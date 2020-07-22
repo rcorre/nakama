@@ -17,10 +17,11 @@ package server
 import (
 	"context"
 	"database/sql"
-	"go.uber.org/atomic"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"go.uber.org/atomic"
 
 	"github.com/heroiclabs/nakama-common/runtime"
 
@@ -490,14 +491,24 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 		return nil, err
 	}
 
+	// jsModules, jsRPCFunctions, jsBeforeRtFunctions, jsAfterRtFunctions, jsBeforeReqFunctions, jsAfterReqFunctions, jsMatchmakerMatchedFunction, allMatchCreateFn, jsTournamentEndFunction, jsTournamentResetFunction, jsLeaderboardResetFunction, err := NewRuntimeProviderJS(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, metrics, streamManager, router, goMatchCreateFn, allEventFunctions.eventFunction, runtimeConfig.Path, paths)
+	jsModules, jsRPCFunctions, _, _, _, _, _, _, _, _, _, err := NewRuntimeProviderJS(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, metrics, streamManager, router, goMatchCreateFn, allEventFunctions.eventFunction, runtimeConfig.Path, paths)
+	if err != nil {
+		startupLogger.Error("Error initialising Javascript runtime provider", zap.Error(err))
+		return nil, err
+	}
+
 	// allMatchCreateFn has already been set up by the Lua side to multiplex, now tell the Go side to use it too.
 	goSetMatchCreateFn(allMatchCreateFn)
 
-	allModules := make([]string, 0, len(goModules)+len(luaModules))
+	allModules := make([]string, 0, len(goModules)+len(luaModules)+len(jsModules))
 	for _, module := range luaModules {
 		allModules = append(allModules, module)
 	}
 	for _, module := range goModules {
+		allModules = append(allModules, module)
+	}
+	for _, module := range jsModules {
 		allModules = append(allModules, module)
 	}
 	startupLogger.Info("Found runtime modules", zap.Int("count", len(allModules)), zap.Strings("modules", allModules))
@@ -520,6 +531,10 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	for id, fn := range goRPCFunctions {
 		allRPCFunctions[id] = fn
 		startupLogger.Info("Registered Go runtime RPC function invocation", zap.String("id", id))
+	}
+	for id, fn := range jsRPCFunctions {
+		allRPCFunctions[id] = fn
+		startupLogger.Info("Registered JS runtime RPC function invocation", zap.String("id", id))
 	}
 
 	allBeforeRtFunctions := make(map[string]RuntimeBeforeRtFunction, len(goBeforeRtFunctions)+len(luaBeforeRtFunctions))
