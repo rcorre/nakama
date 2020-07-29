@@ -107,18 +107,17 @@ type RuntimeProviderJS struct {
 	newFn        func() *RuntimeJS
 }
 
-// TOOD why did I even add this here?
 func (rp *RuntimeProviderJS) Rpc(ctx context.Context, id string, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
 	r, err := rp.Get(ctx)
 	if err != nil {
 		return "", err, codes.Internal
 	}
-	lf := r.GetCallback(RuntimeExecutionModeRPC, id)
-	if lf == nil {
+	jsFn := r.GetCallback(RuntimeExecutionModeRPC, id)
+	if jsFn == nil {
 		rp.Put(r)
 		return "", ErrRuntimeRPCNotFound, codes.NotFound
 	}
-	retValue, err, code := r.InvokeFunction(RuntimeExecutionModeRPC, lf, queryParams, userID, username, vars, expiry, sessionID, clientIP, clientPort, payload)
+	retValue, err, code := r.InvokeFunction(RuntimeExecutionModeRPC, jsFn, queryParams, userID, username, vars, expiry, sessionID, clientIP, clientPort, payload)
 	ret := retValue.(string)
 
 	return ret, err, code
@@ -135,7 +134,10 @@ func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, fn goja.Callab
 
 	retVal, err := fn(goja.Null(), jv...)
 	if err != nil {
-		return nil, err, codes.InvalidArgument
+		if exErr, ok := err.(*goja.Exception); ok {
+			return nil, exErr, codes.Aborted
+		}
+		return nil, err, codes.Internal
 	}
 	if retVal == goja.Undefined() || retVal == goja.Null() {
 		return "", nil, 0
@@ -293,7 +295,7 @@ func newRuntimeJavascriptVM(logger *zap.Logger, db *sql.DB, modCache *RuntimeJSM
 	initializerInst, err := runtime.New(initializerValue)
 
 	jsLogger := NewJsLogger(logger)
-	jsLoggerValue := runtime.ToValue(jsLogger.Constructor())
+	jsLoggerValue := runtime.ToValue(jsLogger.Constructor(runtime))
 	jsLoggerInst, err := runtime.New(jsLoggerValue)
 
 	if err != nil {
@@ -305,7 +307,6 @@ func newRuntimeJavascriptVM(logger *zap.Logger, db *sql.DB, modCache *RuntimeJSM
 		if err != nil {
 			panic(err)
 		}
-
 		_, err = runtime.RunProgram(prg)
 		if err != nil {
 			panic(err)
@@ -324,7 +325,7 @@ func newRuntimeJavascriptVM(logger *zap.Logger, db *sql.DB, modCache *RuntimeJSM
 	}
 
 	// TODO freeze the global object using the writable property on the object definition if possible
-	return &RuntimeJS{
+	return &RuntimeJS {
 		logger:    logger,
 		jsLogger:  jsLoggerInst,
 		nkModule:  nkInst,
@@ -340,59 +341,122 @@ type jsLogger struct {
 }
 
 func NewJsLogger(logger *zap.Logger) *jsLogger {
-	return &jsLogger{logger: logger}
+	return &jsLogger{logger: logger.WithOptions()}
 }
 
-func (l *jsLogger) Constructor() func(goja.ConstructorCall) *goja.Object {
-	return func(call goja.ConstructorCall) *goja.Object {
-
-		getArgs := func(values []goja.Value) (string, []interface{}, error) {
-			format, ok := values[0].Export().(string)
-			if !ok {
-				return "", nil, errors.New("Invalid argument") // TODO
-			}
-			args := make([]interface{}, 0, len(values)-1)
-			for _, v := range values[1:] {
-				a, ok := v.Export().(string)
-				if !ok {
-					return "", nil, errors.New("Invalid argument") // TODO
-				}
-				args = append(args, a)
-			}
-			return format, args, nil
+func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja.Object {
+	invalidArgErr := errors.New("invalid argument")
+	getArgs := func(values []goja.Value) (string, []interface{}, error) {
+		format, ok := values[0].Export().(string)
+		if !ok {
+			return "", nil, invalidArgErr
 		}
+		args := make([]interface{}, 0, len(values)-1)
+		for _, v := range values[1:] {
+			a, ok := v.Export().(string)
+			if !ok {
+				return "", nil, invalidArgErr
+			}
+			args = append(args, a)
+		}
+		return format, args, nil
+	}
+
+	toLoggerFields := func(m map[string]interface{}) []zap.Field {
+		zFields := make([]zap.Field, 0, len(m))
+		for k, v := range m {
+			zFields = append(zFields, zap.Any(k, v))
+		}
+		return zFields
+	}
+
+	return func(call goja.ConstructorCall) *goja.Object {
+		var argFields goja.Value
+		if len(call.Arguments) > 0 {
+			argFields = call.Arguments[0]
+		} else {
+			argFields = r.NewObject()
+		}
+		call.This.Set("fields", argFields)
 
 		call.This.Set("info", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(errors.New("Invalid args in function call.")) // Should this raise an error ?
+				panic(err)
 			}
-			l.logger.Info(fmt.Sprintf(format, a...))
+			fields := call.This.Get("fields").Export().(map[string]interface{})
+			l.logger.Info(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
 			return nil
 		})
 		call.This.Set("warn", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(errors.New("Invalid args in function call.")) // Should this raise an error ?
+				panic(err)
 			}
-			l.logger.Warn(fmt.Sprintf(format, a...))
+			fields := call.This.Get("fields").Export().(map[string]interface{})
+			l.logger.Warn(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
 			return nil
 		})
 		call.This.Set("error", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(errors.New("Invalid args in function call.")) // Should this raise an error ?
+				panic(err)
 			}
-			l.logger.Error(fmt.Sprintf(format, a...))
+			fields := call.This.Get("fields").Export().(map[string]interface{})
+			l.logger.Error(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
 			return nil
 		})
 		call.This.Set("debug", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(errors.New("Invalid args in function call.")) // Should this raise an error ?
+				panic(err)
 			}
-			l.logger.Debug(fmt.Sprintf(format, a...))
+			fields := call.This.Get("fields").Export().(map[string]interface{})
+			l.logger.Debug(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
 			return nil
+		})
+		call.This.Set("withField", func(f goja.FunctionCall) goja.Value {
+			key, ok := f.Arguments[0].Export().(string)
+			if !ok {
+				panic(invalidArgErr)
+			}
+			value, ok := f.Arguments[1].Export().(string)
+			if !ok {
+				panic(invalidArgErr)
+			}
+
+			fields := call.This.Get("fields").Export().(map[string]interface{})
+			fields[key] = value
+
+			c := r.ToValue(call.This.Get("constructor"))
+			objInst, err := r.New(c, r.ToValue(fields))
+			if err != nil {
+				panic(err)
+			}
+
+			return objInst
+		})
+		call.This.Set("withFields", func(f goja.FunctionCall) goja.Value {
+			argMap, ok := f.Arguments[0].Export().(map[string]interface{})
+			if !ok {
+				panic(invalidArgErr)
+			}
+
+			fields := call.This.Get("fields").Export().(map[string]interface{})
+			for k, v := range argMap {
+				fields[k] = v
+			}
+
+			c := r.ToValue(call.This.Get("constructor"))
+			objInst, err := r.New(c, r.ToValue(fields))
+			if err != nil {
+				panic(err)
+			}
+
+			return objInst
+		})
+		call.This.Set("getFields", func(f goja.FunctionCall) goja.Value {
+			return call.This.Get("fields")
 		})
 
 		return nil
