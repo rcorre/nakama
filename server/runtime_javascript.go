@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 	"github.com/dop251/goja"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/heroiclabs/nakama/v2/social"
@@ -32,12 +31,12 @@ import (
 )
 
 type RuntimeJS struct {
-	logger    *zap.Logger
-	jsLogger  *goja.Object
-	nkModule  *goja.Object
-	node      string
-	vm        *goja.Runtime
-	callbacks *RuntimeJavascriptCallbacks
+	logger       *zap.Logger
+	node         string
+	nkInst       *goja.Object
+	jsLoggerInst *goja.Object
+	vm           *goja.Runtime
+	callbacks    *RuntimeJavascriptCallbacks
 }
 
 func (r *RuntimeJS) GetCallback(e RuntimeExecutionMode, key string) goja.Callable {
@@ -70,7 +69,7 @@ type RuntimeJavascriptCallbacks struct {
 type RuntimeJSModule struct {
 	Name    string
 	Path    string
-	Content []byte
+	Program *goja.Program
 }
 
 type RuntimeJSModuleCache struct {
@@ -98,9 +97,6 @@ type RuntimeProviderJS struct {
 	sessionRegistry      SessionRegistry
 	matchRegistry        MatchRegistry
 
-	stdLib              *goja.Object
-	initializer         *RuntimeJavascriptInitModule
-
 	poolCh       chan *RuntimeJS
 	maxCount     uint32
 	currentCount *atomic.Uint32
@@ -118,14 +114,22 @@ func (rp *RuntimeProviderJS) Rpc(ctx context.Context, id string, queryParams map
 		return "", ErrRuntimeRPCNotFound, codes.NotFound
 	}
 	retValue, err, code := r.InvokeFunction(RuntimeExecutionModeRPC, jsFn, queryParams, userID, username, vars, expiry, sessionID, clientIP, clientPort, payload)
-	ret := retValue.(string)
+	if err != nil {
+		return "", err, code
+	}
+	ret, ok := retValue.(string)
+	if !ok {
+		msg := "Failed to assert JS RPC function call return value to string."
+		rp.logger.Error(msg)
+		return "", errors.New(msg), codes.Internal
+	}
 
 	return ret, err, code
 }
 
 func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, fn goja.Callable, queryParams map[string][]string, uid, username string, vars map[string]string, sessionExpiry int64, sid, clientIP, clientPort string, payloads ...interface{}) (interface{}, error, codes.Code) {
-	ctx := r.vm.NewObject()
-	args := []goja.Value{ctx, r.jsLogger, r.nkModule}
+	ctx := r.vm.NewObject() // TODO Figure out ctx
+	args := []goja.Value{ctx, r.jsLoggerInst, r.nkInst}
 	jv := make([]goja.Value, 0, len(args)+len(payloads))
 	jv = append(jv, args...)
 	for _, payload := range payloads {
@@ -135,12 +139,14 @@ func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, fn goja.Callab
 	retVal, err := fn(goja.Null(), jv...)
 	if err != nil {
 		if exErr, ok := err.(*goja.Exception); ok {
-			return nil, exErr, codes.Aborted
+			r.logger.Error("Runtime JS RPC function call raised an uncaught exception", zap.Error(exErr))
+			return nil, errors.New(exErr.String()), codes.Internal
 		}
+		r.logger.Error("Runtime JS RPC function call failed", zap.Error(err))
 		return nil, err, codes.Internal
 	}
 	if retVal == goja.Undefined() || retVal == goja.Null() {
-		return "", nil, 0
+		return "", nil, codes.OK
 	}
 
 	payload, ok := retVal.Export().(string)
@@ -148,7 +154,7 @@ func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, fn goja.Callab
 		return "", errors.New("Runtime function returned invalid data - only allowed one return value of type string."), codes.Internal
 	}
 
-	return payload, nil, 0
+	return payload, nil, codes.OK
 }
 
 func (rp *RuntimeProviderJS) Get(ctx context.Context) (*RuntimeJS, error) {
@@ -205,35 +211,53 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	}
 
 	runtimeProviderJS := &RuntimeProviderJS{
-		logger:              	logger,
-		stdLib:               nil, // TODO
-		initializer:          nil, // TODO
-		poolCh:               make(chan *RuntimeJS, config.GetRuntime().MaxCount),
-		maxCount:             uint32(config.GetRuntime().MaxCount),
-		currentCount:         atomic.NewUint32(uint32(config.GetRuntime().MinCount)),
+		logger:       logger,
+		poolCh:       make(chan *RuntimeJS, config.GetRuntime().MaxCount),
+		maxCount:     uint32(config.GetRuntime().MaxCount),
+		currentCount: atomic.NewUint32(uint32(config.GetRuntime().MinCount)),
 	}
 
 	rpcFunctions := make(map[string]RuntimeRpcFunction, 0)
 	// beforeRtFunctions := make(map[string]RuntimeBeforeRtFunction, 0)
 	// afterRtFunctions := make(map[string]RuntimeAfterRtFunction, 0)
 
-	announceCallbackFn := func(mode RuntimeExecutionMode, key string) {
+	callbacks, err := evalRuntimeModules(logger, modCache, func(mode RuntimeExecutionMode, key string) {
 		switch mode {
 		case RuntimeExecutionModeRPC:
 			rpcFunctions[key] = func(ctx context.Context, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
 				return runtimeProviderJS.Rpc(ctx, key, queryParams, userID, username, vars, expiry, sessionID, clientIP, clientPort, payload)
 			}
 		}
+	})
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
-	// TODO see if it is possible to share the global state across vms
-	initializer := NewRuntimeJavascriptInitModule(logger, announceCallbackFn)
 	runtimeProviderJS.newFn = func () *RuntimeJS {
-		r, err := newRuntimeJavascriptVM(logger, db, modCache, initializer, config)
+		runtime := goja.New()
+
+		jsLogger := NewJsLogger(logger)
+		jsLoggerValue := runtime.ToValue(jsLogger.Constructor(runtime))
+		jsLoggerInst, err := runtime.New(jsLoggerValue)
 		if err != nil {
 			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
 		}
-		return r
+
+		nakamaModule := NewRuntimeJavascriptNakamaModule(logger)
+		nk := runtime.ToValue(nakamaModule.Constructor(runtime))
+		nkInst, err := runtime.New(nk)
+		if err != nil {
+			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
+		}
+
+		return &RuntimeJS {
+			logger:       logger,
+			jsLoggerInst: jsLoggerInst,
+			nkInst:       nkInst,
+			node:         config.GetName(),
+			vm:           runtime,
+			callbacks:    callbacks,
+		}
 	}
 
 	startupLogger.Info("Javascript runtime modules loaded")
@@ -253,6 +277,15 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	return modCache.Names, rpcFunctions, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil
 }
 
+func CheckRuntimeProviderJavascript(logger *zap.Logger, config Config, paths []string) error {
+	modCache, err := cacheJavascriptModules(logger, config.GetRuntime().Path, paths)
+	if err != nil {
+		return err
+	}
+	_, err = evalRuntimeModules(logger, modCache, func(RuntimeExecutionMode, string){})
+	return err
+}
+
 func cacheJavascriptModules(logger *zap.Logger, rootPath string, paths []string) (*RuntimeJSModuleCache, error) {
 	moduleCache := &RuntimeJSModuleCache{
 		Names: make([]string, 0),
@@ -268,197 +301,71 @@ func cacheJavascriptModules(logger *zap.Logger, rootPath string, paths []string)
 		var err error
 		if content, err = ioutil.ReadFile(path); err != nil {
 			logger.Error("Could not read Javascript module", zap.String("path", path), zap.Error(err))
+			return nil, err
+		}
+
+		modName := filepath.Base(path)
+		prg, err := goja.Compile(modName, string(content), true)
+		if err != nil {
+			logger.Error("Could not compile Javascript module", zap.String("module", modName), zap.Error(err))
+			return nil, err
 		}
 
 		moduleCache.Add(&RuntimeJSModule{
-			Name:    filepath.Base(path),
+			Name:    modName,
 			Path:    path,
-			Content: content,
+			Program: prg,
 		})
 	}
 
 	return moduleCache, nil
 }
 
-func newRuntimeJavascriptVM(logger *zap.Logger, db *sql.DB, modCache *RuntimeJSModuleCache, initializer *RuntimeJavascriptInitModule, config Config) (*RuntimeJS, error) {
+func evalRuntimeModules(logger *zap.Logger, modCache *RuntimeJSModuleCache, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, error) {
 	runtime := goja.New()
 
-	nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db)
-	nk := runtime.ToValue(nakamaModule.Constructor())
-	nkInst, err := runtime.New(nk)
-	if err != nil {
-		panic(err)
-	}
-	//runtime.Set("nk", nkInst)
-
+	initializer := NewRuntimeJavascriptInitModule(logger, announceCallbackFn)
 	initializerValue := runtime.ToValue(initializer.Constructor())
 	initializerInst, err := runtime.New(initializerValue)
+	if err != nil {
+		return nil, err
+	}
 
 	jsLogger := NewJsLogger(logger)
 	jsLoggerValue := runtime.ToValue(jsLogger.Constructor(runtime))
 	jsLoggerInst, err := runtime.New(jsLoggerValue)
-
 	if err != nil {
-		panic(err)
+		return nil, err
+	}
+
+	nakamaModule := NewRuntimeJavascriptNakamaModule(logger)
+	nk := runtime.ToValue(nakamaModule.Constructor(runtime))
+	nkInst, err := runtime.New(nk)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, modName := range modCache.Names {
-		prg, err := goja.Compile(modName, string(modCache.Modules[modName].Content), true)
+		_, err = runtime.RunProgram(modCache.Modules[modName].Program)
 		if err != nil {
-			panic(err)
-		}
-		_, err = runtime.RunProgram(prg)
-		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		initMod := runtime.Get("InitModule")
+		initMod := runtime.Get(INIT_MODULE_FN_NAME)
 		initModFn, ok := goja.AssertFunction(initMod)
 		if !ok {
-			panic("Couldn't get InitMod function")
+			logger.Error("InitModule function not found in module.", zap.String("module", modName))
+			return nil, errors.New("InitModule function not found.")
 		}
 
 		_, err = initModFn(goja.Null(), goja.Null(), jsLoggerInst, nkInst, initializerInst)
 		if err != nil {
-			panic(err)
+			if exErr, ok := err.(*goja.Exception); ok {
+				return nil, errors.New(exErr.String())
+			}
+			return nil, err
 		}
 	}
 
-	// TODO freeze the global object using the writable property on the object definition if possible
-	return &RuntimeJS {
-		logger:    logger,
-		jsLogger:  jsLoggerInst,
-		nkModule:  nkInst,
-		node:      config.GetName(),
-		vm:        runtime,
-		callbacks: initializer.Callbacks,
-	}, nil
-}
-
-
-type jsLogger struct {
-	logger *zap.Logger
-}
-
-func NewJsLogger(logger *zap.Logger) *jsLogger {
-	return &jsLogger{logger: logger.WithOptions()}
-}
-
-func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja.Object {
-	invalidArgErr := errors.New("invalid argument")
-	getArgs := func(values []goja.Value) (string, []interface{}, error) {
-		format, ok := values[0].Export().(string)
-		if !ok {
-			return "", nil, invalidArgErr
-		}
-		args := make([]interface{}, 0, len(values)-1)
-		for _, v := range values[1:] {
-			a, ok := v.Export().(string)
-			if !ok {
-				return "", nil, invalidArgErr
-			}
-			args = append(args, a)
-		}
-		return format, args, nil
-	}
-
-	toLoggerFields := func(m map[string]interface{}) []zap.Field {
-		zFields := make([]zap.Field, 0, len(m))
-		for k, v := range m {
-			zFields = append(zFields, zap.Any(k, v))
-		}
-		return zFields
-	}
-
-	return func(call goja.ConstructorCall) *goja.Object {
-		var argFields goja.Value
-		if len(call.Arguments) > 0 {
-			argFields = call.Arguments[0]
-		} else {
-			argFields = r.NewObject()
-		}
-		call.This.Set("fields", argFields)
-
-		call.This.Set("info", func(f goja.FunctionCall) goja.Value {
-			format, a, err := getArgs(f.Arguments)
-			if err != nil {
-				panic(err)
-			}
-			fields := call.This.Get("fields").Export().(map[string]interface{})
-			l.logger.Info(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
-			return nil
-		})
-		call.This.Set("warn", func(f goja.FunctionCall) goja.Value {
-			format, a, err := getArgs(f.Arguments)
-			if err != nil {
-				panic(err)
-			}
-			fields := call.This.Get("fields").Export().(map[string]interface{})
-			l.logger.Warn(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
-			return nil
-		})
-		call.This.Set("error", func(f goja.FunctionCall) goja.Value {
-			format, a, err := getArgs(f.Arguments)
-			if err != nil {
-				panic(err)
-			}
-			fields := call.This.Get("fields").Export().(map[string]interface{})
-			l.logger.Error(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
-			return nil
-		})
-		call.This.Set("debug", func(f goja.FunctionCall) goja.Value {
-			format, a, err := getArgs(f.Arguments)
-			if err != nil {
-				panic(err)
-			}
-			fields := call.This.Get("fields").Export().(map[string]interface{})
-			l.logger.Debug(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
-			return nil
-		})
-		call.This.Set("withField", func(f goja.FunctionCall) goja.Value {
-			key, ok := f.Arguments[0].Export().(string)
-			if !ok {
-				panic(invalidArgErr)
-			}
-			value, ok := f.Arguments[1].Export().(string)
-			if !ok {
-				panic(invalidArgErr)
-			}
-
-			fields := call.This.Get("fields").Export().(map[string]interface{})
-			fields[key] = value
-
-			c := r.ToValue(call.This.Get("constructor"))
-			objInst, err := r.New(c, r.ToValue(fields))
-			if err != nil {
-				panic(err)
-			}
-
-			return objInst
-		})
-		call.This.Set("withFields", func(f goja.FunctionCall) goja.Value {
-			argMap, ok := f.Arguments[0].Export().(map[string]interface{})
-			if !ok {
-				panic(invalidArgErr)
-			}
-
-			fields := call.This.Get("fields").Export().(map[string]interface{})
-			for k, v := range argMap {
-				fields[k] = v
-			}
-
-			c := r.ToValue(call.This.Get("constructor"))
-			objInst, err := r.New(c, r.ToValue(fields))
-			if err != nil {
-				panic(err)
-			}
-
-			return objInst
-		})
-		call.This.Set("getFields", func(f goja.FunctionCall) goja.Value {
-			return call.This.Get("fields")
-		})
-
-		return nil
-	}
+	return initializer.Callbacks, nil
 }

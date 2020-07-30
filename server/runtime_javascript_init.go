@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+const INIT_MODULE_FN_NAME = "InitModule"
+
 type RuntimeJavascriptInitModule struct {
 	Logger *zap.Logger
 	Callbacks *RuntimeJavascriptCallbacks
@@ -45,15 +47,15 @@ func (im *RuntimeJavascriptInitModule) Constructor() func(goja.ConstructorCall) 
 func (im *RuntimeJavascriptInitModule) registerRpc(f goja.FunctionCall) goja.Value {
 	key, ok := f.Arguments[0].Export().(string)
 	if !ok {
-		panic("invalid argument")
+		panic("Rpc function name must be a string")
 	}
 	if key == "" {
-		panic("RPC function name cannot be empty.")
+		panic("Rpc function name cannot be empty.")
 	}
 
 	fn, ok := goja.AssertFunction(f.Arguments[1])
 	if !ok {
-		panic("invalid argument")
+		panic("Registering Rpc must be a javascript function")
 	}
 
 	lKey := strings.ToLower(key)

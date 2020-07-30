@@ -463,6 +463,12 @@ func CheckRuntime(logger *zap.Logger, config Config) error {
 		return err
 	}
 
+	// Check any Javascript runtime modules.
+	err = CheckRuntimeProviderJavascript(logger, config, paths)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

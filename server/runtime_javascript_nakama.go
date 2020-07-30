@@ -1,24 +1,21 @@
 package server
 
 import (
-	"database/sql"
 	"github.com/dop251/goja"
 	"go.uber.org/zap"
 )
 
 type RuntimeJavascriptNakamaModule struct {
 	logger *zap.Logger
-	db *sql.DB
 }
 
-func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB) *RuntimeJavascriptNakamaModule {
+func NewRuntimeJavascriptNakamaModule(logger *zap.Logger) *RuntimeJavascriptNakamaModule {
 	return &RuntimeJavascriptNakamaModule{
 		logger: logger,
-		db: db,
 	}
 }
 
-func (n *RuntimeJavascriptNakamaModule) Constructor() func(goja.ConstructorCall) *goja.Object {
+func (n *RuntimeJavascriptNakamaModule) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja.Object {
 	return func(call goja.ConstructorCall) *goja.Object {
 		for fnName, fn := range n.mappings() {
 			call.This.Set(fnName, fn)
