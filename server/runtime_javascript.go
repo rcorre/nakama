@@ -230,6 +230,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		}
 	})
 	if err != nil {
+		logger.Error("Failed to eval Javascript modules.", zap.Error(err))
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
