@@ -16,17 +16,16 @@ func NewJsLogger(logger *zap.Logger) *jsLogger {
 }
 
 func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja.Object {
-	invalidArgErr := errors.New("invalid argument")
 	getArgs := func(values []goja.Value) (string, []interface{}, error) {
 		format, ok := values[0].Export().(string)
 		if !ok {
-			return "", nil, invalidArgErr
+			return "", nil, errors.New("invalid format argument: must be a string")
 		}
 		args := make([]interface{}, 0, len(values)-1)
 		for _, v := range values[1:] {
 			a, ok := v.Export().(string)
 			if !ok {
-				return "", nil, invalidArgErr
+				return "", nil, errors.New("invalid argument: must be a string")
 			}
 			args = append(args, a)
 		}
@@ -53,47 +52,51 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 		call.This.Set("info", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(err)
+				panic(r.ToValue(err.Error()))
 			}
 			fields := call.This.Get("fields").Export().(map[string]interface{})
 			l.logger.Info(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
 			return nil
 		})
+
 		call.This.Set("warn", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(err)
+				panic(r.ToValue(err.Error()))
 			}
 			fields := call.This.Get("fields").Export().(map[string]interface{})
 			l.logger.Warn(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
 			return nil
 		})
+
 		call.This.Set("error", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(err)
+				panic(r.ToValue(err.Error()))
 			}
 			fields := call.This.Get("fields").Export().(map[string]interface{})
 			l.logger.Error(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
 			return nil
 		})
+
 		call.This.Set("debug", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(err)
+				panic(r.ToValue(err.Error()))
 			}
 			fields := call.This.Get("fields").Export().(map[string]interface{})
 			l.logger.Debug(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
 			return nil
 		})
+
 		call.This.Set("withField", func(f goja.FunctionCall) goja.Value {
 			key, ok := f.Arguments[0].Export().(string)
 			if !ok {
-				panic(invalidArgErr)
+				panic(r.ToValue("key argument must be a string"))
 			}
 			value, ok := f.Arguments[1].Export().(string)
 			if !ok {
-				panic(invalidArgErr)
+				panic(r.ToValue("value argument must be a string"))
 			}
 
 			fields := call.This.Get("fields").Export().(map[string]interface{})
@@ -102,15 +105,16 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 			c := r.ToValue(call.This.Get("constructor"))
 			objInst, err := r.New(c, r.ToValue(fields))
 			if err != nil {
-				panic(err)
+				panic(r.ToValue(err.Error()))
 			}
 
 			return objInst
 		})
+
 		call.This.Set("withFields", func(f goja.FunctionCall) goja.Value {
 			argMap, ok := f.Arguments[0].Export().(map[string]interface{})
 			if !ok {
-				panic(invalidArgErr)
+				panic("argument must be a map")
 			}
 
 			fields := call.This.Get("fields").Export().(map[string]interface{})
@@ -130,7 +134,16 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 			return call.This.Get("fields")
 		})
 
+		freeze(call.This)
+
 		return nil
+	}
+}
+
+// Disallows resetting or changing the properties of the object
+func freeze(o *goja.Object) {
+	for _, key := range o.Keys() {
+		o.DefineDataProperty(key, o.Get(key), goja.FLAG_FALSE, goja.FLAG_FALSE, goja.FLAG_TRUE)
 	}
 }
 

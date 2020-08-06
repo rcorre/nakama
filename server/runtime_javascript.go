@@ -33,8 +33,9 @@ import (
 type RuntimeJS struct {
 	logger       *zap.Logger
 	node         string
-	nkInst       *goja.Object
-	jsLoggerInst *goja.Object
+	nkInst       goja.Value
+	jsLoggerInst goja.Value
+	env          goja.Value
 	vm           *goja.Runtime
 	callbacks    *RuntimeJavascriptCallbacks
 }
@@ -60,10 +61,53 @@ func (r *RuntimeJS) GetCallback(e RuntimeExecutionMode, key string) goja.Callabl
 	return nil
 }
 
+type JsErrorType int
+
+func(e JsErrorType) String() string {
+	switch e {
+	case JsErrorException:
+		return "exception"
+	default:
+		return ""
+	}
+}
+
+const (
+	JsErrorException JsErrorType = iota
+	JsErrorRuntime
+)
+
+type jsError struct {
+	StackTrace string
+	Type string
+	Message string `json:",omitempty"`
+	error error
+}
+
+func (e *jsError) Error() string {
+	return e.error.Error()
+}
+
 type RuntimeJavascriptCallbacks struct {
 	Rpc    map[string]goja.Callable
 	Before map[string]goja.Callable
 	After  map[string]goja.Callable
+}
+
+func newJsExceptionError(t JsErrorType, error, st string) *jsError {
+	return &jsError{
+		StackTrace: st,
+		Type: t.String(),
+		error: errors.New(error),
+	}
+}
+
+func newJsError(t JsErrorType, err error) *jsError {
+	return &jsError{
+		Message: err.Error(),
+		Type: t.String(),
+		error: err,
+	}
 }
 
 type RuntimeJSModule struct {
@@ -113,22 +157,22 @@ func (rp *RuntimeProviderJS) Rpc(ctx context.Context, id string, queryParams map
 		rp.Put(r)
 		return "", ErrRuntimeRPCNotFound, codes.NotFound
 	}
-	retValue, err, code := r.InvokeFunction(RuntimeExecutionModeRPC, jsFn, queryParams, userID, username, vars, expiry, sessionID, clientIP, clientPort, payload)
+	retValue, err, code := r.InvokeFunction(RuntimeExecutionModeRPC, id, jsFn, queryParams, userID, username, vars, expiry, sessionID, clientIP, clientPort, payload)
 	if err != nil {
 		return "", err, code
 	}
-	ret, ok := retValue.(string)
+	payload, ok := retValue.Export().(string)
 	if !ok {
-		msg := "Failed to assert JS RPC function call return value to string."
-		rp.logger.Error(msg)
+		msg := "Runtime function returned invalid data - only allowed one return value of type string."
+		rp.logger.Error(msg, zap.String("mode", RuntimeExecutionModeRPC.String()), zap.String("id", id))
 		return "", errors.New(msg), codes.Internal
 	}
 
-	return ret, err, code
+	return payload, nil, code
 }
 
-func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, fn goja.Callable, queryParams map[string][]string, uid, username string, vars map[string]string, sessionExpiry int64, sid, clientIP, clientPort string, payloads ...interface{}) (interface{}, error, codes.Code) {
-	ctx := r.vm.NewObject() // TODO Figure out ctx
+func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, id string, fn goja.Callable, queryParams map[string][]string, uid, username string, vars map[string]string, sessionExpiry int64, sid, clientIP, clientPort string, payloads ...interface{}) (goja.Value, error, codes.Code) {
+	ctx := NewRuntimeJsContext(r.vm, r.node, r.env, execMode, queryParams, sessionExpiry, uid, username, vars, sid, clientIP, clientPort)
 	args := []goja.Value{ctx, r.jsLoggerInst, r.nkInst}
 	jv := make([]goja.Value, 0, len(args)+len(payloads))
 	jv = append(jv, args...)
@@ -139,22 +183,18 @@ func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, fn goja.Callab
 	retVal, err := fn(goja.Null(), jv...)
 	if err != nil {
 		if exErr, ok := err.(*goja.Exception); ok {
-			r.logger.Error("Runtime JS RPC function call raised an uncaught exception", zap.Error(exErr))
-			return nil, errors.New(exErr.String()), codes.Internal
+			println(exErr)
+			r.logger.Error("javascript runtime function raised an uncaught exception", zap.String("mode", execMode.String()), zap.String("id", id), zap.Error(err))
+			return nil, newJsExceptionError(JsErrorException, exErr.Error(), exErr.String()), codes.Internal
 		}
-		r.logger.Error("Runtime JS RPC function call failed", zap.Error(err))
-		return nil, err, codes.Internal
+		r.logger.Error("javascript runtime function caused an error", zap.String("mode", execMode.String()), zap.String("id", id), zap.Error(err))
+		return nil, newJsError(JsErrorRuntime, err), codes.Internal
 	}
-	if retVal == goja.Undefined() || retVal == goja.Null() {
-		return "", nil, codes.OK
-	}
-
-	payload, ok := retVal.Export().(string)
-	if !ok {
-		return "", errors.New("Runtime function returned invalid data - only allowed one return value of type string."), codes.Internal
+	if retVal == nil || retVal == goja.Undefined() || retVal == goja.Null() {
+		return nil, nil, codes.OK
 	}
 
-	return payload, nil, codes.OK
+	return retVal, nil, codes.OK
 }
 
 func (rp *RuntimeProviderJS) Get(ctx context.Context) (*RuntimeJS, error) {
@@ -221,7 +261,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	// beforeRtFunctions := make(map[string]RuntimeBeforeRtFunction, 0)
 	// afterRtFunctions := make(map[string]RuntimeAfterRtFunction, 0)
 
-	callbacks, err := evalRuntimeModules(logger, modCache, func(mode RuntimeExecutionMode, key string) {
+	callbacks, err := evalRuntimeModules(logger, modCache, config, func(mode RuntimeExecutionMode, key string) {
 		switch mode {
 		case RuntimeExecutionModeRPC:
 			rpcFunctions[key] = func(ctx context.Context, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
@@ -257,6 +297,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 			nkInst:       nkInst,
 			node:         config.GetName(),
 			vm:           runtime,
+			env:          runtime.ToValue(config.GetRuntime().Environment),
 			callbacks:    callbacks,
 		}
 	}
@@ -283,7 +324,7 @@ func CheckRuntimeProviderJavascript(logger *zap.Logger, config Config, paths []s
 	if err != nil {
 		return err
 	}
-	_, err = evalRuntimeModules(logger, modCache, func(RuntimeExecutionMode, string){})
+	_, err = evalRuntimeModules(logger, modCache, config, func(RuntimeExecutionMode, string){})
 	return err
 }
 
@@ -322,44 +363,45 @@ func cacheJavascriptModules(logger *zap.Logger, rootPath string, paths []string)
 	return moduleCache, nil
 }
 
-func evalRuntimeModules(logger *zap.Logger, modCache *RuntimeJSModuleCache, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, error) {
-	runtime := goja.New()
+func evalRuntimeModules(logger *zap.Logger, modCache *RuntimeJSModuleCache, config Config, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, error) {
+	r := goja.New()
 
 	initializer := NewRuntimeJavascriptInitModule(logger, announceCallbackFn)
-	initializerValue := runtime.ToValue(initializer.Constructor())
-	initializerInst, err := runtime.New(initializerValue)
+	initializerValue := r.ToValue(initializer.Constructor())
+	initializerInst, err := r.New(initializerValue)
 	if err != nil {
 		return nil, err
 	}
 
 	jsLogger := NewJsLogger(logger)
-	jsLoggerValue := runtime.ToValue(jsLogger.Constructor(runtime))
-	jsLoggerInst, err := runtime.New(jsLoggerValue)
+	jsLoggerValue := r.ToValue(jsLogger.Constructor(r))
+	jsLoggerInst, err := r.New(jsLoggerValue)
 	if err != nil {
 		return nil, err
 	}
 
 	nakamaModule := NewRuntimeJavascriptNakamaModule(logger)
-	nk := runtime.ToValue(nakamaModule.Constructor(runtime))
-	nkInst, err := runtime.New(nk)
+	nk := r.ToValue(nakamaModule.Constructor(r))
+	nkInst, err := r.New(nk)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, modName := range modCache.Names {
-		_, err = runtime.RunProgram(modCache.Modules[modName].Program)
+		_, err = r.RunProgram(modCache.Modules[modName].Program)
 		if err != nil {
 			return nil, err
 		}
 
-		initMod := runtime.Get(INIT_MODULE_FN_NAME)
+		initMod := r.Get(INIT_MODULE_FN_NAME)
 		initModFn, ok := goja.AssertFunction(initMod)
 		if !ok {
 			logger.Error("InitModule function not found in module.", zap.String("module", modName))
-			return nil, errors.New("InitModule function not found.")
+			return nil, errors.New(INIT_MODULE_FN_NAME + " function not found.")
 		}
 
-		_, err = initModFn(goja.Null(), goja.Null(), jsLoggerInst, nkInst, initializerInst)
+		ctx := NewRuntimeJsInitContext(r, config.GetName(), config.GetRuntime().Environment)
+		_, err = initModFn(goja.Null(), ctx, jsLoggerInst, nkInst, initializerInst)
 		if err != nil {
 			if exErr, ok := err.(*goja.Exception); ok {
 				return nil, errors.New(exErr.String())

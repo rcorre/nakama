@@ -5,60 +5,40 @@ import (
 	"go.uber.org/zap"
 )
 
-type RuntimeJavascriptNakamaModule struct {
+type runtimeJavascriptNakamaModule struct {
 	logger *zap.Logger
 }
 
-func NewRuntimeJavascriptNakamaModule(logger *zap.Logger) *RuntimeJavascriptNakamaModule {
-	return &RuntimeJavascriptNakamaModule{
+func NewRuntimeJavascriptNakamaModule(logger *zap.Logger) *runtimeJavascriptNakamaModule {
+	return &runtimeJavascriptNakamaModule{
 		logger: logger,
 	}
 }
 
-func (n *RuntimeJavascriptNakamaModule) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja.Object {
+func (n *runtimeJavascriptNakamaModule) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja.Object {
 	return func(call goja.ConstructorCall) *goja.Object {
 		for fnName, fn := range n.mappings() {
 			call.This.Set(fnName, fn)
 		}
+		freeze(call.This)
 
-		return nil // Returns the object itself
+		return nil
 	}
 }
 
-func (n *RuntimeJavascriptNakamaModule) mappings() map[string]func(goja.FunctionCall) goja.Value {
+func (n *runtimeJavascriptNakamaModule) mappings() map[string]func(goja.FunctionCall) goja.Value {
 	return map[string]func(goja.FunctionCall) goja.Value {
 		"matchGet": n.matchGet,
 		"matchCreate": n.matchCreate,
-		"logInfo": n.logInfo,
-		"logError": n.logError,
 	}
 }
 
-func (n *RuntimeJavascriptNakamaModule) matchGet(f goja.FunctionCall) goja.Value {
+func (n *runtimeJavascriptNakamaModule) matchGet(f goja.FunctionCall) goja.Value {
 	// TODO matchGet
 	return goja.Null()
 }
 
-func (n *RuntimeJavascriptNakamaModule) logInfo(f goja.FunctionCall) goja.Value {
-	// TODO how to handle errors?
-	s, ok := f.Arguments[0].ToString().Export().(string)
-	if !ok {
-		panic("couldn't get string")
-	}
-	n.logger.Info(s)
-	return goja.Null()
-}
-
-func (n *RuntimeJavascriptNakamaModule) logError(f goja.FunctionCall) goja.Value {
-	s, ok := f.Arguments[0].ToString().Export().(string)
-	if !ok {
-		panic("couldn't get string")
-	}
-	n.logger.Error(s)
-	return goja.Null()
-}
-
-func (n *RuntimeJavascriptNakamaModule) matchCreate(f goja.FunctionCall) goja.Value {
+func (n *runtimeJavascriptNakamaModule) matchCreate(f goja.FunctionCall) goja.Value {
 	// TODO matchCreate
 	return goja.Null()
 }
