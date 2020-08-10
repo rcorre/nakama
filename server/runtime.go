@@ -498,7 +498,7 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	}
 
 	// jsModules, jsRPCFunctions, jsBeforeRtFunctions, jsAfterRtFunctions, jsBeforeReqFunctions, jsAfterReqFunctions, jsMatchmakerMatchedFunction, allMatchCreateFn, jsTournamentEndFunction, jsTournamentResetFunction, jsLeaderboardResetFunction, err := NewRuntimeProviderJS(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, metrics, streamManager, router, goMatchCreateFn, allEventFunctions.eventFunction, runtimeConfig.Path, paths)
-	jsModules, jsRPCFunctions, _, _, _, _, _, _, _, _, _, err := NewRuntimeProviderJS(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, metrics, streamManager, router, goMatchCreateFn, allEventFunctions.eventFunction, runtimeConfig.Path, paths)
+	jsModules, jsRPCFunctions, jsBeforeRtFunctions, jsAfterRtFunctions, jsBeforeReqFunctions, jsAfterReqFunctions, _, _, _, _, _, err := NewRuntimeProviderJS(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, metrics, streamManager, router, goMatchCreateFn, allEventFunctions.eventFunction, runtimeConfig.Path, paths)
 	if err != nil {
 		startupLogger.Error("Error initialising Javascript runtime provider", zap.Error(err))
 		return nil, err
@@ -507,16 +507,17 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	// allMatchCreateFn has already been set up by the Lua side to multiplex, now tell the Go side to use it too.
 	goSetMatchCreateFn(allMatchCreateFn)
 
-	allModules := make([]string, 0, len(goModules)+len(luaModules)+len(jsModules))
+	allModules := make([]string, 0, len(jsModules)+len(luaModules)+len(goModules))
 	for _, module := range luaModules {
-		allModules = append(allModules, module)
-	}
-	for _, module := range goModules {
 		allModules = append(allModules, module)
 	}
 	for _, module := range jsModules {
 		allModules = append(allModules, module)
 	}
+	for _, module := range goModules {
+		allModules = append(allModules, module)
+	}
+
 	startupLogger.Info("Found runtime modules", zap.Int("count", len(allModules)), zap.Strings("modules", allModules))
 
 	if allEventFunctions.eventFunction != nil {
@@ -529,34 +530,42 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 		startupLogger.Info("Registered event function invocation", zap.String("id", "session_end"))
 	}
 
-	allRPCFunctions := make(map[string]RuntimeRpcFunction, len(goRPCFunctions)+len(luaRPCFunctions))
+	allRPCFunctions := make(map[string]RuntimeRpcFunction, len(jsRPCFunctions)+len(luaRPCFunctions)+len(goRPCFunctions))
 	for id, fn := range luaRPCFunctions {
 		allRPCFunctions[id] = fn
 		startupLogger.Info("Registered Lua runtime RPC function invocation", zap.String("id", id))
+	}
+	for id, fn := range jsRPCFunctions {
+		allRPCFunctions[id] = fn
+		startupLogger.Info("Registered Javascript runtime RPC function invocation", zap.String("id", id))
 	}
 	for id, fn := range goRPCFunctions {
 		allRPCFunctions[id] = fn
 		startupLogger.Info("Registered Go runtime RPC function invocation", zap.String("id", id))
 	}
-	for id, fn := range jsRPCFunctions {
-		allRPCFunctions[id] = fn
-		startupLogger.Info("Registered JS runtime RPC function invocation", zap.String("id", id))
-	}
 
-	allBeforeRtFunctions := make(map[string]RuntimeBeforeRtFunction, len(goBeforeRtFunctions)+len(luaBeforeRtFunctions))
+	allBeforeRtFunctions := make(map[string]RuntimeBeforeRtFunction, len(jsBeforeRtFunctions)+len(luaBeforeRtFunctions)+len(goBeforeRtFunctions))
 	for id, fn := range luaBeforeRtFunctions {
 		allBeforeRtFunctions[id] = fn
 		startupLogger.Info("Registered Lua runtime Before function invocation", zap.String("id", strings.TrimPrefix(strings.TrimPrefix(id, API_PREFIX), RTAPI_PREFIX)))
+	}
+	for id, fn := range jsBeforeRtFunctions {
+		allBeforeRtFunctions[id] = fn
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", strings.TrimPrefix(strings.TrimPrefix(id, API_PREFIX), RTAPI_PREFIX)))
 	}
 	for id, fn := range goBeforeRtFunctions {
 		allBeforeRtFunctions[id] = fn
 		startupLogger.Info("Registered Go runtime Before function invocation", zap.String("id", strings.TrimPrefix(strings.TrimPrefix(id, API_PREFIX), RTAPI_PREFIX)))
 	}
 
-	allAfterRtFunctions := make(map[string]RuntimeAfterRtFunction, len(goAfterRtFunctions)+len(luaAfterRtFunctions))
+	allAfterRtFunctions := make(map[string]RuntimeAfterRtFunction, len(jsAfterRtFunctions)+len(luaAfterRtFunctions)+len(goAfterRtFunctions))
 	for id, fn := range luaAfterRtFunctions {
 		allAfterRtFunctions[id] = fn
 		startupLogger.Info("Registered Lua runtime After function invocation", zap.String("id", strings.TrimPrefix(strings.TrimPrefix(id, API_PREFIX), RTAPI_PREFIX)))
+	}
+	for id, fn := range jsAfterRtFunctions {
+		allAfterRtFunctions[id] = fn
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", strings.TrimPrefix(strings.TrimPrefix(id, API_PREFIX), RTAPI_PREFIX)))
 	}
 	for id, fn := range goAfterRtFunctions {
 		allAfterRtFunctions[id] = fn
@@ -564,6 +573,7 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	}
 
 	allBeforeReqFunctions := luaBeforeReqFunctions
+	// Register Lua Before Req functions
 	if allBeforeReqFunctions.beforeGetAccountFunction != nil {
 		startupLogger.Info("Registered Lua runtime Before function invocation", zap.String("id", "getaccount"))
 	}
@@ -762,6 +772,270 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	if allBeforeReqFunctions.beforeEventFunction != nil {
 		startupLogger.Info("Registered Lua runtime Before custom events function invocation")
 	}
+
+	// Register Javascript Before Req functions
+	if jsBeforeReqFunctions.beforeGetAccountFunction != nil {
+		allBeforeReqFunctions.beforeGetAccountFunction = jsBeforeReqFunctions.beforeGetAccountFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "getaccount"))
+	}
+	if jsBeforeReqFunctions.beforeUpdateAccountFunction != nil {
+		allBeforeReqFunctions.beforeUpdateAccountFunction = jsBeforeReqFunctions.beforeUpdateAccountFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "updateaccount"))
+	}
+	if jsBeforeReqFunctions.beforeAuthenticateAppleFunction != nil {
+		allBeforeReqFunctions.beforeAuthenticateAppleFunction = jsBeforeReqFunctions.beforeAuthenticateAppleFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "authenticateapple"))
+	}
+	if jsBeforeReqFunctions.beforeAuthenticateCustomFunction != nil {
+		allBeforeReqFunctions.beforeAuthenticateCustomFunction = jsBeforeReqFunctions.beforeAuthenticateCustomFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "authenticatecustom"))
+	}
+	if jsBeforeReqFunctions.beforeAuthenticateDeviceFunction != nil {
+		allBeforeReqFunctions.beforeAuthenticateDeviceFunction = jsBeforeReqFunctions.beforeAuthenticateDeviceFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "authenticatedevice"))
+	}
+	if jsBeforeReqFunctions.beforeAuthenticateEmailFunction != nil {
+		allBeforeReqFunctions.beforeAuthenticateEmailFunction = jsBeforeReqFunctions.beforeAuthenticateEmailFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "authenticateemail"))
+	}
+	if jsBeforeReqFunctions.beforeAuthenticateFacebookFunction != nil {
+		allBeforeReqFunctions.beforeAuthenticateFacebookFunction = jsBeforeReqFunctions.beforeAuthenticateFacebookFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "authenticatefacebook"))
+	}
+	if jsBeforeReqFunctions.beforeAuthenticateFacebookInstantGameFunction != nil {
+		allBeforeReqFunctions.beforeAuthenticateFacebookInstantGameFunction = jsBeforeReqFunctions.beforeAuthenticateFacebookInstantGameFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "authenticatefacebookinstantgame"))
+	}
+	if jsBeforeReqFunctions.beforeAuthenticateGameCenterFunction != nil {
+		allBeforeReqFunctions.beforeAuthenticateGameCenterFunction = jsBeforeReqFunctions.beforeAuthenticateGameCenterFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "authenticategamecenter"))
+	}
+	if jsBeforeReqFunctions.beforeAuthenticateGoogleFunction != nil {
+		allBeforeReqFunctions.beforeAuthenticateGoogleFunction = jsBeforeReqFunctions.beforeAuthenticateGoogleFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "authenticategoogle"))
+	}
+	if jsBeforeReqFunctions.beforeAuthenticateSteamFunction != nil {
+		allBeforeReqFunctions.beforeAuthenticateSteamFunction = jsBeforeReqFunctions.beforeAuthenticateSteamFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "authenticatesteam"))
+	}
+	if jsBeforeReqFunctions.beforeListChannelMessagesFunction != nil {
+		allBeforeReqFunctions.beforeListChannelMessagesFunction = jsBeforeReqFunctions.beforeListChannelMessagesFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listchannelmessages"))
+	}
+	if jsBeforeReqFunctions.beforeListFriendsFunction != nil {
+		allBeforeReqFunctions.beforeListFriendsFunction = jsBeforeReqFunctions.beforeListFriendsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listfriends"))
+	}
+	if jsBeforeReqFunctions.beforeAddFriendsFunction != nil {
+		allBeforeReqFunctions.beforeAddFriendsFunction = jsBeforeReqFunctions.beforeAddFriendsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "addfriends"))
+	}
+	if jsBeforeReqFunctions.beforeDeleteFriendsFunction != nil {
+		allBeforeReqFunctions.beforeDeleteFriendsFunction = jsBeforeReqFunctions.beforeDeleteFriendsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "deletefriends"))
+	}
+	if jsBeforeReqFunctions.beforeBlockFriendsFunction != nil {
+		allBeforeReqFunctions.beforeBlockFriendsFunction = jsBeforeReqFunctions.beforeBlockFriendsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "blockfriends"))
+	}
+	if jsBeforeReqFunctions.beforeImportFacebookFriendsFunction != nil {
+		allBeforeReqFunctions.beforeImportFacebookFriendsFunction = jsBeforeReqFunctions.beforeImportFacebookFriendsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "importfacebookfriends"))
+	}
+	if jsBeforeReqFunctions.beforeCreateGroupFunction != nil {
+		allBeforeReqFunctions.beforeCreateGroupFunction = jsBeforeReqFunctions.beforeCreateGroupFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "creategroup"))
+	}
+	if jsBeforeReqFunctions.beforeUpdateGroupFunction != nil {
+		allBeforeReqFunctions.beforeUpdateGroupFunction = jsBeforeReqFunctions.beforeUpdateGroupFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "updategroup"))
+	}
+	if jsBeforeReqFunctions.beforeDeleteGroupFunction != nil {
+		allBeforeReqFunctions.beforeDeleteGroupFunction = jsBeforeReqFunctions.beforeDeleteGroupFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "deletegroup"))
+	}
+	if jsBeforeReqFunctions.beforeJoinGroupFunction != nil {
+		allBeforeReqFunctions.beforeJoinGroupFunction = jsBeforeReqFunctions.beforeJoinGroupFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "joingroup"))
+	}
+	if jsBeforeReqFunctions.beforeLeaveGroupFunction != nil {
+		allBeforeReqFunctions.beforeLeaveGroupFunction = jsBeforeReqFunctions.beforeLeaveGroupFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "leavegroup"))
+	}
+	if jsBeforeReqFunctions.beforeAddGroupUsersFunction != nil {
+		allBeforeReqFunctions.beforeAddGroupUsersFunction = jsBeforeReqFunctions.beforeAddGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "addgroupusers"))
+	}
+	if jsBeforeReqFunctions.beforeBanGroupUsersFunction != nil {
+		allBeforeReqFunctions.beforeBanGroupUsersFunction = jsBeforeReqFunctions.beforeBanGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "bangroupusers"))
+	}
+	if jsBeforeReqFunctions.beforeKickGroupUsersFunction != nil {
+		allBeforeReqFunctions.beforeKickGroupUsersFunction = jsBeforeReqFunctions.beforeKickGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "kickgroupusers"))
+	}
+	if jsBeforeReqFunctions.beforePromoteGroupUsersFunction != nil {
+		allBeforeReqFunctions.beforePromoteGroupUsersFunction = jsBeforeReqFunctions.beforePromoteGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "promotegroupusers"))
+	}
+	if jsBeforeReqFunctions.beforeListGroupUsersFunction != nil {
+		allBeforeReqFunctions.beforeListGroupUsersFunction = jsBeforeReqFunctions.beforeListGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listgroupusers"))
+	}
+	if jsBeforeReqFunctions.beforeListUserGroupsFunction != nil {
+		allBeforeReqFunctions.beforeListUserGroupsFunction = jsBeforeReqFunctions.beforeListUserGroupsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listusergroups"))
+	}
+	if jsBeforeReqFunctions.beforeListGroupsFunction != nil {
+		allBeforeReqFunctions.beforeListGroupsFunction = jsBeforeReqFunctions.beforeListGroupsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listgroups"))
+	}
+	if jsBeforeReqFunctions.beforeDeleteLeaderboardRecordFunction != nil {
+		allBeforeReqFunctions.beforeDeleteLeaderboardRecordFunction = jsBeforeReqFunctions.beforeDeleteLeaderboardRecordFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "deleteleaderboardrecord"))
+	}
+	if jsBeforeReqFunctions.beforeListLeaderboardRecordsFunction != nil {
+		allBeforeReqFunctions.beforeListLeaderboardRecordsFunction = jsBeforeReqFunctions.beforeListLeaderboardRecordsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listleaderboardrecords"))
+	}
+	if jsBeforeReqFunctions.beforeWriteLeaderboardRecordFunction != nil {
+		allBeforeReqFunctions.beforeWriteLeaderboardRecordFunction = jsBeforeReqFunctions.beforeWriteLeaderboardRecordFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "writeleaderboardrecord"))
+	}
+	if jsBeforeReqFunctions.beforeListLeaderboardRecordsAroundOwnerFunction != nil {
+		allBeforeReqFunctions.beforeListLeaderboardRecordsAroundOwnerFunction = jsBeforeReqFunctions.beforeListLeaderboardRecordsAroundOwnerFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listleaderboardrecordsaroundowner"))
+	}
+	if jsBeforeReqFunctions.beforeLinkAppleFunction != nil {
+		allBeforeReqFunctions.beforeLinkAppleFunction = jsBeforeReqFunctions.beforeLinkAppleFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "linkapple"))
+	}
+	if jsBeforeReqFunctions.beforeLinkCustomFunction != nil {
+		allBeforeReqFunctions.beforeLinkCustomFunction = jsBeforeReqFunctions.beforeLinkCustomFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "linkcustom"))
+	}
+	if jsBeforeReqFunctions.beforeLinkDeviceFunction != nil {
+		allBeforeReqFunctions.beforeLinkDeviceFunction = jsBeforeReqFunctions.beforeLinkDeviceFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "linkdevice"))
+	}
+	if jsBeforeReqFunctions.beforeLinkEmailFunction != nil {
+		allBeforeReqFunctions.beforeLinkEmailFunction = jsBeforeReqFunctions.beforeLinkEmailFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "linkemail"))
+	}
+	if jsBeforeReqFunctions.beforeLinkFacebookFunction != nil {
+		allBeforeReqFunctions.beforeLinkFacebookFunction = jsBeforeReqFunctions.beforeLinkFacebookFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "linkfacebook"))
+	}
+	if jsBeforeReqFunctions.beforeLinkFacebookInstantGameFunction != nil {
+		allBeforeReqFunctions.beforeLinkFacebookInstantGameFunction = jsBeforeReqFunctions.beforeLinkFacebookInstantGameFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "linkfacebookinstantgame"))
+	}
+	if jsBeforeReqFunctions.beforeLinkGameCenterFunction != nil {
+		allBeforeReqFunctions.beforeLinkGameCenterFunction = jsBeforeReqFunctions.beforeLinkGameCenterFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "linkgamecenter"))
+	}
+	if jsBeforeReqFunctions.beforeLinkGoogleFunction != nil {
+		allBeforeReqFunctions.beforeLinkGoogleFunction = jsBeforeReqFunctions.beforeLinkGoogleFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "linkgoogle"))
+	}
+	if jsBeforeReqFunctions.beforeLinkSteamFunction != nil {
+		allBeforeReqFunctions.beforeLinkSteamFunction = jsBeforeReqFunctions.beforeLinkSteamFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "linksteam"))
+	}
+	if jsBeforeReqFunctions.beforeListMatchesFunction != nil {
+		allBeforeReqFunctions.beforeListMatchesFunction = jsBeforeReqFunctions.beforeListMatchesFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listmatches"))
+	}
+	if jsBeforeReqFunctions.beforeListNotificationsFunction != nil {
+		allBeforeReqFunctions.beforeListNotificationsFunction = jsBeforeReqFunctions.beforeListNotificationsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listnotifications"))
+	}
+	if jsBeforeReqFunctions.beforeDeleteNotificationFunction != nil {
+		allBeforeReqFunctions.beforeDeleteNotificationFunction = jsBeforeReqFunctions.beforeDeleteNotificationFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "deletenotification"))
+	}
+	if jsBeforeReqFunctions.beforeListStorageObjectsFunction != nil {
+		allBeforeReqFunctions.beforeListStorageObjectsFunction = jsBeforeReqFunctions.beforeListStorageObjectsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "liststorageobjects"))
+	}
+	if jsBeforeReqFunctions.beforeReadStorageObjectsFunction != nil {
+		allBeforeReqFunctions.beforeReadStorageObjectsFunction = jsBeforeReqFunctions.beforeReadStorageObjectsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "readstorageobjects"))
+	}
+	if jsBeforeReqFunctions.beforeWriteStorageObjectsFunction != nil {
+		allBeforeReqFunctions.beforeWriteStorageObjectsFunction = jsBeforeReqFunctions.beforeWriteStorageObjectsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "writestorageobjects"))
+	}
+	if jsBeforeReqFunctions.beforeDeleteStorageObjectsFunction != nil {
+		allBeforeReqFunctions.beforeDeleteStorageObjectsFunction = jsBeforeReqFunctions.beforeDeleteStorageObjectsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "deletestorageobjects"))
+	}
+	if jsBeforeReqFunctions.beforeJoinTournamentFunction != nil {
+		allBeforeReqFunctions.beforeJoinTournamentFunction = jsBeforeReqFunctions.beforeJoinTournamentFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "jointournament"))
+	}
+	if jsBeforeReqFunctions.beforeListTournamentRecordsFunction != nil {
+		allBeforeReqFunctions.beforeListTournamentRecordsFunction = jsBeforeReqFunctions.beforeListTournamentRecordsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listtournamentrecords"))
+	}
+	if jsBeforeReqFunctions.beforeListTournamentsFunction != nil {
+		allBeforeReqFunctions.beforeListTournamentsFunction = jsBeforeReqFunctions.beforeListTournamentsFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listtournaments"))
+	}
+	if jsBeforeReqFunctions.beforeWriteTournamentRecordFunction != nil {
+		allBeforeReqFunctions.beforeWriteTournamentRecordFunction = jsBeforeReqFunctions.beforeWriteTournamentRecordFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "writetournamentrecord"))
+	}
+	if jsBeforeReqFunctions.beforeListTournamentRecordsAroundOwnerFunction != nil {
+		allBeforeReqFunctions.beforeListTournamentRecordsAroundOwnerFunction = jsBeforeReqFunctions.beforeListTournamentRecordsAroundOwnerFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "listtournamentrecordsaroundowner"))
+	}
+	if jsBeforeReqFunctions.beforeUnlinkAppleFunction != nil {
+		allBeforeReqFunctions.beforeUnlinkAppleFunction = jsBeforeReqFunctions.beforeUnlinkAppleFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "unlinkapple"))
+	}
+	if jsBeforeReqFunctions.beforeUnlinkCustomFunction != nil {
+		allBeforeReqFunctions.beforeUnlinkCustomFunction = jsBeforeReqFunctions.beforeUnlinkCustomFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "unlinkcustom"))
+	}
+	if jsBeforeReqFunctions.beforeUnlinkDeviceFunction != nil {
+		allBeforeReqFunctions.beforeUnlinkDeviceFunction = jsBeforeReqFunctions.beforeUnlinkDeviceFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "unlinkdevice"))
+	}
+	if jsBeforeReqFunctions.beforeUnlinkEmailFunction != nil {
+		allBeforeReqFunctions.beforeUnlinkEmailFunction = jsBeforeReqFunctions.beforeUnlinkEmailFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "unlinkemail"))
+	}
+	if jsBeforeReqFunctions.beforeUnlinkFacebookFunction != nil {
+		allBeforeReqFunctions.beforeUnlinkFacebookFunction = jsBeforeReqFunctions.beforeUnlinkFacebookFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "unlinkfacebook"))
+	}
+	if jsBeforeReqFunctions.beforeUnlinkFacebookInstantGameFunction != nil {
+		allBeforeReqFunctions.beforeUnlinkFacebookInstantGameFunction = jsBeforeReqFunctions.beforeUnlinkFacebookInstantGameFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "unlinkfacebookinstantgame"))
+	}
+	if jsBeforeReqFunctions.beforeUnlinkGameCenterFunction != nil {
+		allBeforeReqFunctions.beforeUnlinkGameCenterFunction = jsBeforeReqFunctions.beforeUnlinkGameCenterFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "unlinkgamecenter"))
+	}
+	if jsBeforeReqFunctions.beforeUnlinkGoogleFunction != nil {
+		allBeforeReqFunctions.beforeUnlinkGoogleFunction = jsBeforeReqFunctions.beforeUnlinkGoogleFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "unlinkgoogle"))
+	}
+	if jsBeforeReqFunctions.beforeUnlinkSteamFunction != nil {
+		allBeforeReqFunctions.beforeUnlinkSteamFunction = jsBeforeReqFunctions.beforeUnlinkSteamFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "unlinksteam"))
+	}
+	if jsBeforeReqFunctions.beforeGetUsersFunction != nil {
+		allBeforeReqFunctions.beforeGetUsersFunction = jsBeforeReqFunctions.beforeGetUsersFunction
+		startupLogger.Info("Registered Javascript runtime Before function invocation", zap.String("id", "getusers"))
+	}
+	if jsBeforeReqFunctions.beforeEventFunction != nil {
+		allBeforeReqFunctions.beforeEventFunction = jsBeforeReqFunctions.beforeEventFunction
+		startupLogger.Info("Registered Javascript runtime Before custom events function invocation")
+	}
+
+	// Register Go Before Req functions
 	if goBeforeReqFunctions.beforeGetAccountFunction != nil {
 		allBeforeReqFunctions.beforeGetAccountFunction = goBeforeReqFunctions.beforeGetAccountFunction
 		startupLogger.Info("Registered Go runtime Before function invocation", zap.String("id", "getaccount"))
@@ -1028,6 +1302,7 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	}
 
 	allAfterReqFunctions := luaAfterReqFunctions
+	// Register Lua After req functions
 	if allAfterReqFunctions.afterGetAccountFunction != nil {
 		startupLogger.Info("Registered Lua runtime After function invocation", zap.String("id", "getaccount"))
 	}
@@ -1226,6 +1501,270 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	if allAfterReqFunctions.afterEventFunction != nil {
 		startupLogger.Info("Registered Lua runtime After custom events function invocation")
 	}
+
+	// Register Javascript After req Functions
+	if jsAfterReqFunctions.afterGetAccountFunction != nil {
+		allAfterReqFunctions.afterGetAccountFunction = jsAfterReqFunctions.afterGetAccountFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "getaccount"))
+	}
+	if jsAfterReqFunctions.afterUpdateAccountFunction != nil {
+		allAfterReqFunctions.afterUpdateAccountFunction = jsAfterReqFunctions.afterUpdateAccountFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "updateaccount"))
+	}
+	if jsAfterReqFunctions.afterAuthenticateAppleFunction != nil {
+		allAfterReqFunctions.afterAuthenticateAppleFunction = jsAfterReqFunctions.afterAuthenticateAppleFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "authenticateapple"))
+	}
+	if jsAfterReqFunctions.afterAuthenticateCustomFunction != nil {
+		allAfterReqFunctions.afterAuthenticateCustomFunction = jsAfterReqFunctions.afterAuthenticateCustomFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "authenticatecustom"))
+	}
+	if jsAfterReqFunctions.afterAuthenticateDeviceFunction != nil {
+		allAfterReqFunctions.afterAuthenticateDeviceFunction = jsAfterReqFunctions.afterAuthenticateDeviceFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "authenticatedevice"))
+	}
+	if jsAfterReqFunctions.afterAuthenticateEmailFunction != nil {
+		allAfterReqFunctions.afterAuthenticateEmailFunction = jsAfterReqFunctions.afterAuthenticateEmailFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "authenticateemail"))
+	}
+	if jsAfterReqFunctions.afterAuthenticateFacebookFunction != nil {
+		allAfterReqFunctions.afterAuthenticateFacebookFunction = jsAfterReqFunctions.afterAuthenticateFacebookFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "authenticatefacebook"))
+	}
+	if jsAfterReqFunctions.afterAuthenticateFacebookInstantGameFunction != nil {
+		allAfterReqFunctions.afterAuthenticateFacebookInstantGameFunction = jsAfterReqFunctions.afterAuthenticateFacebookInstantGameFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "authenticatefacebookinstantgame"))
+	}
+	if jsAfterReqFunctions.afterAuthenticateGameCenterFunction != nil {
+		allAfterReqFunctions.afterAuthenticateGameCenterFunction = jsAfterReqFunctions.afterAuthenticateGameCenterFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "authenticategamecenter"))
+	}
+	if jsAfterReqFunctions.afterAuthenticateGoogleFunction != nil {
+		allAfterReqFunctions.afterAuthenticateGoogleFunction = jsAfterReqFunctions.afterAuthenticateGoogleFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "authenticategoogle"))
+	}
+	if jsAfterReqFunctions.afterAuthenticateSteamFunction != nil {
+		allAfterReqFunctions.afterAuthenticateSteamFunction = jsAfterReqFunctions.afterAuthenticateSteamFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "authenticatesteam"))
+	}
+	if jsAfterReqFunctions.afterListChannelMessagesFunction != nil {
+		allAfterReqFunctions.afterListChannelMessagesFunction = jsAfterReqFunctions.afterListChannelMessagesFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listchannelmessages"))
+	}
+	if jsAfterReqFunctions.afterListFriendsFunction != nil {
+		allAfterReqFunctions.afterListFriendsFunction = jsAfterReqFunctions.afterListFriendsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listfriends"))
+	}
+	if jsAfterReqFunctions.afterAddFriendsFunction != nil {
+		allAfterReqFunctions.afterAddFriendsFunction = jsAfterReqFunctions.afterAddFriendsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "addfriends"))
+	}
+	if jsAfterReqFunctions.afterDeleteFriendsFunction != nil {
+		allAfterReqFunctions.afterDeleteFriendsFunction = jsAfterReqFunctions.afterDeleteFriendsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "deletefriends"))
+	}
+	if jsAfterReqFunctions.afterBlockFriendsFunction != nil {
+		allAfterReqFunctions.afterBlockFriendsFunction = jsAfterReqFunctions.afterBlockFriendsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "blockfriends"))
+	}
+	if jsAfterReqFunctions.afterImportFacebookFriendsFunction != nil {
+		allAfterReqFunctions.afterImportFacebookFriendsFunction = jsAfterReqFunctions.afterImportFacebookFriendsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "importfacebookfriends"))
+	}
+	if jsAfterReqFunctions.afterCreateGroupFunction != nil {
+		allAfterReqFunctions.afterCreateGroupFunction = jsAfterReqFunctions.afterCreateGroupFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "creategroup"))
+	}
+	if jsAfterReqFunctions.afterUpdateGroupFunction != nil {
+		allAfterReqFunctions.afterUpdateGroupFunction = jsAfterReqFunctions.afterUpdateGroupFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "updategroup"))
+	}
+	if jsAfterReqFunctions.afterDeleteGroupFunction != nil {
+		allAfterReqFunctions.afterDeleteGroupFunction = jsAfterReqFunctions.afterDeleteGroupFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "deletegroup"))
+	}
+	if jsAfterReqFunctions.afterJoinGroupFunction != nil {
+		allAfterReqFunctions.afterJoinGroupFunction = jsAfterReqFunctions.afterJoinGroupFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "joingroup"))
+	}
+	if jsAfterReqFunctions.afterLeaveGroupFunction != nil {
+		allAfterReqFunctions.afterLeaveGroupFunction = jsAfterReqFunctions.afterLeaveGroupFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "leavegroup"))
+	}
+	if jsAfterReqFunctions.afterAddGroupUsersFunction != nil {
+		allAfterReqFunctions.afterAddGroupUsersFunction = jsAfterReqFunctions.afterAddGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "addgroupusers"))
+	}
+	if jsAfterReqFunctions.afterBanGroupUsersFunction != nil {
+		allAfterReqFunctions.afterBanGroupUsersFunction = jsAfterReqFunctions.afterBanGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "bangroupusers"))
+	}
+	if jsAfterReqFunctions.afterKickGroupUsersFunction != nil {
+		allAfterReqFunctions.afterKickGroupUsersFunction = jsAfterReqFunctions.afterKickGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "kickgroupusers"))
+	}
+	if jsAfterReqFunctions.afterPromoteGroupUsersFunction != nil {
+		allAfterReqFunctions.afterPromoteGroupUsersFunction = jsAfterReqFunctions.afterPromoteGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "promotegroupusers"))
+	}
+	if jsAfterReqFunctions.afterListGroupUsersFunction != nil {
+		allAfterReqFunctions.afterListGroupUsersFunction = jsAfterReqFunctions.afterListGroupUsersFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listgroupusers"))
+	}
+	if jsAfterReqFunctions.afterListUserGroupsFunction != nil {
+		allAfterReqFunctions.afterListUserGroupsFunction = jsAfterReqFunctions.afterListUserGroupsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listusergroups"))
+	}
+	if jsAfterReqFunctions.afterListGroupsFunction != nil {
+		allAfterReqFunctions.afterListGroupsFunction = jsAfterReqFunctions.afterListGroupsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listgroups"))
+	}
+	if jsAfterReqFunctions.afterDeleteLeaderboardRecordFunction != nil {
+		allAfterReqFunctions.afterDeleteLeaderboardRecordFunction = jsAfterReqFunctions.afterDeleteLeaderboardRecordFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "deleteleaderboardrecord"))
+	}
+	if jsAfterReqFunctions.afterListLeaderboardRecordsFunction != nil {
+		allAfterReqFunctions.afterListLeaderboardRecordsFunction = jsAfterReqFunctions.afterListLeaderboardRecordsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listleaderboardrecords"))
+	}
+	if jsAfterReqFunctions.afterWriteLeaderboardRecordFunction != nil {
+		allAfterReqFunctions.afterWriteLeaderboardRecordFunction = jsAfterReqFunctions.afterWriteLeaderboardRecordFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "writeleaderboardrecord"))
+	}
+	if jsAfterReqFunctions.afterListLeaderboardRecordsAroundOwnerFunction != nil {
+		allAfterReqFunctions.afterListLeaderboardRecordsAroundOwnerFunction = jsAfterReqFunctions.afterListLeaderboardRecordsAroundOwnerFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listleaderboardrecordsaroundowner"))
+	}
+	if jsAfterReqFunctions.afterLinkAppleFunction != nil {
+		allAfterReqFunctions.afterLinkAppleFunction = jsAfterReqFunctions.afterLinkAppleFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "linkapple"))
+	}
+	if jsAfterReqFunctions.afterLinkCustomFunction != nil {
+		allAfterReqFunctions.afterLinkCustomFunction = jsAfterReqFunctions.afterLinkCustomFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "linkcustom"))
+	}
+	if jsAfterReqFunctions.afterLinkDeviceFunction != nil {
+		allAfterReqFunctions.afterLinkDeviceFunction = jsAfterReqFunctions.afterLinkDeviceFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "linkdevice"))
+	}
+	if jsAfterReqFunctions.afterLinkEmailFunction != nil {
+		allAfterReqFunctions.afterLinkEmailFunction = jsAfterReqFunctions.afterLinkEmailFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "linkemail"))
+	}
+	if jsAfterReqFunctions.afterLinkFacebookFunction != nil {
+		allAfterReqFunctions.afterLinkFacebookFunction = jsAfterReqFunctions.afterLinkFacebookFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "linkfacebook"))
+	}
+	if jsAfterReqFunctions.afterLinkFacebookInstantGameFunction != nil {
+		allAfterReqFunctions.afterLinkFacebookInstantGameFunction = jsAfterReqFunctions.afterLinkFacebookInstantGameFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "linkfacebookinstantgame"))
+	}
+	if jsAfterReqFunctions.afterLinkGameCenterFunction != nil {
+		allAfterReqFunctions.afterLinkGameCenterFunction = jsAfterReqFunctions.afterLinkGameCenterFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "linkgamecenter"))
+	}
+	if jsAfterReqFunctions.afterLinkGoogleFunction != nil {
+		allAfterReqFunctions.afterLinkGoogleFunction = jsAfterReqFunctions.afterLinkGoogleFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "linkgoogle"))
+	}
+	if jsAfterReqFunctions.afterLinkSteamFunction != nil {
+		allAfterReqFunctions.afterLinkSteamFunction = jsAfterReqFunctions.afterLinkSteamFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "linksteam"))
+	}
+	if jsAfterReqFunctions.afterListMatchesFunction != nil {
+		allAfterReqFunctions.afterListMatchesFunction = jsAfterReqFunctions.afterListMatchesFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listmatches"))
+	}
+	if jsAfterReqFunctions.afterListNotificationsFunction != nil {
+		allAfterReqFunctions.afterListNotificationsFunction = jsAfterReqFunctions.afterListNotificationsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listnotifications"))
+	}
+	if jsAfterReqFunctions.afterDeleteNotificationFunction != nil {
+		allAfterReqFunctions.afterDeleteNotificationFunction = jsAfterReqFunctions.afterDeleteNotificationFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "deletenotification"))
+	}
+	if jsAfterReqFunctions.afterListStorageObjectsFunction != nil {
+		allAfterReqFunctions.afterListStorageObjectsFunction = jsAfterReqFunctions.afterListStorageObjectsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "liststorageobjects"))
+	}
+	if jsAfterReqFunctions.afterReadStorageObjectsFunction != nil {
+		allAfterReqFunctions.afterReadStorageObjectsFunction = jsAfterReqFunctions.afterReadStorageObjectsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "readstorageobjects"))
+	}
+	if jsAfterReqFunctions.afterWriteStorageObjectsFunction != nil {
+		allAfterReqFunctions.afterWriteStorageObjectsFunction = jsAfterReqFunctions.afterWriteStorageObjectsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "writestorageobjects"))
+	}
+	if jsAfterReqFunctions.afterDeleteStorageObjectsFunction != nil {
+		allAfterReqFunctions.afterDeleteStorageObjectsFunction = jsAfterReqFunctions.afterDeleteStorageObjectsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "deletestorageobjects"))
+	}
+	if jsAfterReqFunctions.afterJoinTournamentFunction != nil {
+		allAfterReqFunctions.afterJoinTournamentFunction = jsAfterReqFunctions.afterJoinTournamentFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "jointournament"))
+	}
+	if jsAfterReqFunctions.afterListTournamentRecordsFunction != nil {
+		allAfterReqFunctions.afterListTournamentRecordsFunction = jsAfterReqFunctions.afterListTournamentRecordsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listtournamentrecords"))
+	}
+	if jsAfterReqFunctions.afterListTournamentsFunction != nil {
+		allAfterReqFunctions.afterListTournamentsFunction = jsAfterReqFunctions.afterListTournamentsFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listtournaments"))
+	}
+	if jsAfterReqFunctions.afterWriteTournamentRecordFunction != nil {
+		allAfterReqFunctions.afterWriteTournamentRecordFunction = jsAfterReqFunctions.afterWriteTournamentRecordFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "writetournamentrecord"))
+	}
+	if jsAfterReqFunctions.afterListTournamentRecordsAroundOwnerFunction != nil {
+		allAfterReqFunctions.afterListTournamentRecordsAroundOwnerFunction = jsAfterReqFunctions.afterListTournamentRecordsAroundOwnerFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "listtournamentrecordsaroundowner"))
+	}
+	if jsAfterReqFunctions.afterUnlinkAppleFunction != nil {
+		allAfterReqFunctions.afterUnlinkAppleFunction = jsAfterReqFunctions.afterUnlinkAppleFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "unlinkapple"))
+	}
+	if jsAfterReqFunctions.afterUnlinkCustomFunction != nil {
+		allAfterReqFunctions.afterUnlinkCustomFunction = jsAfterReqFunctions.afterUnlinkCustomFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "unlinkcustom"))
+	}
+	if jsAfterReqFunctions.afterUnlinkDeviceFunction != nil {
+		allAfterReqFunctions.afterUnlinkDeviceFunction = jsAfterReqFunctions.afterUnlinkDeviceFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "unlinkdevice"))
+	}
+	if jsAfterReqFunctions.afterUnlinkEmailFunction != nil {
+		allAfterReqFunctions.afterUnlinkEmailFunction = jsAfterReqFunctions.afterUnlinkEmailFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "unlinkemail"))
+	}
+	if jsAfterReqFunctions.afterUnlinkFacebookFunction != nil {
+		allAfterReqFunctions.afterUnlinkFacebookFunction = jsAfterReqFunctions.afterUnlinkFacebookFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "unlinkfacebook"))
+	}
+	if jsAfterReqFunctions.afterUnlinkFacebookInstantGameFunction != nil {
+		allAfterReqFunctions.afterUnlinkFacebookInstantGameFunction = jsAfterReqFunctions.afterUnlinkFacebookInstantGameFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "unlinkfacebookinstantgame"))
+	}
+	if jsAfterReqFunctions.afterUnlinkGameCenterFunction != nil {
+		allAfterReqFunctions.afterUnlinkGameCenterFunction = jsAfterReqFunctions.afterUnlinkGameCenterFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "unlinkgamecenter"))
+	}
+	if jsAfterReqFunctions.afterUnlinkGoogleFunction != nil {
+		allAfterReqFunctions.afterUnlinkGoogleFunction = jsAfterReqFunctions.afterUnlinkGoogleFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "unlinkgoogle"))
+	}
+	if jsAfterReqFunctions.afterUnlinkSteamFunction != nil {
+		allAfterReqFunctions.afterUnlinkSteamFunction = jsAfterReqFunctions.afterUnlinkSteamFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "unlinksteam"))
+	}
+	if jsAfterReqFunctions.afterGetUsersFunction != nil {
+		allAfterReqFunctions.afterGetUsersFunction = jsAfterReqFunctions.afterGetUsersFunction
+		startupLogger.Info("Registered Javascript runtime After function invocation", zap.String("id", "getusers"))
+	}
+	if jsAfterReqFunctions.afterEventFunction != nil {
+		allAfterReqFunctions.afterEventFunction = jsAfterReqFunctions.afterEventFunction
+		startupLogger.Info("Registered Javascript runtime After custom events function invocation")
+	}
+
+	// Register Go After req functions
 	if goAfterReqFunctions.afterGetAccountFunction != nil {
 		allAfterReqFunctions.afterGetAccountFunction = goAfterReqFunctions.afterGetAccountFunction
 		startupLogger.Info("Registered Go runtime After function invocation", zap.String("id", "getaccount"))

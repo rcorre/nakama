@@ -28,15 +28,19 @@ func NewRuntimeJavascriptInitModule(logger *zap.Logger, announceCallbackFn func(
 	}
 }
 
-func (im *RuntimeJavascriptInitModule) mappings() map[string]func(goja.FunctionCall) goja.Value {
+func (im *RuntimeJavascriptInitModule) mappings(r *goja.Runtime) map[string]func(goja.FunctionCall) goja.Value {
 	return map[string]func(goja.FunctionCall) goja.Value {
-		"registerRpc": im.registerRpc,
+		"registerRpc": im.registerRpc(r),
+		"registerReqBefore": im.registerReqBefore(r),
+		"registerReqAfter": im.registerReqAfter(r),
+		"registerRTBefore": im.registerRTBefore(r),
+		"registerRTAfter": im.registerRTAfter(r),
 	}
 }
 
-func (im *RuntimeJavascriptInitModule) Constructor() func(goja.ConstructorCall) *goja.Object {
+func (im *RuntimeJavascriptInitModule) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja.Object {
 	return func(call goja.ConstructorCall) *goja.Object {
-		for key, fn := range im.mappings() {
+		for key, fn := range im.mappings(r) {
 			call.This.Set(key, fn)
 		}
 
@@ -44,25 +48,119 @@ func (im *RuntimeJavascriptInitModule) Constructor() func(goja.ConstructorCall) 
 	}
 }
 
-func (im *RuntimeJavascriptInitModule) registerRpc(f goja.FunctionCall) goja.Value {
-	key, ok := f.Arguments[0].Export().(string)
-	if !ok {
-		panic("Rpc function name must be a string")
-	}
-	if key == "" {
-		panic("Rpc function name cannot be empty.")
-	}
+func (im *RuntimeJavascriptInitModule) registerRpc(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		key, ok := f.Arguments[0].Export().(string)
+		if !ok {
+			panic(r.ToValue("Rpc function name must be a string."))
+		}
+		if key == "" {
+			panic(r.ToValue("Rpc function name cannot be empty."))
+		}
 
-	fn, ok := goja.AssertFunction(f.Arguments[1])
-	if !ok {
-		panic("Registering Rpc must be a javascript function")
+		fn, ok := goja.AssertFunction(f.Arguments[1])
+		if !ok {
+			panic(r.ToValue("Registering Rpc must be a javascript function."))
+		}
+
+		lKey := strings.ToLower(key)
+		im.registerCallbackFn(RuntimeExecutionModeRPC, lKey, fn)
+		im.announceCallbackFn(RuntimeExecutionModeRPC, lKey)
+
+		return nil
 	}
+}
 
-	lKey := strings.ToLower(key)
-	im.registerCallbackFn(RuntimeExecutionModeRPC, lKey, fn)
-	im.announceCallbackFn(RuntimeExecutionModeRPC, lKey)
+func (im *RuntimeJavascriptInitModule) registerReqBefore(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		key, ok := f.Arguments[0].Export().(string)
+		if !ok {
+			panic(r.ToValue("Request Before hook function name must be a string."))
+		}
+		if key == "" {
+			panic(r.ToValue("Request Before hook function name cannot be empty."))
+		}
 
-	return nil
+		fn, ok := goja.AssertFunction(f.Arguments[1])
+		if !ok {
+			panic(r.ToValue("Registering request Before hook must be a javascript function."))
+		}
+
+		lKey := strings.ToLower(API_PREFIX + key)
+		im.registerCallbackFn(RuntimeExecutionModeBefore, lKey, fn)
+		im.announceCallbackFn(RuntimeExecutionModeBefore, lKey)
+
+		return nil
+	}
+}
+
+func (im *RuntimeJavascriptInitModule) registerReqAfter(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		key, ok := f.Arguments[0].Export().(string)
+		if !ok {
+			panic(r.ToValue("Request After hook function name must be a string."))
+		}
+		if key == "" {
+			panic(r.ToValue("Request After hook function name cannot be empty."))
+		}
+
+		fn, ok := goja.AssertFunction(f.Arguments[1])
+		if !ok {
+			panic(r.ToValue("Registering request After hook must be a javascript function."))
+		}
+
+		lKey := strings.ToLower(API_PREFIX + key)
+		im.registerCallbackFn(RuntimeExecutionModeAfter, lKey, fn)
+		im.announceCallbackFn(RuntimeExecutionModeAfter, lKey)
+
+		return nil
+	}
+}
+
+func (im *RuntimeJavascriptInitModule) registerRTBefore(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		key, ok := f.Arguments[0].Export().(string)
+		if !ok {
+			panic(r.ToValue("Request realtime Before hook function name must be a string."))
+		}
+		if key == "" {
+			panic(r.ToValue("Request realtime Before hook function name cannot be empty."))
+		}
+
+		fn, ok := goja.AssertFunction(f.Arguments[1])
+		if !ok {
+			panic(r.ToValue("Registering realtime Before hook must be a javascript function."))
+		}
+
+		lKey := strings.ToLower(RTAPI_PREFIX + key)
+		im.registerCallbackFn(RuntimeExecutionModeBefore, lKey, fn)
+		im.announceCallbackFn(RuntimeExecutionModeBefore, lKey)
+
+		return nil
+	}
+}
+
+func (im *RuntimeJavascriptInitModule) registerRTAfter(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		key, ok := f.Arguments[0].Export().(string)
+		if !ok {
+			panic(r.ToValue("Request realtime After hook function name must be a string."))
+		}
+		if key == "" {
+			panic(r.ToValue("Request realtime After hook function name cannot be empty."))
+		}
+
+		fn, ok := goja.AssertFunction(f.Arguments[1])
+		if !ok {
+			panic(r.ToValue("Request realtime After hook must be a javascript function."))
+		}
+
+		lKey := strings.ToLower(RTAPI_PREFIX + key)
+		im.registerCallbackFn(RuntimeExecutionModeAfter, lKey, fn)
+		im.announceCallbackFn(RuntimeExecutionModeAfter, lKey)
+
+		return nil
+	}
 }
 
 func (im *RuntimeJavascriptInitModule) registerCallbackFn(mode RuntimeExecutionMode, key string, fn goja.Callable) {

@@ -1253,12 +1253,12 @@ func (rp *RuntimeProviderLua) BeforeRt(ctx context.Context, id string, logger *z
 
 	resultJSON, err := json.Marshal(result)
 	if err != nil {
-		logger.Error("Could not marshall result to JSON", zap.Any("result", result), zap.Error(err))
+		logger.Error("Could not marshal result to JSON", zap.Any("result", result), zap.Error(err))
 		return nil, errors.New("Could not complete runtime Before function.")
 	}
 
 	if err = rp.jsonpbUnmarshaler.Unmarshal(strings.NewReader(string(resultJSON)), envelope); err != nil {
-		logger.Error("Could not unmarshall result to envelope", zap.Any("result", result), zap.Error(err))
+		logger.Error("Could not unmarshal result to envelope", zap.Any("result", result), zap.Error(err))
 		return nil, errors.New("Could not complete runtime Before function.")
 	}
 
