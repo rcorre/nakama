@@ -1307,7 +1307,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
 		}
 
-		nakamaModule := NewRuntimeJavascriptNakamaModule(logger)
+		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, eventFn)
 		nk := runtime.ToValue(nakamaModule.Constructor(runtime))
 		nkInst, err := runtime.New(nk)
 		if err != nil {
@@ -1403,7 +1403,7 @@ func evalRuntimeModules(logger *zap.Logger, modCache *RuntimeJSModuleCache, conf
 		return nil, err
 	}
 
-	nakamaModule := NewRuntimeJavascriptNakamaModule(logger)
+	nakamaModule := NewRuntimeJavascriptNakamaModule(logger, nil)
 	nk := r.ToValue(nakamaModule.Constructor(r))
 	nkInst, err := r.New(nk)
 	if err != nil {
