@@ -145,6 +145,7 @@ type RuntimeProviderJS struct {
 	sessionRegistry      SessionRegistry
 	matchRegistry        MatchRegistry
 
+	eventFn      RuntimeEventCustomFunction
 	poolCh       chan *RuntimeJS
 	maxCount     uint32
 	currentCount *atomic.Uint32
@@ -460,7 +461,6 @@ func (rp *RuntimeProviderJS) Put(r *RuntimeJS) {
 	}
 }
 
-
 func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, leaderboardCache LeaderboardCache, leaderboardRankCache LeaderboardRankCache, leaderboardScheduler LeaderboardScheduler, sessionRegistry SessionRegistry, matchRegistry MatchRegistry, tracker Tracker, metrics *Metrics, streamManager StreamManager, router MessageRouter, goMatchCreateFn RuntimeMatchCreateFunction, eventFn RuntimeEventCustomFunction, rootPath string, paths []string) ([]string, map[string]RuntimeRpcFunction, map[string]RuntimeBeforeRtFunction, map[string]RuntimeAfterRtFunction, *RuntimeBeforeReqFunctions, *RuntimeAfterReqFunctions, RuntimeMatchmakerMatchedFunction, RuntimeMatchCreateFunction, RuntimeTournamentEndFunction, RuntimeTournamentResetFunction, RuntimeLeaderboardResetFunction, error) {
 	startupLogger.Info("Initialising Javascript runtime provider", zap.String("path", rootPath))
 
@@ -471,6 +471,8 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 
 	runtimeProviderJS := &RuntimeProviderJS{
 		logger:       logger,
+		db:           db,
+		eventFn:      eventFn,
 		jsonpbMarshaler: jsonpbMarshaler,
 		jsonpbUnmarshaler: jsonpbUnmarshaler,
 		poolCh:       make(chan *RuntimeJS, config.GetRuntime().MaxCount),
@@ -484,7 +486,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	beforeReqFunctions := &RuntimeBeforeReqFunctions{}
 	afterReqFunctions := &RuntimeAfterReqFunctions{}
 
-	callbacks, err := evalRuntimeModules(logger, modCache, config, func(mode RuntimeExecutionMode, id string) {
+	callbacks, err := evalRuntimeModules(runtimeProviderJS, modCache, config, func(mode RuntimeExecutionMode, id string) {
 		switch mode {
 		case RuntimeExecutionModeRPC:
 			rpcFunctions[id] = func(ctx context.Context, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
@@ -1307,7 +1309,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
 		}
 
-		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, eventFn)
+		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, eventFn)
 		nk := runtime.ToValue(nakamaModule.Constructor(runtime))
 		nkInst, err := runtime.New(nk)
 		if err != nil {
@@ -1347,7 +1349,7 @@ func CheckRuntimeProviderJavascript(logger *zap.Logger, config Config, paths []s
 	if err != nil {
 		return err
 	}
-	_, err = evalRuntimeModules(logger, modCache, config, func(RuntimeExecutionMode, string){})
+	_, err = evalRuntimeModules(nil, modCache, config, func(RuntimeExecutionMode, string){})
 	return err
 }
 
@@ -1386,8 +1388,11 @@ func cacheJavascriptModules(logger *zap.Logger, rootPath string, paths []string)
 	return moduleCache, nil
 }
 
-func evalRuntimeModules(logger *zap.Logger, modCache *RuntimeJSModuleCache, config Config, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, error) {
+func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, config Config, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, error) {
 	r := goja.New()
+	logger := rp.logger
+	db := rp.db
+	eventFn := rp.eventFn
 
 	initializer := NewRuntimeJavascriptInitModule(logger, announceCallbackFn)
 	initializerValue := r.ToValue(initializer.Constructor(r))
@@ -1403,7 +1408,7 @@ func evalRuntimeModules(logger *zap.Logger, modCache *RuntimeJSModuleCache, conf
 		return nil, err
 	}
 
-	nakamaModule := NewRuntimeJavascriptNakamaModule(logger, nil)
+	nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, eventFn)
 	nk := r.ToValue(nakamaModule.Constructor(r))
 	nkInst, err := r.New(nk)
 	if err != nil {

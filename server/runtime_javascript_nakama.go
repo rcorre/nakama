@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"github.com/dop251/goja"
+	"github.com/gofrs/uuid"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/heroiclabs/nakama-common/api"
 	"go.uber.org/zap"
@@ -11,12 +13,14 @@ import (
 
 type runtimeJavascriptNakamaModule struct {
 	logger *zap.Logger
+	db *sql.DB
 	eventFn RuntimeEventCustomFunction
 }
 
-func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
+func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
 	return &runtimeJavascriptNakamaModule{
 		logger: logger,
+		db: db,
 		eventFn: eventFn,
 	}
 }
@@ -35,23 +39,26 @@ func (n *runtimeJavascriptNakamaModule) Constructor(r *goja.Runtime) func(goja.C
 func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]func(goja.FunctionCall) goja.Value {
 	return map[string]func(goja.FunctionCall) goja.Value {
 		"event": n.event(r),
+		"uuidv4": n.uuidV4(r),
+		"sqlExec": n.sqlExec(r),
+		"sqlQuery": n.sqlQuery(r),
+		"httpRequest": n.httpRequest(r),
 	}
 }
 
 func (n *runtimeJavascriptNakamaModule) event(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
-		eventName := validateString(r, f.Argument(0))
-		properties := validateStringMap(r, f.Argument(1))
+		eventName := getString(r, f.Argument(0))
+		properties := getStringMap(r, f.Argument(1))
 		ts := &timestamp.Timestamp{}
 		if f.Argument(2) != goja.Undefined() {
-			int := validateInt(r, f.Argument(2))
-			ts.Seconds = int64(int)
+			ts.Seconds = getInt(r, f.Argument(2))
 		} else {
 			ts.Seconds = time.Now().Unix()
 		}
 		external := false
 		if f.Argument(3) != goja.Undefined() {
-			external = validateBool(r, f.Argument(3))
+			external = getBool(r, f.Argument(3))
 		}
 
 		if n.eventFn != nil {
@@ -67,7 +74,119 @@ func (n *runtimeJavascriptNakamaModule) event(r *goja.Runtime) func(goja.Functio
 	}
 }
 
-func validateString(r *goja.Runtime, v goja.Value) string {
+func (n *runtimeJavascriptNakamaModule) uuidV4(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		return r.ToValue(uuid.Must(uuid.NewV4()).String())
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) sqlExec(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		query := getString(r, f.Argument(0))
+		var args []interface{}
+		if f.Argument(1) == goja.Undefined() {
+			args = make([]interface{}, 0)
+		} else {
+			var ok bool
+			args, ok = f.Argument(1).Export().([]interface{})
+			if !ok {
+				panic(r.ToValue("Invalid argument - query params must be an array."))
+			}
+		}
+
+		// TODO figure out how to pass in context
+		var res sql.Result
+		var err error
+		err = ExecuteRetryable(func() error {
+			res, err = n.db.Exec(query, args...)
+			return err
+		})
+		if err != nil {
+			n.logger.Error("Failed to exec db query.", zap.String("query", query), zap.Any("args", args), zap.Error(err))
+			panic(r.ToValue(err.Error()))
+		}
+
+		nRowsAffected, _ := res.RowsAffected()
+
+		return r.ToValue(
+			map[string]interface{}{
+				"rows_affected": nRowsAffected,
+			},
+		)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) sqlQuery(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		query := getString(r, f.Argument(0))
+		var args []interface{}
+		if f.Argument(1) == goja.Undefined() {
+			args = make([]interface{}, 0)
+		} else {
+			var ok bool
+			args, ok = f.Argument(1).Export().([]interface{})
+			if !ok {
+				panic(r.ToValue("Invalid argument - query params must be an array."))
+			}
+		}
+
+		var rows *sql.Rows
+		var err error
+		err = ExecuteRetryable(func() error {
+			rows, err = n.db.Query(query, args...)
+			return err
+		})
+		if err != nil {
+			n.logger.Error("Failed to exec db query.", zap.String("query", query), zap.Any("args", args), zap.Error(err))
+			panic(r.ToValue(err.Error()))
+		}
+		defer rows.Close()
+
+		rowColumns, err := rows.Columns()
+		if err != nil {
+			n.logger.Error("Failed to get row columns.", zap.Error(err))
+			panic(r.ToValue(err.Error()))
+		}
+		rowsColumnCount := len(rowColumns)
+		resultRows := make([][]interface{}, 0)
+		for rows.Next() {
+			resultRowValues := make([]interface{}, rowsColumnCount)
+			resultRowPointers := make([]interface{}, rowsColumnCount)
+			for i := range resultRowValues {
+				resultRowPointers[i] = &resultRowValues[i]
+			}
+			if err = rows.Scan(resultRowPointers...); err != nil {
+				n.logger.Error("Failed to scan row results.", zap.Error(err))
+				panic(r.ToValue(err.Error()))
+			}
+			resultRows = append(resultRows, resultRowValues)
+		}
+		if err = rows.Err(); err != nil {
+			n.logger.Error("Failed scan rows.", zap.Error(err))
+			panic(r.ToValue(err.Error()))
+		}
+
+		results := make([]map[string]interface{}, 0, len(resultRows))
+		for _, row := range resultRows {
+			resultRow := make(map[string]interface{}, rowsColumnCount)
+			for i, col := range rowColumns {
+				resultRow[col] = row[i]
+			}
+			results = append(results, resultRow)
+		}
+
+		return r.ToValue(results)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) httpRequest(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		// TODO http request
+		return nil
+	}
+}
+
+func getString(r *goja.Runtime, v goja.Value) string {
 	s, ok := v.Export().(string)
 	if !ok {
 		panic(r.ToValue("Invalid argument - string expected."))
@@ -75,7 +194,7 @@ func validateString(r *goja.Runtime, v goja.Value) string {
 	return s
 }
 
-func validateStringMap(r *goja.Runtime, v goja.Value) map[string]string {
+func getStringMap(r *goja.Runtime, v goja.Value) map[string]string {
 	m, ok := v.Export().(map[string]interface{})
 	if !ok {
 		panic(r.ToValue("Invalid argument - object of string keys and values expected."))
@@ -92,15 +211,15 @@ func validateStringMap(r *goja.Runtime, v goja.Value) map[string]string {
 	return res
 }
 
-func validateInt(r *goja.Runtime, v goja.Value) int {
-	i, ok := v.Export().(int)
+func getInt(r *goja.Runtime, v goja.Value) int64 {
+	i, ok := v.Export().(int64)
 	if !ok {
 		panic(r.ToValue("Invalid argument - int expected."))
 	}
 	return i
 }
 
-func validateBool(r *goja.Runtime, v goja.Value) bool {
+func getBool(r *goja.Runtime, v goja.Value) bool {
 	b, ok := v.Export().(bool)
 	if !ok {
 		panic(r.ToValue("Invalid argument - boolean expected."))

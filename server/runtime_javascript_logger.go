@@ -23,11 +23,7 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 		}
 		args := make([]interface{}, 0, len(values)-1)
 		for _, v := range values[1:] {
-			a, ok := v.Export().(string)
-			if !ok {
-				return "", nil, errors.New("invalid argument: must be a string")
-			}
-			args = append(args, a)
+			args = append(args, v.Export())
 		}
 		return format, args, nil
 	}
