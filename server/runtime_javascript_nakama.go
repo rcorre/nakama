@@ -3,17 +3,23 @@ package server
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/dop251/goja"
 	"github.com/gofrs/uuid"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/heroiclabs/nakama-common/api"
 	"go.uber.org/zap"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"strings"
 	"time"
 )
 
 type runtimeJavascriptNakamaModule struct {
 	logger *zap.Logger
 	db *sql.DB
+	httpClient *http.Client
 	eventFn RuntimeEventCustomFunction
 }
 
@@ -21,6 +27,9 @@ func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, eventFn Ru
 	return &runtimeJavascriptNakamaModule{
 		logger: logger,
 		db: db,
+		httpClient: &http.Client{
+			Timeout: 5 * time.Second,
+		},
 		eventFn: eventFn,
 	}
 }
@@ -181,8 +190,63 @@ func (n *runtimeJavascriptNakamaModule) sqlQuery(r *goja.Runtime) func(goja.Func
 
 func (n *runtimeJavascriptNakamaModule) httpRequest(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
-		// TODO http request
-		return nil
+		url := getString(r, f.Argument(0))
+		method := strings.ToUpper(getString(r, f.Argument(1)))
+		headers := getStringMap(r, f.Argument(2))
+		body := getString(r, f.Argument(3))
+		timeoutArg := f.Argument(4)
+		if timeoutArg != goja.Undefined() {
+			n.httpClient.Timeout = time.Duration(timeoutArg.ToInteger()) * time.Millisecond
+		}
+
+		n.logger.Debug(fmt.Sprintf("Http Timeout: %v", n.httpClient.Timeout))
+
+		if url == "" {
+			panic(r.ToValue("URL string cannot be empty."))
+		}
+
+		if !(method == "GET" || method == "POST" || method == "PUT" || method == "PATCH") {
+			panic(r.ToValue("Invalid method must be one of: 'get', 'post', 'put', 'patch'."))
+		}
+
+		var requestBody io.Reader
+		if body != "" {
+			requestBody = strings.NewReader(body)
+		}
+
+		req, err := http.NewRequest(method, url, requestBody)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("HTTP request is invalid: %v", err.Error())))
+		}
+
+		for h, v := range headers {
+			// TODO accept multiple values
+			req.Header.Add(h, v)
+		}
+
+		resp, err := n.httpClient.Do(req)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("HTTP request error: %v", err.Error())))
+		}
+
+		// Read the response body.
+		responseBody, err := ioutil.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("HTTP response body error: %v", err.Error())))
+		}
+		respHeaders := make(map[string][]string, len(resp.Header))
+		for h, v := range resp.Header {
+			respHeaders[h] = v
+		}
+
+		returnVal := map[string]interface{} {
+			"code": resp.StatusCode,
+			"headers": respHeaders,
+			"body": string(responseBody),
+		}
+
+		return r.ToValue(returnVal)
 	}
 }
 
