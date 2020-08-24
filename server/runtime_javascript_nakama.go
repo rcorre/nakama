@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"database/sql"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"github.com/dop251/goja"
 	"github.com/gofrs/uuid"
@@ -52,6 +54,8 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"sqlExec": n.sqlExec(r),
 		"sqlQuery": n.sqlQuery(r),
 		"httpRequest": n.httpRequest(r),
+		"base64UrlEncode": n.base64UrlEncode(r),
+		"base64UrlDecode": n.base64UrlDecode(r),
 	}
 }
 
@@ -247,6 +251,109 @@ func (n *runtimeJavascriptNakamaModule) httpRequest(r *goja.Runtime) func(goja.F
 		}
 
 		return r.ToValue(returnVal)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) base64Encode(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		in := getString(r, f.Argument(0))
+		padding := true
+		if f.Argument(1) != goja.Undefined() {
+			padding = getBool(r, f.Argument(1))
+		}
+
+		e := base64.URLEncoding
+		if !padding {
+			e = base64.RawURLEncoding
+		}
+
+		out := e.EncodeToString([]byte(in))
+		return r.ToValue(out)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) base64Decode(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		in := getString(r, f.Argument(0))
+		padding := true
+		if f.Argument(1) != goja.Undefined() {
+			padding = getBool(r, f.Argument(1))
+		}
+
+		if !padding {
+			// Pad string up to length multiple of 4 if needed to effectively make padding optional.
+			if maybePad := len(in) % 4; maybePad != 0 {
+				in += strings.Repeat("=", 4-maybePad)
+			}
+		}
+
+		out, err := base64.StdEncoding.DecodeString(in)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("Failed to decode string: %s", in)))
+		}
+		return r.ToValue(string(out))
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) base64UrlEncode(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		in := getString(r, f.Argument(0))
+		padding := true
+		if f.Argument(1) != goja.Undefined() {
+			padding = getBool(r, f.Argument(1))
+		}
+
+		e := base64.URLEncoding
+		if !padding {
+			e = base64.RawURLEncoding
+		}
+
+		out := e.EncodeToString([]byte(in))
+		return r.ToValue(out)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) base64UrlDecode(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		in := getString(r, f.Argument(0))
+		padding := true
+		if f.Argument(1) != goja.Undefined() {
+			padding = getBool(r, f.Argument(1))
+		}
+
+		if !padding {
+			// Pad string up to length multiple of 4 if needed to effectively make padding optional.
+			if maybePad := len(in) % 4; maybePad != 0 {
+				in += strings.Repeat("=", 4-maybePad)
+			}
+		}
+
+		out, err := base64.URLEncoding.DecodeString(in)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("Failed to decode string: %s", in)))
+		}
+		return r.ToValue(string(out))
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) base16Encode(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		in := getString(r, f.Argument(0))
+
+		out := hex.EncodeToString([]byte(in))
+		return r.ToValue(out)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) base16Decode(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		in := getString(r, f.Argument(0))
+
+		out, err := hex.DecodeString(in)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("Failed to decode string: %s", in)))
+		}
+		return r.ToValue(string(out))
 	}
 }
 
