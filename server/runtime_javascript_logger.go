@@ -48,7 +48,7 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 		call.This.Set("info", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(r.ToValue(err.Error()))
+				panic(r.NewTypeError(err.Error()))
 			}
 			fields := call.This.Get("fields").Export().(map[string]interface{})
 			l.logger.Info(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
@@ -58,7 +58,7 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 		call.This.Set("warn", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(r.ToValue(err.Error()))
+				panic(r.NewTypeError(err.Error()))
 			}
 			fields := call.This.Get("fields").Export().(map[string]interface{})
 			l.logger.Warn(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
@@ -68,7 +68,7 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 		call.This.Set("error", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(r.ToValue(err.Error()))
+				panic(r.NewTypeError(err.Error()))
 			}
 			fields := call.This.Get("fields").Export().(map[string]interface{})
 			l.logger.Error(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
@@ -78,7 +78,7 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 		call.This.Set("debug", func(f goja.FunctionCall) goja.Value {
 			format, a, err := getArgs(f.Arguments)
 			if err != nil {
-				panic(r.ToValue(err.Error()))
+				panic(r.NewTypeError(err.Error()))
 			}
 			fields := call.This.Get("fields").Export().(map[string]interface{})
 			l.logger.Debug(fmt.Sprintf(format, a...), toLoggerFields(fields)...)
@@ -88,11 +88,11 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 		call.This.Set("withField", func(f goja.FunctionCall) goja.Value {
 			key, ok := f.Arguments[0].Export().(string)
 			if !ok {
-				panic(r.ToValue("key argument must be a string"))
+				panic(r.NewTypeError("key argument must be a string"))
 			}
 			value, ok := f.Arguments[1].Export().(string)
 			if !ok {
-				panic(r.ToValue("value argument must be a string"))
+				panic(r.NewTypeError("value argument must be a string"))
 			}
 
 			fields := call.This.Get("fields").Export().(map[string]interface{})
@@ -110,7 +110,7 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 		call.This.Set("withFields", func(f goja.FunctionCall) goja.Value {
 			argMap, ok := f.Arguments[0].Export().(map[string]interface{})
 			if !ok {
-				panic("argument must be a map")
+				panic(r.NewTypeError("argument must be a map"))
 			}
 
 			fields := call.This.Get("fields").Export().(map[string]interface{})

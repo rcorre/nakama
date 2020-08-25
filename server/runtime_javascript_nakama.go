@@ -107,7 +107,7 @@ func (n *runtimeJavascriptNakamaModule) sqlExec(r *goja.Runtime) func(goja.Funct
 			var ok bool
 			args, ok = f.Argument(1).Export().([]interface{})
 			if !ok {
-				panic(r.ToValue("Invalid argument - query params must be an array."))
+				panic(r.NewTypeError("Invalid argument - query params must be an array."))
 			}
 		}
 
@@ -143,7 +143,7 @@ func (n *runtimeJavascriptNakamaModule) sqlQuery(r *goja.Runtime) func(goja.Func
 			var ok bool
 			args, ok = f.Argument(1).Export().([]interface{})
 			if !ok {
-				panic(r.ToValue("Invalid argument - query params must be an array."))
+				panic(r.NewTypeError("Invalid argument - query params must be an array."))
 			}
 		}
 
@@ -386,7 +386,7 @@ func (n *runtimeJavascriptNakamaModule) jwtGenerate(r *goja.Runtime) func(goja.F
 
 		claims, ok := f.Argument(2).Export().(map[string]interface{})
 		if !ok {
-			panic(r.ToValue("claims must be an object"))
+			panic(r.NewTypeError("claims must be an object"))
 		}
 		jwtClaims := jwt.MapClaims{}
 		for k, v := range claims {
@@ -423,7 +423,7 @@ func (n *runtimeJavascriptNakamaModule) jwtGenerate(r *goja.Runtime) func(goja.F
 func getString(r *goja.Runtime, v goja.Value) string {
 	s, ok := v.Export().(string)
 	if !ok {
-		panic(r.ToValue("Invalid argument - string expected."))
+		panic(r.NewTypeError("Invalid argument - string expected."))
 	}
 	return s
 }
@@ -438,7 +438,7 @@ func getStringMap(r *goja.Runtime, v goja.Value) map[string]string {
 	for k, v := range m {
 		s, ok := v.(string)
 		if !ok {
-			panic(r.ToValue("Invalid object value - string expected."))
+			panic(r.NewTypeError("Invalid object value - string expected."))
 		}
 		res[k] = s
 	}
@@ -448,7 +448,7 @@ func getStringMap(r *goja.Runtime, v goja.Value) map[string]string {
 func getInt(r *goja.Runtime, v goja.Value) int64 {
 	i, ok := v.Export().(int64)
 	if !ok {
-		panic(r.ToValue("Invalid argument - int expected."))
+		panic(r.NewTypeError("Invalid argument - int expected."))
 	}
 	return i
 }
@@ -456,7 +456,7 @@ func getInt(r *goja.Runtime, v goja.Value) int64 {
 func getBool(r *goja.Runtime, v goja.Value) bool {
 	b, ok := v.Export().(bool)
 	if !ok {
-		panic(r.ToValue("Invalid argument - boolean expected."))
+		panic(r.NewTypeError("Invalid argument - boolean expected."))
 	}
 	return b
 }
