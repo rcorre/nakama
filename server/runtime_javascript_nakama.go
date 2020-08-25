@@ -2,10 +2,13 @@ package server
 
 import (
 	"context"
+	"crypto/x509"
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/pem"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
 	"github.com/gofrs/uuid"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -56,6 +59,7 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"httpRequest": n.httpRequest(r),
 		"base64UrlEncode": n.base64UrlEncode(r),
 		"base64UrlDecode": n.base64UrlDecode(r),
+		"jwtGenerate": n.jwtGenerate(r),
 	}
 }
 
@@ -354,6 +358,65 @@ func (n *runtimeJavascriptNakamaModule) base16Decode(r *goja.Runtime) func(goja.
 			panic(r.ToValue(fmt.Sprintf("Failed to decode string: %s", in)))
 		}
 		return r.ToValue(string(out))
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) jwtGenerate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		algoType := getString(r, f.Argument(0))
+
+		var signingMethod jwt.SigningMethod
+		switch algoType {
+		case "HS256":
+			signingMethod = jwt.SigningMethodHS256
+		case "RS256":
+			signingMethod = jwt.SigningMethodRS256
+		default:
+			panic(r.NewTypeError("unsupported algo type - only allowed 'HS256', 'RS256'."))
+		}
+
+		signingKey := getString(r, f.Argument(1))
+		if signingKey == "" {
+			panic(r.ToValue("signing key cannot be empty"))
+		}
+
+		if f.Argument(1) == goja.Undefined() {
+			panic(r.ToValue("claims argument is required"))
+		}
+
+		claims, ok := f.Argument(2).Export().(map[string]interface{})
+		if !ok {
+			panic(r.ToValue("claims must be an object"))
+		}
+		jwtClaims := jwt.MapClaims{}
+		for k, v := range claims {
+			jwtClaims[k] = v
+		}
+
+		var pk interface{}
+		switch signingMethod {
+		case jwt.SigningMethodRS256:
+			block, _ := pem.Decode([]byte(signingKey))
+			if block == nil {
+				panic(r.ToValue("could not parse private key: no valid blocks found"))
+			}
+
+			var err error
+			pk, err = x509.ParsePKCS8PrivateKey(block.Bytes)
+			if err != nil {
+				panic(r.ToValue(fmt.Sprintf("could not parse private key: %v", err.Error())))
+			}
+		case jwt.SigningMethodHS256:
+			pk = []byte(signingKey)
+		}
+
+		token := jwt.NewWithClaims(signingMethod, jwtClaims)
+		signedToken, err := token.SignedString(pk)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to sign token: %v", err.Error())))
+		}
+
+		return r.ToValue(signedToken)
 	}
 }
 

@@ -270,6 +270,16 @@ interface Nakama {
      * @returns Decoded string.
      */
     base64UrlDecode(s: string, padding?: boolean): string
+
+    /**
+     * Generate a JWT token
+     *
+     * @param algorithm - JWT signing algorithm.
+     * @param signingKey - Signing Key.
+     * @param claims - JWT claims.
+     * @returns signed JWT token.
+     */
+    jwtGenerate(s: 'HS256' | 'RS256', signingKey: string, claims: {[key: string]: string}): string
 }
 
 /**
