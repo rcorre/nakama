@@ -275,11 +275,47 @@ interface Nakama {
      * Generate a JWT token
      *
      * @param algorithm - JWT signing algorithm.
-     * @param signingKey - Signing Key.
+     * @param signingKey - Signing key.
      * @param claims - JWT claims.
      * @returns signed JWT token.
      */
     jwtGenerate(s: 'HS256' | 'RS256', signingKey: string, claims: {[key: string]: string}): string
+
+    /**
+     * AES 128 bit block size encrypt
+     *
+     * @param input - String to encrypt.
+     * @param key - Encryption key.
+     * @returns cipher text base64 encoded.
+     */
+    aes128Encrypt(input: string, key: string): string
+
+    /**
+     * AES 128 bit block size decrypt
+     *
+     * @param input - String to decrypt.
+     * @param key - Encryption key.
+     * @returns clear text.
+     */
+    aes128Decrypt(input: string, key: string): string
+
+    /**
+     * AES 256 bit block size encrypt
+     *
+     * @param input - String to encrypt.
+     * @param key - Encryption key.
+     * @returns cipher text base64 encoded.
+     */
+    aes256Encrypt(input: string, key: string): string
+
+    /**
+     * AES 256 bit block size decrypt
+     *
+     * @param input - String to decrypt.
+     * @param key - Encryption key.
+     * @returns clear text.
+     */
+    aes256Decrypt(input: string, key: string): string
 }
 
 /**

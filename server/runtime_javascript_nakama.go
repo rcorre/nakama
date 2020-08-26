@@ -2,11 +2,15 @@ package server
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
 	"crypto/x509"
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
@@ -60,6 +64,10 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"base64UrlEncode": n.base64UrlEncode(r),
 		"base64UrlDecode": n.base64UrlDecode(r),
 		"jwtGenerate": n.jwtGenerate(r),
+		"aes128Encrypt": n.aes128Encrypt(r),
+		"aes128Decrypt": n.aes128Decrypt(r),
+		"aes256Encrypt": n.aes256Encrypt(r),
+		"aes256Decrypt": n.aes256Decrypt(r),
 	}
 }
 
@@ -418,6 +426,115 @@ func (n *runtimeJavascriptNakamaModule) jwtGenerate(r *goja.Runtime) func(goja.F
 
 		return r.ToValue(signedToken)
 	}
+}
+
+func (n *runtimeJavascriptNakamaModule) aes128Encrypt(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+		key := getString(r, f.Argument(1))
+
+		cipherText, err := n.aesEncrypt(16, input, key)
+		if err != nil {
+			panic(r.ToValue(err.Error()))
+		}
+
+		return r.ToValue(cipherText)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) aes128Decrypt(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+		key := getString(r, f.Argument(1))
+
+		clearText, err := n.aesDecrypt(16, input, key)
+		if err != nil {
+			panic(r.ToValue(err.Error()))
+		}
+
+		return r.ToValue(clearText)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) aes256Encrypt(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+		key := getString(r, f.Argument(1))
+
+		cipherText, err := n.aesEncrypt(32, input, key)
+		if err != nil {
+			panic(r.ToValue(err.Error()))
+		}
+
+		return r.ToValue(cipherText)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) aes256Decrypt(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+		key := getString(r, f.Argument(1))
+
+		clearText, err := n.aesDecrypt(32, input, key)
+		if err != nil {
+			panic(r.ToValue(err.Error()))
+		}
+
+		return r.ToValue(clearText)
+	}
+}
+
+// Returns the cipher text base64 encoded
+func (n *runtimeJavascriptNakamaModule) aesEncrypt(keySize int, input, key string) (string, error) {
+	if len(key) != keySize {
+		return "", errors.New(fmt.Sprintf("expects key %v bytes long", keySize))
+	}
+
+	// Pad string up to length multiple of 4 if needed.
+	if maybePad := len(input) % 4; maybePad != 0 {
+		input += strings.Repeat(" ", 4-maybePad)
+	}
+
+	block, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("error creating cipher block: %v", err.Error()))
+	}
+
+	cipherText := make([]byte, aes.BlockSize+len(input))
+	iv := cipherText[:aes.BlockSize]
+	if _, err = io.ReadFull(rand.Reader, iv); err != nil {
+		return "", errors.New(fmt.Sprintf("error getting iv: %v", err.Error()))
+	}
+
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(cipherText[aes.BlockSize:], []byte(input))
+
+	return base64.StdEncoding.EncodeToString(cipherText), nil
+}
+
+// Expect the input cipher text to be base64 encoded
+func (n *runtimeJavascriptNakamaModule) aesDecrypt(keySize int, input, key string) (string, error) {
+	if len(key) != keySize {
+		return "", errors.New(fmt.Sprintf("expects key %v bytes long", keySize))
+	}
+
+	block, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("error creating cipher block: %v", err.Error()))
+	}
+
+	decodedtText, err := base64.StdEncoding.DecodeString(input)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("error decoding cipher text: %v", err.Error()))
+	}
+	cipherText := decodedtText
+	iv := cipherText[:aes.BlockSize]
+	cipherText = cipherText[aes.BlockSize:]
+
+	stream := cipher.NewCFBDecrypter(block, iv)
+	stream.XORKeyStream(cipherText, cipherText)
+
+	return string(cipherText), nil
 }
 
 func getString(r *goja.Runtime, v goja.Value) string {
