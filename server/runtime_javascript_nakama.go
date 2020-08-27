@@ -2,9 +2,14 @@ package server
 
 import (
 	"context"
+	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
+	"crypto/md5"
 	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"database/sql"
 	"encoding/base64"
@@ -18,6 +23,7 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/heroiclabs/nakama-common/api"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -68,6 +74,12 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"aes128Decrypt": n.aes128Decrypt(r),
 		"aes256Encrypt": n.aes256Encrypt(r),
 		"aes256Decrypt": n.aes256Decrypt(r),
+		"md5Hash": n.md5Hash(r), // TODO need to add function interfaces for these
+		"sha256Hash": n.sha256Hash(r),
+		"hmacSha256Hash": n.hmacSHA256Hash(r),
+		"rsaSha256Hash": n.rsaSHA256Hash(r),
+		"bcryptHash": n.bcryptHash(r),
+		"bcryptCompare": n.bcryptCompare(r),
 	}
 }
 
@@ -535,6 +547,103 @@ func (n *runtimeJavascriptNakamaModule) aesDecrypt(keySize int, input, key strin
 	stream.XORKeyStream(cipherText, cipherText)
 
 	return string(cipherText), nil
+}
+
+func (n *runtimeJavascriptNakamaModule) md5Hash(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+
+		hash := fmt.Sprintf("%x", md5.Sum([]byte(input)))
+
+		return r.ToValue(hash)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) sha256Hash(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+
+		hash := fmt.Sprintf("%x", sha256.Sum256([]byte(input)))
+
+		return r.ToValue(hash)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) rsaSHA256Hash(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+		key := getString(r, f.Argument(1))
+		if key == "" {
+			panic(r.NewTypeError("Invalid argument - cannot be empty string."))
+		}
+
+		block, _ := pem.Decode([]byte(key))
+		rsaPrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error parsing key: %v", err.Error())))
+		}
+
+		hashed := sha256.Sum256([]byte(input))
+		signature, err := rsa.SignPKCS1v15(rand.Reader, rsaPrivateKey, crypto.SHA256, hashed[:])
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error signing input: %v", err.Error())))
+		}
+
+		return r.ToValue(string(signature))
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) hmacSHA256Hash(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+		key := getString(r, f.Argument(1))
+		if key == "" {
+			panic(r.NewTypeError("Invalid argument - cannot be empty string."))
+		}
+
+		mac := hmac.New(sha256.New, []byte(key))
+		_, err := mac.Write([]byte(input))
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error creating hash: %v", err.Error())))
+		}
+
+		return r.ToValue(string(mac.Sum(nil)))
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) bcryptHash(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+		hash, err := bcrypt.GenerateFromPassword([]byte(input), bcrypt.DefaultCost)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error hashing input: %v", err.Error())))
+		}
+
+		return r.ToValue(string(hash))
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) bcryptCompare(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		hash := getString(r, f.Argument(0))
+		if hash == "" {
+			panic(r.NewTypeError("Invalid argument - cannot be empty string."))
+		}
+
+		plaintext := getString(r, f.Argument(1))
+		if plaintext == "" {
+			panic(r.NewTypeError("Invalid argument - cannot be empty string."))
+		}
+
+		err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(plaintext))
+		if err == nil {
+			return r.ToValue(true)
+		} else if err == bcrypt.ErrHashTooShort || err == bcrypt.ErrMismatchedHashAndPassword {
+			return r.ToValue(false)
+		}
+
+		panic(r.ToValue(fmt.Sprintf("error comparing hash and plaintext: %v", err.Error())))
+	}
 }
 
 func getString(r *goja.Runtime, v goja.Value) string {

@@ -316,6 +316,57 @@ interface Nakama {
      * @returns clear text.
      */
     aes256Decrypt(input: string, key: string): string
+
+    /**
+     * MD5 Hash of the input
+     *
+     * @param input - String to hash.
+     * @returns md5 Hash.
+     */
+    md5Hash(input: string): string
+
+    /**
+     * SHA256 Hash of the input
+     *
+     * @param input - String to hash.
+     * @returns sha256 Hash.
+     */
+    sha256Hash(input: string): string
+
+    /**
+     * RSA SHA256 Hash of the input
+     *
+     * @param input - String to hash.
+     * @param key - RSA private key.
+     * @returns sha256 Hash.
+     */
+    rsaSHA256Hash(input: string, key: string): string
+
+    /**
+     * HMAC SHA256 of the input
+     *
+     * @param input - String to hash.
+     * @param key - secret key.
+     * @returns HMAC SHA256.
+     */
+    hmacSHA256Hash(input: string, key: string): string
+
+    /**
+     * BCrypt hash of a password
+     *
+     * @param password - password to hash.
+     * @returns password bcrypt hash.
+     */
+    bcryptHash(password: string): string
+
+    /**
+     * Compare BCrypt password hash with password for a match.
+     *
+     * @param password - plaintext password.
+     * @param hash - hashed password.
+     * @returns true if hashed password and plaintext password match, false otherwise.
+     */
+    bcryptCompare(hash: string, password: string): boolean
 }
 
 /**
