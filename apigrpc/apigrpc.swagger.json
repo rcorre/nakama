@@ -30,12 +30,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "tags": [
@@ -53,12 +56,15 @@
             "schema": {
               "$ref": "#/definitions/apiAccount"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "tags": [
@@ -74,12 +80,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -107,12 +116,15 @@
             "schema": {
               "$ref": "#/definitions/apiSession"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -160,12 +172,15 @@
             "schema": {
               "$ref": "#/definitions/apiSession"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -177,6 +192,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountCustom"
             }
+<<<<<<< HEAD
           },
           {
             "name": "create",
@@ -191,6 +207,8 @@
             "in": "query",
             "required": false,
             "type": "string"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -213,12 +231,15 @@
             "schema": {
               "$ref": "#/definitions/apiSession"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -230,6 +251,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountDevice"
             }
+<<<<<<< HEAD
           },
           {
             "name": "create",
@@ -244,6 +266,8 @@
             "in": "query",
             "required": false,
             "type": "string"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -266,12 +290,15 @@
             "schema": {
               "$ref": "#/definitions/apiSession"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -283,6 +310,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountEmail"
             }
+<<<<<<< HEAD
           },
           {
             "name": "create",
@@ -297,6 +325,8 @@
             "in": "query",
             "required": false,
             "type": "string"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -319,12 +349,15 @@
             "schema": {
               "$ref": "#/definitions/apiSession"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -336,6 +369,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountFacebook"
             }
+<<<<<<< HEAD
           },
           {
             "name": "create",
@@ -357,6 +391,8 @@
             "in": "query",
             "required": false,
             "type": "boolean"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -379,12 +415,15 @@
             "schema": {
               "$ref": "#/definitions/apiSession"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -396,6 +435,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountFacebookInstantGame"
             }
+<<<<<<< HEAD
           },
           {
             "name": "create",
@@ -410,6 +450,8 @@
             "in": "query",
             "required": false,
             "type": "string"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -432,12 +474,15 @@
             "schema": {
               "$ref": "#/definitions/apiSession"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -449,6 +494,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountGameCenter"
             }
+<<<<<<< HEAD
           },
           {
             "name": "create",
@@ -463,6 +509,8 @@
             "in": "query",
             "required": false,
             "type": "string"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -485,12 +533,15 @@
             "schema": {
               "$ref": "#/definitions/apiSession"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -502,6 +553,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountGoogle"
             }
+<<<<<<< HEAD
           },
           {
             "name": "create",
@@ -516,6 +568,8 @@
             "in": "query",
             "required": false,
             "type": "string"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -538,12 +592,15 @@
             "schema": {
               "$ref": "#/definitions/apiSession"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -555,6 +612,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountSteam"
             }
+<<<<<<< HEAD
           },
           {
             "name": "create",
@@ -569,6 +627,8 @@
             "in": "query",
             "required": false,
             "type": "string"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -591,12 +651,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -624,12 +687,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -657,12 +723,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -690,12 +759,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -723,12 +795,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -740,6 +815,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountFacebook"
             }
+<<<<<<< HEAD
           },
           {
             "name": "sync",
@@ -747,6 +823,8 @@
             "in": "query",
             "required": false,
             "type": "boolean"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -764,12 +842,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -797,12 +878,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -830,12 +914,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -863,12 +950,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -896,12 +986,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -929,12 +1022,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -962,12 +1058,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -995,12 +1094,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1028,12 +1130,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1061,12 +1166,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1094,12 +1202,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1127,12 +1238,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1160,12 +1274,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1193,12 +1310,15 @@
             "schema": {
               "$ref": "#/definitions/apiChannelMessageList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1247,12 +1367,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1280,12 +1403,15 @@
             "schema": {
               "$ref": "#/definitions/apiFriendList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1326,12 +1452,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1343,8 +1472,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           },
           {
             "name": "usernames",
@@ -1354,8 +1482,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           }
         ],
         "tags": [
@@ -1371,12 +1498,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "tags": [
@@ -1394,12 +1524,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "tags": [
@@ -1417,12 +1550,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1434,6 +1570,7 @@
             "schema": {
               "$ref": "#/definitions/apiAccountFacebook"
             }
+<<<<<<< HEAD
           },
           {
             "name": "reset",
@@ -1441,6 +1578,8 @@
             "in": "query",
             "required": false,
             "type": "boolean"
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         ],
         "tags": [
@@ -1458,12 +1597,15 @@
             "schema": {
               "$ref": "#/definitions/apiGroupList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1503,12 +1645,15 @@
             "schema": {
               "$ref": "#/definitions/apiGroup"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1536,12 +1681,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1566,12 +1714,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1606,12 +1757,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1638,12 +1792,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1670,12 +1827,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1702,12 +1862,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1734,12 +1897,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1766,12 +1932,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1798,12 +1967,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1830,12 +2002,15 @@
             "schema": {
               "$ref": "#/definitions/apiGroupUserList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1885,12 +2060,15 @@
             "schema": {
               "$ref": "#/definitions/apiLeaderboardRecordList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1909,8 +2087,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           },
           {
             "name": "limit",
@@ -1949,12 +2126,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -1979,12 +2159,15 @@
             "schema": {
               "$ref": "#/definitions/apiLeaderboardRecord"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2020,12 +2203,15 @@
             "schema": {
               "$ref": "#/definitions/apiLeaderboardRecordList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2075,12 +2261,15 @@
             "schema": {
               "$ref": "#/definitions/apiMatchList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2145,12 +2334,15 @@
             "schema": {
               "$ref": "#/definitions/apiNotificationList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2183,12 +2375,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2200,8 +2395,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           }
         ],
         "tags": [
@@ -2219,12 +2413,15 @@
             "schema": {
               "$ref": "#/definitions/apiRpc"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2269,12 +2466,15 @@
             "schema": {
               "$ref": "#/definitions/apiRpc"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2323,12 +2523,15 @@
             "schema": {
               "$ref": "#/definitions/apiStorageObjects"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2354,12 +2557,15 @@
             "schema": {
               "$ref": "#/definitions/apiStorageObjectAcks"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2387,12 +2593,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2420,12 +2629,15 @@
             "schema": {
               "$ref": "#/definitions/apiStorageObjectList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2474,12 +2686,15 @@
             "schema": {
               "$ref": "#/definitions/apiStorageObjectList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2528,12 +2743,15 @@
             "schema": {
               "$ref": "#/definitions/apiTournamentList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2600,12 +2818,15 @@
             "schema": {
               "$ref": "#/definitions/apiTournamentRecordList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2624,8 +2845,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           },
           {
             "name": "limit",
@@ -2664,12 +2884,15 @@
             "schema": {
               "$ref": "#/definitions/apiLeaderboardRecord"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2705,12 +2928,15 @@
             "schema": {
               "properties": {}
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2737,12 +2963,15 @@
             "schema": {
               "$ref": "#/definitions/apiTournamentRecordList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2792,12 +3021,15 @@
             "schema": {
               "$ref": "#/definitions/apiUsers"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -2809,8 +3041,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           },
           {
             "name": "usernames",
@@ -2820,8 +3051,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           },
           {
             "name": "facebookIds",
@@ -2831,8 +3061,7 @@
             "type": "array",
             "items": {
               "type": "string"
-            },
-            "collectionFormat": "multi"
+            }
           }
         ],
         "tags": [
@@ -2850,12 +3079,15 @@
             "schema": {
               "$ref": "#/definitions/apiUserGroupList"
             }
+<<<<<<< HEAD
           },
           "default": {
             "description": "An unexpected error response.",
             "schema": {
               "$ref": "#/definitions/rpcStatus"
             }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
           }
         },
         "parameters": [
@@ -4182,6 +4414,7 @@
         }
       },
       "description": "Write objects to the storage engine."
+<<<<<<< HEAD
     },
     "protobufAny": {
       "type": "object",
@@ -4212,6 +4445,8 @@
           }
         }
       }
+=======
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
     }
   },
   "securityDefinitions": {
