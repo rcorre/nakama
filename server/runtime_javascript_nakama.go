@@ -22,6 +22,7 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/heroiclabs/nakama-common/api"
+	"github.com/heroiclabs/nakama/v2/social"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -33,15 +34,21 @@ import (
 
 type runtimeJavascriptNakamaModule struct {
 	logger *zap.Logger
+	config Config
 	db *sql.DB
+	router MessageRouter
 	httpClient *http.Client
+	socialClient *social.Client
 	eventFn RuntimeEventCustomFunction
 }
 
-func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
+func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, config Config, socialClient *social.Client, router MessageRouter, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
 	return &runtimeJavascriptNakamaModule{
 		logger: logger,
+		config: config,
 		db: db,
+		router: router,
+		socialClient: socialClient,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
 		},
@@ -74,12 +81,22 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"aes128Decrypt": n.aes128Decrypt(r),
 		"aes256Encrypt": n.aes256Encrypt(r),
 		"aes256Decrypt": n.aes256Decrypt(r),
-		"md5Hash": n.md5Hash(r), // TODO need to add function interfaces for these
+		"md5Hash": n.md5Hash(r),
 		"sha256Hash": n.sha256Hash(r),
 		"hmacSha256Hash": n.hmacSHA256Hash(r),
 		"rsaSha256Hash": n.rsaSHA256Hash(r),
 		"bcryptHash": n.bcryptHash(r),
 		"bcryptCompare": n.bcryptCompare(r),
+		"authenticateApple": n.authenticateApple(r),
+		"authenticateCustom": n.authenticateCustom(r),
+		"authenticateDevice": n.authenticateDevice(r),
+		"authenticateEmail": n.authenticateEmail(r),
+		"authenticateFacebook": n.authenticateFacebook(r),
+		"authenticateFacebookInstantGame": n.authenticateFacebookInstantGame(r),
+		"authenticateGamecenter": n.authenticateGameCenter(r),
+		"authenticateGoogle": n.authenticateGoogle(r),
+		"authenticateSteam": n.authenticateSteam(r),
+		"authenticateTokenGenerate": n.authenticateTokenGenerate(r),
 	}
 }
 
@@ -578,6 +595,9 @@ func (n *runtimeJavascriptNakamaModule) rsaSHA256Hash(r *goja.Runtime) func(goja
 		}
 
 		block, _ := pem.Decode([]byte(key))
+		if block == nil {
+			panic(r.ToValue("could not parse private key: no valid blocks found"))
+		}
 		rsaPrivateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 		if err != nil {
 			panic(r.ToValue(fmt.Sprintf("error parsing key: %v", err.Error())))
@@ -643,6 +663,458 @@ func (n *runtimeJavascriptNakamaModule) bcryptCompare(r *goja.Runtime) func(goja
 		}
 
 		panic(r.ToValue(fmt.Sprintf("error comparing hash and plaintext: %v", err.Error())))
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateApple(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		if n.config.GetSocial().Apple.BundleId == "" {
+			panic(r.ToValue("Apple authentication is not configured"))
+		}
+
+		token := getString(r, f.Argument(0))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+
+		username := ""
+		if f.Argument(1) != goja.Undefined() {
+			username = getString(r, f.Argument(1))
+		}
+
+		if username == "" {
+			username = generateUsername()
+		} else if invalidCharsRegex.MatchString(username) {
+			panic(r.NewTypeError("expects username to be valid, no spaces or control characters allowed"))
+		} else if len(username) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 1-128 bytes"))
+		}
+
+		create := true
+		if f.Argument(2) != goja.Undefined() {
+			create = getBool(r, f.Argument(2))
+		}
+
+		dbUserID, dbUsername, created, err := AuthenticateApple(context.Background(), n.logger, n.db, n.socialClient, n.config.GetSocial().Apple.BundleId, token, username, create)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error authenticating: %v", err.Error())))
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"user_id": dbUserID,
+			"username": dbUsername,
+			"created": created,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateCustom(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects id string"))
+		} else if invalidCharsRegex.MatchString(id) {
+			panic(r.NewTypeError("expects id to be valid, no spaces or control characters allowed"))
+		} else if len(id) < 6 || len(id) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 6-128 bytes"))
+		}
+
+		username := ""
+		if f.Argument(1) != goja.Undefined() {
+			username = getString(r, f.Argument(1))
+		}
+
+		if username == "" {
+			username = generateUsername()
+		} else if invalidCharsRegex.MatchString(username) {
+			panic(r.NewTypeError("expects username to be valid, no spaces or control characters allowed"))
+		} else if len(username) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 1-128 bytes"))
+		}
+
+		create := true
+		if f.Argument(3) != goja.Undefined() {
+			create = getBool(r, f.Argument(3))
+		}
+
+		dbUserID, dbUsername, created, err := AuthenticateCustom(context.Background(), n.logger, n.db, id, username, create)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error authenticating: %v", err.Error())))
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"user_id": dbUserID,
+			"username": dbUsername,
+			"created": created,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateDevice(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects id string"))
+		} else if invalidCharsRegex.MatchString(id) {
+			panic(r.NewTypeError("expects id to be valid, no spaces or control characters allowed"))
+		} else if len(id) < 10 || len(id) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 10-128 bytes"))
+		}
+
+		username := ""
+		if f.Argument(1) != goja.Undefined() {
+			username = getString(r, f.Argument(1))
+		}
+
+		if username == "" {
+			username = generateUsername()
+		} else if invalidCharsRegex.MatchString(username) {
+			panic(r.NewTypeError("expects username to be valid, no spaces or control characters allowed"))
+		} else if len(username) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 1-128 bytes"))
+		}
+
+		create := true
+		if f.Argument(3) != goja.Undefined() {
+			create = getBool(r, f.Argument(3))
+		}
+
+		dbUserID, dbUsername, created, err := AuthenticateDevice(context.Background(), n.logger, n.db, id, username, create)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error authenticating: %v", err.Error())))
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"user_id": dbUserID,
+			"username": dbUsername,
+			"created": created,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateEmail(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		var attemptUsernameLogin bool
+		// Parse email.
+		email := getString(r, f.Argument(0))
+		if email == "" {
+			attemptUsernameLogin = true
+		} else if invalidCharsRegex.MatchString(email) {
+			panic(r.NewTypeError("expects email to be valid, no spaces or control characters allowed"))
+		} else if !emailRegex.MatchString(email) {
+			panic(r.NewTypeError("expects email to be valid, invalid email address format"))
+		} else if len(email) < 10 || len(email) > 255 {
+			panic(r.NewTypeError("expects email to be valid, must be 10-255 bytes"))
+		}
+
+		// Parse password.
+		password := getString(r, f.Argument(1))
+		if password == "" {
+			panic(r.NewTypeError("expects password string"))
+		} else if len(password) < 8 {
+			panic(r.NewTypeError("expects password to be valid, must be longer than 8 characters"))
+		}
+
+		username := ""
+		if f.Argument(2) != goja.Undefined() {
+			username = getString(r, f.Argument(2))
+		}
+
+		if username == "" {
+			if attemptUsernameLogin {
+				panic(r.NewTypeError("expects username string when email is not supplied"))
+			}
+
+			username = generateUsername()
+		} else if invalidCharsRegex.MatchString(username) {
+			panic(r.NewTypeError("expects username to be valid, no spaces or control characters allowed"))
+		} else if len(username) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 1-128 bytes"))
+		}
+
+		create := true
+		if f.Argument(3) != goja.Undefined() {
+			create = getBool(r, f.Argument(3))
+		}
+
+		var dbUserID string
+		var created bool
+		var err error
+
+		if attemptUsernameLogin {
+			dbUserID, err = AuthenticateUsername(context.Background(), n.logger, n.db, username, password)
+		} else {
+			cleanEmail := strings.ToLower(email)
+
+			dbUserID, username, created, err = AuthenticateEmail(context.Background(), n.logger, n.db, cleanEmail, password, username, create)
+		}
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error authenticating: %v", err.Error())))
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"user_id": dbUserID,
+			"username": username,
+			"created": created,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateFacebook(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		token := getString(r, f.Argument(0))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+
+		importFriends := true
+		if f.Argument(1) != goja.Undefined() {
+			importFriends = getBool(r, f.Argument(1))
+		}
+
+		username := ""
+		if f.Argument(2) != goja.Undefined() {
+			username = getString(r, f.Argument(2))
+		}
+
+		if username == "" {
+			username = generateUsername()
+		} else if invalidCharsRegex.MatchString(username) {
+			panic(r.NewTypeError("expects username to be valid, no spaces or control characters allowed"))
+		} else if len(username) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 1-128 bytes"))
+		}
+
+		create := true
+		if f.Argument(3) != goja.Undefined() {
+			create = getBool(r, f.Argument(3))
+		}
+
+		dbUserID, dbUsername, created, err := AuthenticateFacebook(context.Background(), n.logger, n.db, n.socialClient, token, username, create)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error authenticating: %v", err.Error())))
+		}
+
+		if importFriends {
+			// Errors are logged before this point and failure here does not invalidate the whole operation.
+			_ = importFacebookFriends(context.Background(), n.logger, n.db, n.router, n.socialClient, uuid.FromStringOrNil(dbUserID), dbUsername, token, false)
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"user_id": dbUserID,
+			"username": username,
+			"created": created,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateFacebookInstantGame(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		signedPlayerInfo := getString(r, f.Argument(0))
+		if signedPlayerInfo == "" {
+			panic(r.NewTypeError("expects signed player info"))
+		}
+
+		username := ""
+		if f.Argument(1) != goja.Undefined() {
+			username = getString(r, f.Argument(1))
+		}
+
+		if username == "" {
+			username = generateUsername()
+		} else if invalidCharsRegex.MatchString(username) {
+			panic(r.NewTypeError("expects username to be valid, no spaces or control characters allowed"))
+		} else if len(username) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 1-128 bytes"))
+		}
+
+		create := true
+		if f.Argument(2) != goja.Undefined() {
+			create = getBool(r, f.Argument(2))
+		}
+
+		dbUserID, dbUsername, created, err := AuthenticateFacebookInstantGame(context.Background(), n.logger, n.db, n.socialClient, n.config.GetSocial().FacebookInstantGame.AppSecret, signedPlayerInfo, username, create)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error authenticating: %v", err.Error())))
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"user_id": dbUserID,
+			"username": dbUsername,
+			"created": created,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateGameCenter(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		playerID := getString(r, f.Argument(0))
+		if playerID == "" {
+			panic(r.NewTypeError("expects player ID string"))
+		}
+		bundleID := getString(r, f.Argument(1))
+		if bundleID == "" {
+			panic(r.NewTypeError("expects bundle ID string"))
+		}
+		ts := getInt(r, f.Argument(2))
+		if ts == 0 {
+			panic(r.NewTypeError("expects timestamp value"))
+		}
+		salt := getString(r, f.Argument(3))
+		if salt == "" {
+			panic(r.NewTypeError("expects salt string"))
+		}
+		signature := getString(r, f.Argument(4))
+		if signature == "" {
+			panic(r.NewTypeError("expects signature string"))
+		}
+		publicKeyURL := getString(r, f.Argument(5))
+		if publicKeyURL == "" {
+			panic(r.NewTypeError("expects public key URL string"))
+		}
+
+		username := ""
+		if f.Argument(6) != goja.Undefined() {
+			username = getString(r, f.Argument(6))
+		}
+
+		if username == "" {
+			username = generateUsername()
+		} else if invalidCharsRegex.MatchString(username) {
+			panic(r.NewTypeError("expects username to be valid, no spaces or control characters allowed"))
+		} else if len(username) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 1-128 bytes"))
+		}
+
+		create := true
+		if f.Argument(7) != goja.Undefined() {
+			create = getBool(r, f.Argument(7))
+		}
+
+		dbUserID, dbUsername, created, err := AuthenticateGameCenter(context.Background(), n.logger, n.db, n.socialClient, playerID, bundleID, ts, salt, signature, publicKeyURL, username, create)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error authenticating: %v", err.Error())))
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"user_id": dbUserID,
+			"username": dbUsername,
+			"created": created,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateGoogle(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		token := getString(r, f.Argument(0))
+		if token == "" {
+			panic(r.NewTypeError("expects ID token string"))
+		}
+
+		username := ""
+		if f.Argument(1) != goja.Undefined() {
+			username = getString(r, f.Argument(1))
+		}
+
+		if username == "" {
+			username = generateUsername()
+		} else if invalidCharsRegex.MatchString(username) {
+			panic(r.NewTypeError("expects username to be valid, no spaces or control characters allowed"))
+		} else if len(username) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 1-128 bytes"))
+		}
+
+		create := true
+		if f.Argument(1) != goja.Undefined() {
+			create = getBool(r, f.Argument(1))
+		}
+
+		dbUserID, dbUsername, created, err := AuthenticateGoogle(context.Background(), n.logger, n.db, n.socialClient, token, username, create)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error authenticating: %v", err.Error())))
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"user_id": dbUserID,
+			"username": dbUsername,
+			"created": created,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateSteam(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		if n.config.GetSocial().Steam.PublisherKey == "" || n.config.GetSocial().Steam.AppID == 0 {
+			panic(r.ToValue("Steam authentication is not configured"))
+		}
+
+		token := getString(r, f.Argument(0))
+		if token == "" {
+			panic(r.NewTypeError("expects ID token string"))
+		}
+
+		username := ""
+		if f.Argument(1) != goja.Undefined() {
+			username = getString(r, f.Argument(1))
+		}
+
+		if username == "" {
+			username = generateUsername()
+		} else if invalidCharsRegex.MatchString(username) {
+			panic(r.NewTypeError("expects username to be valid, no spaces or control characters allowed"))
+		} else if len(username) > 128 {
+			panic(r.NewTypeError("expects id to be valid, must be 1-128 bytes"))
+		}
+
+		create := true
+		if f.Argument(1) != goja.Undefined() {
+			create = getBool(r, f.Argument(1))
+		}
+
+		dbUserID, dbUsername, created, err := AuthenticateSteam(context.Background(), n.logger, n.db, n.socialClient, n.config.GetSocial().Steam.AppID, n.config.GetSocial().Steam.PublisherKey, token, username, create)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error authenticating: %v", err.Error())))
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"user_id": dbUserID,
+			"username": dbUsername,
+			"created": created,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) authenticateTokenGenerate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		// Parse input User ID.
+		userIDString := getString(r, f.Argument(0))
+		if userIDString == "" {
+			panic(r.NewTypeError("expects user id"))
+		}
+
+		_, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects valid user id"))
+		}
+
+		username := getString(r, f.Argument(1))
+		if username == "" {
+			panic(r.NewTypeError("expects username"))
+		}
+
+		exp := time.Now().UTC().Add(time.Duration(n.config.GetSession().TokenExpirySec) * time.Second).Unix()
+		if f.Argument(2) != goja.Undefined() {
+			exp = getInt(r, f.Argument(2))
+		}
+
+		vars := getStringMap(r, f.Argument(3))
+
+		token, exp := generateTokenWithExpiry(n.config, userIDString, username, vars, exp)
+
+		return r.ToValue(map[string]interface{}{
+			"token": token,
+			"exp": exp,
+		})
 	}
 }
 

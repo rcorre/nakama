@@ -1309,7 +1309,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
 		}
 
-		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, eventFn)
+		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, config, socialClient, router, eventFn)
 		nk := runtime.ToValue(nakamaModule.Constructor(runtime))
 		nkInst, err := runtime.New(nk)
 		if err != nil {
@@ -1391,8 +1391,6 @@ func cacheJavascriptModules(logger *zap.Logger, rootPath string, paths []string)
 func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, config Config, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, error) {
 	r := goja.New()
 	logger := rp.logger
-	db := rp.db
-	eventFn := rp.eventFn
 
 	initializer := NewRuntimeJavascriptInitModule(logger, announceCallbackFn)
 	initializerValue := r.ToValue(initializer.Constructor(r))
@@ -1408,7 +1406,8 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, c
 		return nil, err
 	}
 
-	nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, eventFn)
+	// TODO check if router is needed
+	nakamaModule := NewRuntimeJavascriptNakamaModule(rp.logger, rp.db, rp.config, rp.socialClient, nil, rp.eventFn)
 	nk := r.ToValue(nakamaModule.Constructor(r))
 	nkInst, err := r.New(nk)
 	if err != nil {

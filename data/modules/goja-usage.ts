@@ -160,7 +160,7 @@ type RequestMethod = "get" | "post" | "put" | "patch"
  * HTTP Response type
  */
 interface HttpResponse {
-     /**
+    /**
      * Http Response status code.
      */
     code: number;
@@ -172,6 +172,38 @@ interface HttpResponse {
      * Http Response body.
      */
     body: string;
+}
+
+/**
+ * Object returned on successful user authentication
+ */
+interface AuthResult {
+    /**
+     * Authenticated User ID.
+     */
+    user_id: string;
+    /**
+     * Authenticated Username.
+     */
+    username: string;
+    /**
+     * New user created
+     */
+    created: boolean;
+}
+
+/**
+ * Object returned on authentication token generation
+ */
+interface TokenGenerateResult {
+    /**
+     * Authentication token
+     */
+    token: string;
+    /**
+     * Token expire - Unix epoch
+     */
+    exp: number;
 }
 
 /**
@@ -340,7 +372,7 @@ interface Nakama {
      * @param key - RSA private key.
      * @returns sha256 Hash.
      */
-    rsaSHA256Hash(input: string, key: string): string
+    rsaSha256Hash(input: string, key: string): string
 
     /**
      * HMAC SHA256 of the input
@@ -349,7 +381,7 @@ interface Nakama {
      * @param key - secret key.
      * @returns HMAC SHA256.
      */
-    hmacSHA256Hash(input: string, key: string): string
+    hmacSha256Hash(input: string, key: string): string
 
     /**
      * BCrypt hash of a password
@@ -367,6 +399,122 @@ interface Nakama {
      * @returns true if hashed password and plaintext password match, false otherwise.
      */
     bcryptCompare(hash: string, password: string): boolean
+
+    /**
+     * Authenticate with Apple.
+     *
+     * @param token - Apple token.
+     * @param username - username. If not provided a random username will be generated.
+     * @param create - create user if not exists, defaults to true
+     * @returns Object with authenticated user data.
+     */
+    authenticateApple(token: string, username?: string, create?: boolean): AuthResult
+
+    /**
+     * Authenticate using a custom identifier.
+     *
+     * @param id - custom identifier.
+     * @param username - username. If not provided a random username will be generated.
+     * @param create - create user if not exists, defaults to true
+     * @returns Object with authenticated user data.
+     */
+    authenticateCustom(id: string, username?: string, create?: boolean): AuthResult
+
+    /**
+     * Authenticate using a device identifier.
+     *
+     * @param id - device identifier.
+     * @param username - username. If not provided a random username will be generated.
+     * @param create - create user if not exists, defaults to true
+     * @returns Object with authenticated user data.
+     */
+    authenticateDevice(id: string, username?: string, create?: boolean): AuthResult
+
+    /**
+     * Authenticate using email.
+     *
+     * @param email - account email.
+     * @param password - account password.
+     * @param username - username. If not provided a random username will be generated.
+     * @param create - create user if not exists, defaults to true
+     * @returns Object with authenticated user data.
+     */
+    authenticateDevice(email: string, password: string, username?: string, create?: boolean): AuthResult
+
+     /**
+     * Authenticate using Facebook account.
+     *
+     * @param token - Facebook token.
+     * @param importFriends - import FB account friends.
+     * @param username - username. If not provided a random username will be generated.
+     * @param create - create user if not exists, defaults to true
+     * @returns Object with authenticated user data.
+     */
+    authenticateDevice(token: string, importFriends?: boolean, username?: string, create?: boolean): AuthResult
+
+    /**
+     * Authenticate using Facebook Instant Game.
+     *
+     * @param signedPlayerInfo - Facebook Instant Game signed player info.
+     * @param username - username. If not provided a random username will be generated.
+     * @param create - create user if not exists, defaults to true
+     * @returns Object with authenticated user data.
+     */
+    authenticateFacebookInstantGame(signedPlayerInfo: string, username?: string, create?: boolean): AuthResult
+
+    /**
+     * Authenticate using Apple Game center.
+     *
+     * @param playerId - Game center player ID.
+     * @param bundleId - Game center bundle ID.
+     * @param ts - Timestamp.
+     * @param salt - Salt.
+     * @param signature - Signature.
+     * @param publicKeyURL - Public Key URL.
+     * @param username - username. If not provided a random username will be generated.
+     * @param create - create user if not exists, defaults to true
+     * @returns Object with authenticated user data.
+     */
+    authenticateGamecenter(
+        playerId: string,
+        bundleId: string,
+        ts: number,
+        salt: string,
+        signature: string,
+        publicKeyURL: string,
+        username?: string,
+        create?: boolean
+    ): AuthResult
+
+    /**
+     * Authenticate with Google account.
+     *
+     * @param token - Google token.
+     * @param username - username. If not provided a random username will be generated.
+     * @param create - create user if not exists, defaults to true
+     * @returns Object with authenticated user data.
+     */
+    authenticateGoogle(token: string, username?: string, create?: boolean): AuthResult
+
+    /**
+     * Authenticate with Steam account.
+     *
+     * @param token - Steam token.
+     * @param username - username. If not provided a random username will be generated.
+     * @param create - create user if not exists, defaults to true
+     * @returns Object with authenticated user data.
+     */
+    authenticateSteam(token: string, username?: string, create?: boolean): AuthResult
+
+     /**
+     * Generate authentication token.
+     *
+     * @param userId - User ID.
+     * @param exp - Token expiration, Unix epoch.
+     * @param vars - Arbitrary metadata.
+     * @returns Object with authenticated user data.
+     */
+    authenticateTokenGenerate(userId: string, exp: number, vars: {[key: string]: string}): TokenGenerateResult
 }
 
 /**
