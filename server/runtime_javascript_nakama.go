@@ -21,7 +21,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
 	"github.com/gofrs/uuid"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama/v2/social"
 	"go.uber.org/zap"
@@ -34,21 +36,25 @@ import (
 )
 
 type runtimeJavascriptNakamaModule struct {
-	logger *zap.Logger
-	config Config
-	db *sql.DB
-	httpClient *http.Client
-	socialClient *social.Client
-	tracker Tracker
-	router MessageRouter
-	eventFn RuntimeEventCustomFunction
+	logger            *zap.Logger
+	config            Config
+	db                *sql.DB
+	jsonpbMarshaler   *jsonpb.Marshaler
+	jsonpbUnmarshaler *jsonpb.Unmarshaler
+	httpClient        *http.Client
+	socialClient      *social.Client
+	tracker           Tracker
+	router            MessageRouter
+	eventFn           RuntimeEventCustomFunction
 }
 
-func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, config Config, socialClient *social.Client, tracker Tracker, router MessageRouter, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
+func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, tracker Tracker, router MessageRouter, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
 	return &runtimeJavascriptNakamaModule{
 		logger: logger,
 		config: config,
 		db: db,
+		jsonpbMarshaler: jsonpbMarshaler,
+		jsonpbUnmarshaler: jsonpbUnmarshaler,
 		router: router,
 		tracker: tracker,
 		socialClient: socialClient,
@@ -102,6 +108,7 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"authenticateTokenGenerate": n.authenticateTokenGenerate(r),
 		"accountGetId": n.accountGetId(r),
 		"accountsGetId": n.accountsGetId(r),
+		"accountUpdateId": n.accountUpdateId(r),
 	}
 }
 
@@ -129,7 +136,7 @@ func (n *runtimeJavascriptNakamaModule) event(r *goja.Runtime) func(goja.Functio
 			})
 		}
 
-		return nil
+		return goja.Undefined()
 	}
 }
 
@@ -1191,6 +1198,108 @@ func (n *runtimeJavascriptNakamaModule) accountsGetId(r *goja.Runtime) func(goja
 	}
 }
 
+func (n *runtimeJavascriptNakamaModule) accountUpdateId(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID, err := uuid.FromString(getString(r, f.Argument(0)))
+		if err != nil {
+			panic(r.ToValue("invalid user id"))
+		}
+
+		data, ok := f.Argument(1).Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("invalid data - must be an object"))
+		}
+
+		var username string
+		if _, ok := data["username"]; ok {
+			username = data["username"].(string)
+		}
+
+		var displayName *wrappers.StringValue
+		if _, ok := data["display_name"]; ok {
+			displayName = &wrappers.StringValue{Value: data["display_name"].(string)}
+		}
+
+		var timezone *wrappers.StringValue
+		if _, ok := data["timezone"]; ok {
+			timezone = &wrappers.StringValue{Value: data["timezone"].(string)}
+		}
+
+		var location *wrappers.StringValue
+		if _, ok := data["location"]; ok {
+			location = &wrappers.StringValue{Value: data["location"].(string)}
+		}
+
+		var lang *wrappers.StringValue
+		if _, ok := data["lang_tag"]; ok {
+			lang = &wrappers.StringValue{Value: data["lang_tag"].(string)}
+		}
+
+		var avatar *wrappers.StringValue
+		if _, ok := data["avatar_url"]; ok {
+			avatar = &wrappers.StringValue{Value: data["avatar_url"].(string)}
+		}
+
+		var metadata *wrappers.StringValue
+		if _, ok := data["metadata"]; ok {
+			metadata = &wrappers.StringValue{Value: data["metadata"].(string)}
+		}
+
+		if err = UpdateAccounts(context.Background(), n.logger, n.db, []*accountUpdate{{
+			userID:      userID,
+			username:    username,
+			displayName: displayName,
+			timezone:    timezone,
+			location:    location,
+			langTag:     lang,
+			avatarURL:   avatar,
+			metadata:    metadata,
+		}}); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error while trying to update user: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) accountDeleteId(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID, err := uuid.FromString(getString(r, f.Argument(0)))
+		if err != nil {
+			panic("invalid user id")
+		}
+
+		recorded := getBool(r, f.Argument(1))
+
+		if err := DeleteAccount(context.Background(), n.logger, n.db, userID, recorded); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error while trying to delete account: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) accountExportId(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID, err := uuid.FromString(getString(r, f.Argument(0)))
+		if err != nil {
+			panic("invalid user id")
+		}
+
+		export, err := ExportAccount(context.Background(), n.logger, n.db, userID)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error exporting account: %v", err.Error())))
+		}
+
+		exportString, err := n.jsonpbMarshaler.MarshalToString(export)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error encoding account export: %v", err.Error())))
+		}
+
+		return r.ToValue(exportString)
+	}
+}
+
 func getString(r *goja.Runtime, v goja.Value) string {
 	s, ok := v.Export().(string)
 	if !ok {
@@ -1202,7 +1311,7 @@ func getString(r *goja.Runtime, v goja.Value) string {
 func getStringMap(r *goja.Runtime, v goja.Value) map[string]string {
 	m, ok := v.Export().(map[string]interface{})
 	if !ok {
-		panic(r.ToValue("Invalid argument - object of string keys and values expected."))
+		panic(r.ToValue("Invalid argument - object with type string keys and values expected."))
 	}
 
 	res := make(map[string]string)

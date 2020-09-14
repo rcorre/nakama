@@ -207,6 +207,49 @@ interface TokenGenerateResult {
 }
 
 /**
+ * User account object
+ */
+interface UserAccount {
+    user_id: string;
+    username: string;
+    display_name: string;
+    avatar_url: string;
+    lang_tag: string;
+    location: string;
+    timezone: string;
+    apple_id: string;
+    facebook_id: string;
+    facebook_instant_game_id: string;
+    google_id: string;
+    gamecenter_id: string;
+    steam_id: string;
+    online: boolean;
+    edge_count: string;
+    create_time: number;
+    update_time: number;
+    metadata: object;
+    wallet: {[key: string]: number},
+    email: string;
+    devices: {[key: string]: string}[];
+    custom_id: string;
+    verify_time: number;
+    disable_time: number;
+}
+
+/**
+ * User update account object
+ */
+interface UserUpdateAccount {
+    username: string;
+    display_name: string;
+    avatar_url: string;
+    lang_tag: string;
+    location: string;
+    timezone: string;
+    metadata: object;
+}
+
+/**
  * The server APIs available in the game server.
  */
 interface Nakama {
@@ -515,6 +558,30 @@ interface Nakama {
      * @returns Object with authenticated user data.
      */
     authenticateTokenGenerate(userId: string, exp: number, vars: {[key: string]: string}): TokenGenerateResult
+
+    /**
+     * Get account data by id.
+     *
+     * @param userId - User ID.
+     * @returns Object with account data.
+     */
+    accountGetId(userId: string): UserAccount
+
+    /**
+     * Get accounts data by ids.
+     *
+     * @param userIds - User IDs.
+     * @returns Array containing accounts data.
+     */
+    accountsGetId(userIds: string[]): UserAccount[]
+
+    /**
+     * Update user account
+     *
+     * @param userId - Target account.
+     * @param data - Object with the data to update.
+     */
+    accountUpdateId(userId: string, data: UserUpdateAccount)
 }
 
 /**
