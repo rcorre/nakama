@@ -42,10 +42,14 @@ func request_Nakama_AddFriends_0(ctx context.Context, marshaler runtime.Marshale
 	var metadata runtime.ServerMetadata
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AddFriends_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -65,10 +69,25 @@ func local_request_Nakama_AddFriends_0(ctx context.Context, marshaler runtime.Ma
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AddFriends_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AddFriends(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AddFriends_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AddFriendsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AddFriends_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AddFriends(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -136,13 +155,47 @@ func local_request_Nakama_AddGroupUsers_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AddGroupUsers_0); err != nil {
+<<<<<<< HEAD
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AddGroupUsers_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AddGroupUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AddGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AddGroupUsersRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["group_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+	}
+
+	protoReq.GroupId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AddGroupUsers_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AddGroupUsers(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -164,10 +217,14 @@ func request_Nakama_AuthenticateApple_0(ctx context.Context, marshaler runtime.M
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AuthenticateApple_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -195,10 +252,33 @@ func local_request_Nakama_AuthenticateApple_0(ctx context.Context, marshaler run
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateApple_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AuthenticateApple(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AuthenticateApple_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AuthenticateAppleRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateApple_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AuthenticateApple(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -220,10 +300,14 @@ func request_Nakama_AuthenticateCustom_0(ctx context.Context, marshaler runtime.
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AuthenticateCustom_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -251,10 +335,33 @@ func local_request_Nakama_AuthenticateCustom_0(ctx context.Context, marshaler ru
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateCustom_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AuthenticateCustom(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AuthenticateCustom_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AuthenticateCustomRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateCustom_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AuthenticateCustom(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -276,10 +383,14 @@ func request_Nakama_AuthenticateDevice_0(ctx context.Context, marshaler runtime.
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AuthenticateDevice_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -307,10 +418,33 @@ func local_request_Nakama_AuthenticateDevice_0(ctx context.Context, marshaler ru
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateDevice_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AuthenticateDevice(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AuthenticateDevice_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AuthenticateDeviceRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateDevice_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AuthenticateDevice(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -332,10 +466,14 @@ func request_Nakama_AuthenticateEmail_0(ctx context.Context, marshaler runtime.M
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AuthenticateEmail_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -363,10 +501,33 @@ func local_request_Nakama_AuthenticateEmail_0(ctx context.Context, marshaler run
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateEmail_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AuthenticateEmail(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AuthenticateEmail_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AuthenticateEmailRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateEmail_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AuthenticateEmail(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -388,10 +549,14 @@ func request_Nakama_AuthenticateFacebook_0(ctx context.Context, marshaler runtim
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AuthenticateFacebook_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -419,10 +584,33 @@ func local_request_Nakama_AuthenticateFacebook_0(ctx context.Context, marshaler 
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateFacebook_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AuthenticateFacebook(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AuthenticateFacebook_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AuthenticateFacebookRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateFacebook_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AuthenticateFacebook(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -444,10 +632,14 @@ func request_Nakama_AuthenticateFacebookInstantGame_0(ctx context.Context, marsh
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AuthenticateFacebookInstantGame_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -475,10 +667,33 @@ func local_request_Nakama_AuthenticateFacebookInstantGame_0(ctx context.Context,
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateFacebookInstantGame_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AuthenticateFacebookInstantGame(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AuthenticateFacebookInstantGame_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AuthenticateFacebookInstantGameRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateFacebookInstantGame_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AuthenticateFacebookInstantGame(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -500,10 +715,14 @@ func request_Nakama_AuthenticateGameCenter_0(ctx context.Context, marshaler runt
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AuthenticateGameCenter_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -531,10 +750,33 @@ func local_request_Nakama_AuthenticateGameCenter_0(ctx context.Context, marshale
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateGameCenter_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AuthenticateGameCenter(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AuthenticateGameCenter_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AuthenticateGameCenterRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateGameCenter_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AuthenticateGameCenter(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -556,10 +798,14 @@ func request_Nakama_AuthenticateGoogle_0(ctx context.Context, marshaler runtime.
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AuthenticateGoogle_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -587,10 +833,33 @@ func local_request_Nakama_AuthenticateGoogle_0(ctx context.Context, marshaler ru
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateGoogle_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AuthenticateGoogle(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AuthenticateGoogle_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AuthenticateGoogleRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateGoogle_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AuthenticateGoogle(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -612,10 +881,14 @@ func request_Nakama_AuthenticateSteam_0(ctx context.Context, marshaler runtime.M
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_AuthenticateSteam_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -643,10 +916,33 @@ func local_request_Nakama_AuthenticateSteam_0(ctx context.Context, marshaler run
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateSteam_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.AuthenticateSteam(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_AuthenticateSteam_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AuthenticateSteamRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_AuthenticateSteam_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.AuthenticateSteam(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -676,7 +972,10 @@ func request_Nakama_BanGroupUsers_0(ctx context.Context, marshaler runtime.Marsh
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_BanGroupUsers_0); err != nil {
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_BanGroupUsers_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -685,6 +984,7 @@ func request_Nakama_BanGroupUsers_0(ctx context.Context, marshaler runtime.Marsh
 
 }
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 func local_request_Nakama_BanGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.BanGroupUsersRequest
@@ -748,6 +1048,47 @@ func local_request_Nakama_BlockFriends_0(ctx context.Context, marshaler runtime.
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	var metadata runtime.ServerMetadata
 
+=======
+func local_request_Nakama_BanGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.BanGroupUsersRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["group_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+	}
+
+	protoReq.GroupId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_BanGroupUsers_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.BanGroupUsers(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+var (
+	filter_Nakama_BlockFriends_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_Nakama_BlockFriends_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.BlockFriendsRequest
+	var metadata runtime.ServerMetadata
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
@@ -756,6 +1097,19 @@ func local_request_Nakama_BlockFriends_0(ctx context.Context, marshaler runtime.
 	}
 
 	msg, err := client.BlockFriends(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_BlockFriends_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.BlockFriendsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_BlockFriends_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.BlockFriends(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -777,6 +1131,23 @@ func request_Nakama_CreateGroup_0(ctx context.Context, marshaler runtime.Marshal
 
 }
 
+func local_request_Nakama_CreateGroup_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.CreateGroupRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.CreateGroup(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 var (
 	filter_Nakama_DeleteFriends_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
@@ -786,10 +1157,14 @@ func request_Nakama_DeleteFriends_0(ctx context.Context, marshaler runtime.Marsh
 	var metadata runtime.ServerMetadata
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_DeleteFriends_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -809,10 +1184,25 @@ func local_request_Nakama_DeleteFriends_0(ctx context.Context, marshaler runtime
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_DeleteFriends_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.DeleteFriends(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_DeleteFriends_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.DeleteFriendsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_DeleteFriends_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.DeleteFriends(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -844,6 +1234,9 @@ func request_Nakama_DeleteGroup_0(ctx context.Context, marshaler runtime.Marshal
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 func local_request_Nakama_DeleteGroup_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.DeleteGroupRequest
 	var metadata runtime.ServerMetadata
@@ -861,6 +1254,10 @@ func local_request_Nakama_DeleteGroup_0(ctx context.Context, marshaler runtime.M
 	}
 
 	protoReq.GroupId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
 	}
@@ -870,8 +1267,11 @@ func local_request_Nakama_DeleteGroup_0(ctx context.Context, marshaler runtime.M
 
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 func request_Nakama_DeleteLeaderboardRecord_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.DeleteLeaderboardRecordRequest
 	var metadata runtime.ServerMetadata
@@ -899,6 +1299,9 @@ func request_Nakama_DeleteLeaderboardRecord_0(ctx context.Context, marshaler run
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 func local_request_Nakama_DeleteLeaderboardRecord_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.DeleteLeaderboardRecordRequest
 	var metadata runtime.ServerMetadata
@@ -916,6 +1319,10 @@ func local_request_Nakama_DeleteLeaderboardRecord_0(ctx context.Context, marshal
 	}
 
 	protoReq.LeaderboardId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
 	}
@@ -925,8 +1332,11 @@ func local_request_Nakama_DeleteLeaderboardRecord_0(ctx context.Context, marshal
 
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 var (
 	filter_Nakama_DeleteNotifications_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
@@ -936,10 +1346,14 @@ func request_Nakama_DeleteNotifications_0(ctx context.Context, marshaler runtime
 	var metadata runtime.ServerMetadata
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_DeleteNotifications_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -959,10 +1373,25 @@ func local_request_Nakama_DeleteNotifications_0(ctx context.Context, marshaler r
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_DeleteNotifications_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.DeleteNotifications(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_DeleteNotifications_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.DeleteNotificationsRequest
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_DeleteNotifications_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.DeleteNotifications(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -984,6 +1413,23 @@ func request_Nakama_DeleteStorageObjects_0(ctx context.Context, marshaler runtim
 
 }
 
+func local_request_Nakama_DeleteStorageObjects_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.DeleteStorageObjectsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.DeleteStorageObjects(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Nakama_Event_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.Event
 	var metadata runtime.ServerMetadata
@@ -1001,11 +1447,37 @@ func request_Nakama_Event_0(ctx context.Context, marshaler runtime.Marshaler, cl
 
 }
 
+func local_request_Nakama_Event_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.Event
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.Event(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Nakama_GetAccount_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetAccount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_GetAccount_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq empty.Empty
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.GetAccount(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1019,10 +1491,14 @@ func request_Nakama_GetUsers_0(ctx context.Context, marshaler runtime.Marshaler,
 	var metadata runtime.ServerMetadata
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_GetUsers_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1042,10 +1518,25 @@ func local_request_Nakama_GetUsers_0(ctx context.Context, marshaler runtime.Mars
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_GetUsers_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.GetUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_GetUsers_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.GetUsersRequest
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_GetUsers_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.GetUsers(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1055,6 +1546,15 @@ func request_Nakama_Healthcheck_0(ctx context.Context, marshaler runtime.Marshal
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.Healthcheck(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_Healthcheck_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq empty.Empty
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.Healthcheck(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1076,10 +1576,14 @@ func request_Nakama_ImportFacebookFriends_0(ctx context.Context, marshaler runti
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ImportFacebookFriends_0); err != nil {
+<<<<<<< HEAD
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1107,10 +1611,33 @@ func local_request_Nakama_ImportFacebookFriends_0(ctx context.Context, marshaler
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ImportFacebookFriends_0); err != nil {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.ImportFacebookFriends(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ImportFacebookFriends_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ImportFacebookFriendsRequest
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ImportFacebookFriends_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ImportFacebookFriends(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1141,6 +1668,41 @@ func request_Nakama_JoinGroup_0(ctx context.Context, marshaler runtime.Marshaler
 
 }
 
+func local_request_Nakama_JoinGroup_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.JoinGroupRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["group_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	protoReq.GroupId, err = runtime.String(val)
+=======
+	protoReq.TournamentId, err = runtime.String(val)
+=======
+	protoReq.GroupId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+	}
+
+	msg, err := server.JoinGroup(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Nakama_JoinTournament_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.JoinTournamentRequest
 	var metadata runtime.ServerMetadata
@@ -1158,9 +1720,13 @@ func request_Nakama_JoinTournament_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+	protoReq.TournamentId, err = runtime.String(val)
+=======
 	protoReq.GroupId, err = runtime.String(val)
 =======
 	protoReq.TournamentId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if err != nil {
@@ -1172,46 +1738,11 @@ func request_Nakama_JoinTournament_0(ctx context.Context, marshaler runtime.Mars
 
 }
 
-var (
-	filter_Nakama_KickGroupUsers_0 = &utilities.DoubleArray{Encoding: map[string]int{"group_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-)
-
-func request_Nakama_KickGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.KickGroupUsersRequest
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["group_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
-	}
-
 <<<<<<< HEAD
-	protoReq.TournamentId, err = runtime.String(val)
+<<<<<<< HEAD
+func local_request_Nakama_JoinTournament_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.JoinTournamentRequest
 =======
-	protoReq.GroupId, err = runtime.String(val)
-
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
-	}
-
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_KickGroupUsers_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.KickGroupUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-<<<<<<< HEAD
 func local_request_Nakama_JoinTournament_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.JoinTournamentRequest
 	var metadata runtime.ServerMetadata
@@ -1229,6 +1760,7 @@ func local_request_Nakama_JoinTournament_0(ctx context.Context, marshaler runtim
 	}
 
 	protoReq.TournamentId, err = runtime.String(val)
+
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
 	}
@@ -1259,6 +1791,7 @@ func request_Nakama_KickGroupUsers_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 	protoReq.GroupId, err = runtime.String(val)
+
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
 	}
@@ -1292,6 +1825,179 @@ func local_request_Nakama_KickGroupUsers_0(ctx context.Context, marshaler runtim
 	}
 
 	protoReq.GroupId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_KickGroupUsers_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.KickGroupUsers(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Nakama_LeaveGroup_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.LeaveGroupRequest
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["tournament_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tournament_id")
+	}
+
+	protoReq.TournamentId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
+	}
+
+	msg, err := server.JoinTournament(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+<<<<<<< HEAD
+var (
+	filter_Nakama_KickGroupUsers_0 = &utilities.DoubleArray{Encoding: map[string]int{"group_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+=======
+func local_request_Nakama_LeaveGroup_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.LeaveGroupRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["group_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+	}
+
+	protoReq.GroupId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+	}
+
+	msg, err := server.LeaveGroup(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Nakama_LinkApple_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountApple
+	var metadata runtime.ServerMetadata
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+
+func request_Nakama_KickGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.KickGroupUsersRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["group_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+	}
+
+<<<<<<< HEAD
+	protoReq.GroupId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+	}
+=======
+func local_request_Nakama_LinkApple_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountApple
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LinkApple(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Nakama_LinkCustom_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountCustom
+	var metadata runtime.ServerMetadata
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_KickGroupUsers_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.KickGroupUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+<<<<<<< HEAD
+func local_request_Nakama_KickGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.KickGroupUsersRequest
+=======
+func local_request_Nakama_LinkCustom_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountCustom
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LinkCustom(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Nakama_LinkDevice_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountDevice
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["group_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+	}
+
+	protoReq.GroupId, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
 	}
@@ -1308,10 +2014,32 @@ func local_request_Nakama_KickGroupUsers_0(ctx context.Context, marshaler runtim
 
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 func request_Nakama_LeaveGroup_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.LeaveGroupRequest
+=======
+func local_request_Nakama_LinkDevice_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountDevice
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LinkDevice(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Nakama_LinkEmail_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountEmail
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -1433,6 +2161,23 @@ func request_Nakama_LinkEmail_0(ctx context.Context, marshaler runtime.Marshaler
 
 }
 
+func local_request_Nakama_LinkEmail_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountEmail
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LinkEmail(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 var (
 	filter_Nakama_LinkFacebook_0 = &utilities.DoubleArray{Encoding: map[string]int{"account": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
@@ -1449,7 +2194,10 @@ func request_Nakama_LinkFacebook_0(ctx context.Context, marshaler runtime.Marsha
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_LinkFacebook_0); err != nil {
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_LinkFacebook_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -1458,14 +2206,15 @@ func request_Nakama_LinkFacebook_0(ctx context.Context, marshaler runtime.Marsha
 
 }
 
-func request_Nakama_LinkFacebookInstantGame_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountFacebookInstantGame
+func local_request_Nakama_LinkFacebook_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.LinkFacebookRequest
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
 	if berr != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
 	}
+<<<<<<< HEAD
 <<<<<<< HEAD
 	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -1478,10 +2227,51 @@ func request_Nakama_LinkFacebookInstantGame_0(ctx context.Context, marshaler run
 =======
 	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Account); err != nil && err != io.EOF {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_LinkFacebook_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LinkFacebook(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Nakama_LinkFacebookInstantGame_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountFacebookInstantGame
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.LinkFacebookInstantGame(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_LinkFacebookInstantGame_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountFacebookInstantGame
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LinkFacebookInstantGame(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1503,6 +2293,23 @@ func request_Nakama_LinkGameCenter_0(ctx context.Context, marshaler runtime.Mars
 
 }
 
+func local_request_Nakama_LinkGameCenter_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountGameCenter
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LinkGameCenter(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Nakama_LinkGoogle_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.AccountGoogle
 	var metadata runtime.ServerMetadata
@@ -1520,6 +2327,23 @@ func request_Nakama_LinkGoogle_0(ctx context.Context, marshaler runtime.Marshale
 
 }
 
+func local_request_Nakama_LinkGoogle_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountGoogle
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LinkGoogle(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Nakama_LinkSteam_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.AccountSteam
 	var metadata runtime.ServerMetadata
@@ -1533,6 +2357,23 @@ func request_Nakama_LinkSteam_0(ctx context.Context, marshaler runtime.Marshaler
 	}
 
 	msg, err := client.LinkSteam(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_LinkSteam_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountSteam
+	var metadata runtime.ServerMetadata
+
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.LinkSteam(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1557,17 +2398,78 @@ func request_Nakama_ListChannelMessages_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
 	}
 
+<<<<<<< HEAD
+<<<<<<< HEAD
 	protoReq.ChannelId, err = runtime.String(val)
+=======
+	protoReq.GroupId, err = runtime.String(val)
+=======
+	protoReq.ChannelId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListChannelMessages_0); err != nil {
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListChannelMessages_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.ListChannelMessages(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListChannelMessages_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListChannelMessagesRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["channel_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "channel_id")
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	protoReq.ChannelId, err = runtime.String(val)
+=======
+	protoReq.LeaderboardId, err = runtime.String(val)
+=======
+	protoReq.ChannelId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "channel_id", err)
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListChannelMessages_0); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListLeaderboardRecords_0); err != nil {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListChannelMessages_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListChannelMessages(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1580,11 +2482,38 @@ func request_Nakama_ListFriends_0(ctx context.Context, marshaler runtime.Marshal
 	var protoReq api.ListFriendsRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListFriends_0); err != nil {
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListFriends_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.ListFriends(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListFriends_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListFriendsRequest
+	var metadata runtime.ServerMetadata
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListFriends_0); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListLeaderboardRecordsAroundOwner_0); err != nil {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListFriends_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListFriends(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1597,11 +2526,38 @@ func request_Nakama_ListGroups_0(ctx context.Context, marshaler runtime.Marshale
 	var protoReq api.ListGroupsRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListGroups_0); err != nil {
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListGroups_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.ListGroups(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListGroups_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListGroupsRequest
+	var metadata runtime.ServerMetadata
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListGroups_0); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListNotifications_0); err != nil {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListGroups_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListGroups(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1627,20 +2583,88 @@ func request_Nakama_ListGroupUsers_0(ctx context.Context, marshaler runtime.Mars
 	}
 
 <<<<<<< HEAD
-	protoReq.ChannelId, err = runtime.String(val)
+<<<<<<< HEAD
+	protoReq.GroupId, err = runtime.String(val)
+=======
+	protoReq.Collection, err = runtime.String(val)
 =======
 	protoReq.GroupId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListGroupUsers_0); err != nil {
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListGroupUsers_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.ListGroupUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListGroupUsersRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+<<<<<<< HEAD
+	val, ok = pathParams["collection"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "collection")
+	}
+
+<<<<<<< HEAD
+	protoReq.GroupId, err = runtime.String(val)
+=======
+	protoReq.Collection, err = runtime.String(val)
+
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "collection", err)
+	}
+
+<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListGroupUsers_0); err != nil {
+=======
+	val, ok = pathParams["user_id"]
+=======
+	val, ok = pathParams["group_id"]
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+	}
+
+	protoReq.GroupId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+	}
+
+<<<<<<< HEAD
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListStorageObjects_1); err != nil {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListGroupUsers_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListGroupUsers(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1650,6 +2674,53 @@ var (
 )
 
 func request_Nakama_ListLeaderboardRecords_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListLeaderboardRecordsRequest
+	var metadata runtime.ServerMetadata
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["leaderboard_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "leaderboard_id")
+	}
+
+	protoReq.LeaderboardId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListLeaderboardRecords_0); err != nil {
+<<<<<<< HEAD
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListTournaments_0); err != nil {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListLeaderboardRecords(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListLeaderboardRecords_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq api.ListLeaderboardRecordsRequest
 	var metadata runtime.ServerMetadata
 
@@ -1666,9 +2737,13 @@ func request_Nakama_ListLeaderboardRecords_0(ctx context.Context, marshaler runt
 	}
 
 <<<<<<< HEAD
-	protoReq.ChannelId, err = runtime.String(val)
+<<<<<<< HEAD
+	protoReq.LeaderboardId, err = runtime.String(val)
+=======
+	protoReq.TournamentId, err = runtime.String(val)
 =======
 	protoReq.LeaderboardId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if err != nil {
@@ -1676,17 +2751,21 @@ func request_Nakama_ListLeaderboardRecords_0(ctx context.Context, marshaler runt
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListChannelMessages_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListLeaderboardRecords_0); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListTournamentRecords_0); err != nil {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListLeaderboardRecords_0); err != nil {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListLeaderboardRecords(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := server.ListLeaderboardRecords(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1711,12 +2790,100 @@ func request_Nakama_ListLeaderboardRecordsAroundOwner_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "leaderboard_id")
 	}
 
+<<<<<<< HEAD
+<<<<<<< HEAD
 	protoReq.LeaderboardId, err = runtime.String(val)
+=======
+	protoReq.TournamentId, err = runtime.String(val)
+=======
+	protoReq.LeaderboardId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
 	}
 
+	val, ok = pathParams["owner_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "owner_id")
+	}
+
+	protoReq.OwnerId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListLeaderboardRecordsAroundOwner_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListLeaderboardRecordsAroundOwner(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListLeaderboardRecordsAroundOwner_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListLeaderboardRecordsAroundOwnerRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	val, ok = pathParams["leaderboard_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "leaderboard_id")
+	}
+
+	protoReq.LeaderboardId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
+	}
+
+	val, ok = pathParams["owner_id"]
+=======
+	val, ok = pathParams["user_id"]
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	val, ok = pathParams["leaderboard_id"]
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "leaderboard_id")
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	protoReq.OwnerId, err = runtime.String(val)
+=======
+	protoReq.UserId, err = runtime.String(val)
+=======
+	protoReq.LeaderboardId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListLeaderboardRecordsAroundOwner_0); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListUserGroups_0); err != nil {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
 	val, ok = pathParams["owner_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "owner_id")
@@ -1728,18 +2895,12 @@ func request_Nakama_ListLeaderboardRecordsAroundOwner_0(ctx context.Context, mar
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner_id", err)
 	}
 
-<<<<<<< HEAD
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListFriends_0); err != nil {
-=======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListLeaderboardRecordsAroundOwner_0); err != nil {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListLeaderboardRecordsAroundOwner(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := server.ListLeaderboardRecordsAroundOwner(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1752,11 +2913,41 @@ func request_Nakama_ListMatches_0(ctx context.Context, marshaler runtime.Marshal
 	var protoReq api.ListMatchesRequest
 	var metadata runtime.ServerMetadata
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListMatches_0); err != nil {
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListMatches_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListMatches_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+=======
+	val, ok = pathParams["group_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
 	msg, err := client.ListMatches(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListMatches_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListMatchesRequest
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListMatches_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	}
+
+	msg, err := server.ListMatches(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1769,18 +2960,41 @@ func request_Nakama_ListNotifications_0(ctx context.Context, marshaler runtime.M
 	var protoReq api.ListNotificationsRequest
 	var metadata runtime.ServerMetadata
 
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListNotifications_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	msg, err := client.ListNotifications(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListNotifications_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListNotificationsRequest
+	var metadata runtime.ServerMetadata
+
 <<<<<<< HEAD
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListGroups_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListNotifications_0); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_PromoteGroupUsers_0); err != nil {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 =======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListNotifications_0); err != nil {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListNotifications(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := server.ListNotifications(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1806,20 +3020,77 @@ func request_Nakama_ListStorageObjects_0(ctx context.Context, marshaler runtime.
 	}
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+	protoReq.Collection, err = runtime.String(val)
+=======
 	protoReq.GroupId, err = runtime.String(val)
 =======
 	protoReq.Collection, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "collection", err)
 	}
 
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListStorageObjects_0); err != nil {
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListStorageObjects_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.ListStorageObjects(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListStorageObjects_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListStorageObjectsRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["collection"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "collection")
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	protoReq.Collection, err = runtime.String(val)
+=======
+	protoReq.Id, err = runtime.String(val)
+=======
+	protoReq.Collection, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "collection", err)
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListStorageObjects_0); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_RpcFunc_0); err != nil {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListStorageObjects_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListStorageObjects(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1845,21 +3116,109 @@ func request_Nakama_ListStorageObjects_1(ctx context.Context, marshaler runtime.
 	}
 
 <<<<<<< HEAD
-	protoReq.GroupId, err = runtime.String(val)
+<<<<<<< HEAD
+	protoReq.Collection, err = runtime.String(val)
+=======
+	protoReq.Id, err = runtime.String(val)
 =======
 	protoReq.Collection, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "collection", err)
 	}
 
+	val, ok = pathParams["user_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "user_id")
+	}
+
 <<<<<<< HEAD
+<<<<<<< HEAD
+	protoReq.UserId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "user_id", err)
+	}
+=======
+	msg, err := client.RpcFunc(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	protoReq.UserId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "user_id", err)
+	}
+
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListGroupUsers_0); err != nil {
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListStorageObjects_1); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListStorageObjects(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListStorageObjects_1(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListStorageObjectsRequest
+	var metadata runtime.ServerMetadata
+
+<<<<<<< HEAD
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+<<<<<<< HEAD
+
+	protoReq.Collection, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "collection", err)
 =======
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["collection"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "collection")
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	}
+
+	protoReq.Collection, err = runtime.String(val)
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	protoReq.UserId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "user_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListStorageObjects_1); err != nil {
+=======
+}
+=======
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "collection", err)
+	}
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+
 	val, ok = pathParams["user_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "user_id")
@@ -1870,13 +3229,17 @@ func request_Nakama_ListStorageObjects_1(ctx context.Context, marshaler runtime.
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "user_id", err)
 	}
+<<<<<<< HEAD
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
 
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListStorageObjects_1); err != nil {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListStorageObjects(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := server.ListStorageObjects(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1889,35 +3252,42 @@ func request_Nakama_ListTournaments_0(ctx context.Context, marshaler runtime.Mar
 	var protoReq api.ListTournamentsRequest
 	var metadata runtime.ServerMetadata
 
-<<<<<<< HEAD
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["leaderboard_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "leaderboard_id")
-	}
-
-	protoReq.LeaderboardId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
-	}
-
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListLeaderboardRecords_0); err != nil {
-=======
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListTournaments_0); err != nil {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListTournaments_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.ListTournaments(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListTournaments_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListTournamentsRequest
+	var metadata runtime.ServerMetadata
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListTournaments_0); err != nil {
+=======
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListTournaments_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListTournaments(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1930,6 +3300,10 @@ func request_Nakama_ListTournamentRecords_0(ctx context.Context, marshaler runti
 	var protoReq api.ListTournamentRecordsRequest
 	var metadata runtime.ServerMetadata
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	var (
 		val string
 		ok  bool
@@ -1940,30 +3314,95 @@ func request_Nakama_ListTournamentRecords_0(ctx context.Context, marshaler runti
 	val, ok = pathParams["tournament_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tournament_id")
+<<<<<<< HEAD
 	}
 
-<<<<<<< HEAD
-	protoReq.LeaderboardId, err = runtime.String(val)
-=======
 	protoReq.TournamentId, err = runtime.String(val)
-
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
 	}
 
-<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+=======
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	}
+
+	protoReq.TournamentId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
+	}
+
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListLeaderboardRecords_0); err != nil {
-=======
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListTournamentRecords_0); err != nil {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListTournamentRecords_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.ListTournamentRecords(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListTournamentRecords_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListTournamentRecordsRequest
+	var metadata runtime.ServerMetadata
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["tournament_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tournament_id")
+<<<<<<< HEAD
+	}
+
+	protoReq.TournamentId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListTournamentRecords_0); err != nil {
+=======
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	}
+
+	protoReq.TournamentId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListTournamentRecords_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListTournamentRecords(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -1987,13 +3426,88 @@ func request_Nakama_ListTournamentRecordsAroundOwner_0(ctx context.Context, mars
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tournament_id")
 	}
-
 <<<<<<< HEAD
-	protoReq.LeaderboardId, err = runtime.String(val)
+<<<<<<< HEAD
+
+	protoReq.TournamentId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
 =======
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+
 	protoReq.TournamentId, err = runtime.String(val)
 
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	}
+
+	val, ok = pathParams["owner_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "owner_id")
+	}
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+	protoReq.OwnerId, err = runtime.String(val)
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner_id", err)
+	}
+=======
+}
+
+func request_Nakama_UnlinkSteam_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.AccountSteam
+	var metadata runtime.ServerMetadata
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	protoReq.OwnerId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner_id", err)
+	}
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListTournamentRecordsAroundOwner_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ListTournamentRecordsAroundOwner(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Nakama_ListTournamentRecordsAroundOwner_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListTournamentRecordsAroundOwnerRequest
+	var metadata runtime.ServerMetadata
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["tournament_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tournament_id")
+	}
+
+	protoReq.TournamentId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
 	}
@@ -2004,15 +3518,33 @@ func request_Nakama_ListTournamentRecordsAroundOwner_0(ctx context.Context, mars
 	}
 
 	protoReq.OwnerId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner_id", err)
 	}
 
+<<<<<<< HEAD
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListTournamentRecordsAroundOwner_0); err != nil {
+=======
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+>>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListTournamentRecordsAroundOwner_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.ListTournamentRecordsAroundOwner(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := server.ListTournamentRecordsAroundOwner(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -2032,43 +3564,29 @@ func request_Nakama_ListUserGroups_0(ctx context.Context, marshaler runtime.Mars
 		_   = err
 	)
 
-<<<<<<< HEAD
-	val, ok = pathParams["leaderboard_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "leaderboard_id")
-	}
-
-	protoReq.LeaderboardId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
-	}
-
-	val, ok = pathParams["owner_id"]
-=======
 	val, ok = pathParams["user_id"]
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "user_id")
 	}
 
 <<<<<<< HEAD
-	protoReq.OwnerId, err = runtime.String(val)
+<<<<<<< HEAD
+	protoReq.UserId, err = runtime.String(val)
+=======
+	protoReq.GroupId, err = runtime.String(val)
 =======
 	protoReq.UserId, err = runtime.String(val)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "user_id", err)
 	}
 
-<<<<<<< HEAD
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListLeaderboardRecordsAroundOwner_0); err != nil {
-=======
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListUserGroups_0); err != nil {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListUserGroups_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -2077,12 +3595,8 @@ func request_Nakama_ListUserGroups_0(ctx context.Context, marshaler runtime.Mars
 
 }
 
-var (
-	filter_Nakama_PromoteGroupUsers_0 = &utilities.DoubleArray{Encoding: map[string]int{"group_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-)
-
-func request_Nakama_PromoteGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.PromoteGroupUsersRequest
+func local_request_Nakama_ListUserGroups_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.ListUserGroupsRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -2092,559 +3606,12 @@ func request_Nakama_PromoteGroupUsers_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-<<<<<<< HEAD
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListMatches_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-=======
-	val, ok = pathParams["group_id"]
+	val, ok = pathParams["user_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-	}
-
-	protoReq.GroupId, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "user_id")
 	}
 
 <<<<<<< HEAD
-	msg, err := client.ListNotifications(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_Nakama_ListNotifications_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ListNotificationsRequest
-	var metadata runtime.ServerMetadata
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListNotifications_0); err != nil {
-=======
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_PromoteGroupUsers_0); err != nil {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.PromoteGroupUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-var (
-	filter_Nakama_DemoteGroupUsers_0 = &utilities.DoubleArray{Encoding: map[string]int{"group_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-)
-
-func request_Nakama_DemoteGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.DemoteGroupUsersRequest
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["group_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
-	}
-
-<<<<<<< HEAD
-	protoReq.Collection, err = runtime.String(val)
-=======
-	protoReq.GroupId, err = runtime.String(val)
-
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
-	}
-
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_DemoteGroupUsers_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.DemoteGroupUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_ReadStorageObjects_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.ReadStorageObjectsRequest
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.ReadStorageObjects(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-var (
-	filter_Nakama_RpcFunc_0 = &utilities.DoubleArray{Encoding: map[string]int{"payload": 0, "id": 1}, Base: []int{1, 1, 2, 0, 0}, Check: []int{0, 1, 1, 2, 3}}
-)
-
-func request_Nakama_RpcFunc_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.Rpc
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Payload); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
-	}
-
-<<<<<<< HEAD
-	protoReq.Collection, err = runtime.String(val)
-=======
-	protoReq.Id, err = runtime.String(val)
-
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
-	}
-
-<<<<<<< HEAD
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListStorageObjects_0); err != nil {
-=======
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_RpcFunc_0); err != nil {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.RpcFunc(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-var (
-	filter_Nakama_RpcFunc_1 = &utilities.DoubleArray{Encoding: map[string]int{"id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-)
-
-func request_Nakama_RpcFunc_1(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.Rpc
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
-	}
-
-<<<<<<< HEAD
-	protoReq.Collection, err = runtime.String(val)
-=======
-	protoReq.Id, err = runtime.String(val)
-
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
-	}
-
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_RpcFunc_1); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-<<<<<<< HEAD
-	protoReq.UserId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "user_id", err)
-	}
-=======
-	msg, err := client.RpcFunc(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-
-func request_Nakama_UnlinkApple_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountApple
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UnlinkApple(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_UnlinkCustom_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountCustom
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-<<<<<<< HEAD
-
-	protoReq.Collection, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "collection", err)
-=======
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-	}
-
-	msg, err := client.UnlinkCustom(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-<<<<<<< HEAD
-	protoReq.UserId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "user_id", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListStorageObjects_1); err != nil {
-=======
-}
-
-func request_Nakama_UnlinkDevice_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountDevice
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UnlinkDevice(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_UnlinkEmail_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountEmail
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UnlinkEmail(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_UnlinkFacebook_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountFacebook
-	var metadata runtime.ServerMetadata
-
-<<<<<<< HEAD
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListTournaments_0); err != nil {
-=======
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UnlinkFacebook(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_UnlinkFacebookInstantGame_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountFacebookInstantGame
-	var metadata runtime.ServerMetadata
-
-<<<<<<< HEAD
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["tournament_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tournament_id")
-	}
-
-	protoReq.TournamentId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-=======
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UnlinkFacebookInstantGame(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_UnlinkGameCenter_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountGameCenter
-	var metadata runtime.ServerMetadata
-
-<<<<<<< HEAD
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["tournament_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tournament_id")
-	}
-
-	protoReq.TournamentId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListTournamentRecords_0); err != nil {
-=======
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UnlinkGameCenter(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_UnlinkGoogle_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountGoogle
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-<<<<<<< HEAD
-
-	protoReq.TournamentId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
-=======
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-	}
-
-	msg, err := client.UnlinkGoogle(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-<<<<<<< HEAD
-	protoReq.OwnerId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner_id", err)
-	}
-=======
-}
-
-func request_Nakama_UnlinkSteam_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.AccountSteam
-	var metadata runtime.ServerMetadata
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UnlinkSteam(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_UpdateAccount_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.UpdateAccountRequest
-	var metadata runtime.ServerMetadata
-
-<<<<<<< HEAD
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["tournament_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tournament_id")
-	}
-
-	protoReq.TournamentId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
-	}
-
-	val, ok = pathParams["owner_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "owner_id")
-	}
-
-	protoReq.OwnerId, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "owner_id", err)
-	}
-
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_ListTournamentRecordsAroundOwner_0); err != nil {
-=======
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	msg, err := client.UpdateAccount(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_UpdateGroup_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.UpdateGroupRequest
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["group_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
-	}
-
-<<<<<<< HEAD
-	protoReq.UserId, err = runtime.String(val)
-=======
-	protoReq.GroupId, err = runtime.String(val)
-
->>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
-	}
-
-	msg, err := client.UpdateGroup(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func request_Nakama_WriteLeaderboardRecord_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.WriteLeaderboardRecordRequest
-	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Record); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["leaderboard_id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "leaderboard_id")
-	}
-
 <<<<<<< HEAD
 	protoReq.UserId, err = runtime.String(val)
 	if err != nil {
@@ -2662,18 +3629,35 @@ func request_Nakama_WriteLeaderboardRecord_0(ctx context.Context, marshaler runt
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	protoReq.UserId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "user_id", err)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	}
 
-	msg, err := client.WriteLeaderboardRecord(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_ListUserGroups_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ListUserGroups(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
-func request_Nakama_WriteStorageObjects_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.WriteStorageObjectsRequest
+var (
+	filter_Nakama_PromoteGroupUsers_0 = &utilities.DoubleArray{Encoding: map[string]int{"group_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
+func request_Nakama_PromoteGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.PromoteGroupUsersRequest
 	var metadata runtime.ServerMetadata
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	var (
 		val string
 		ok  bool
@@ -2684,6 +3668,7 @@ func request_Nakama_WriteStorageObjects_0(ctx context.Context, marshaler runtime
 	val, ok = pathParams["group_id"]
 	if !ok {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
+<<<<<<< HEAD
 	}
 
 	protoReq.GroupId, err = runtime.String(val)
@@ -2698,27 +3683,31 @@ func request_Nakama_WriteStorageObjects_0(ctx context.Context, marshaler runtime
 	if berr != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+
+	protoReq.GroupId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_PromoteGroupUsers_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
-	msg, err := client.WriteStorageObjects(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.PromoteGroupUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
 
-func request_Nakama_WriteTournamentRecord_0(ctx context.Context, marshaler runtime.Marshaler, client NakamaClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq api.WriteTournamentRecordRequest
+func local_request_Nakama_PromoteGroupUsers_0(ctx context.Context, marshaler runtime.Marshaler, server NakamaServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq api.PromoteGroupUsersRequest
 	var metadata runtime.ServerMetadata
-
-	newReader, berr := utilities.IOReaderFactory(req.Body)
-	if berr != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
-	}
-	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq.Record); err != nil && err != io.EOF {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-	}
 
 	var (
 		val string
@@ -2727,11 +3716,12 @@ func request_Nakama_WriteTournamentRecord_0(ctx context.Context, marshaler runti
 		_   = err
 	)
 
-	val, ok = pathParams["tournament_id"]
+	val, ok = pathParams["group_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tournament_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "group_id")
 	}
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 	protoReq.GroupId, err = runtime.String(val)
 	if err != nil {
@@ -2749,14 +3739,27 @@ func request_Nakama_WriteTournamentRecord_0(ctx context.Context, marshaler runti
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+	protoReq.GroupId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	}
 
-	msg, err := client.WriteTournamentRecord(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_PromoteGroupUsers_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.PromoteGroupUsers(ctx, &protoReq)
 	return msg, metadata, err
 
 }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 var (
 	filter_Nakama_DemoteGroupUsers_0 = &utilities.DoubleArray{Encoding: map[string]int{"group_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
@@ -2778,6 +3781,10 @@ func request_Nakama_DemoteGroupUsers_0(ctx context.Context, marshaler runtime.Ma
 	}
 
 	protoReq.GroupId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
 	}
@@ -2811,14 +3818,22 @@ func local_request_Nakama_DemoteGroupUsers_0(ctx context.Context, marshaler runt
 	}
 
 	protoReq.GroupId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
 	}
 
+<<<<<<< HEAD
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_DemoteGroupUsers_0); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_DemoteGroupUsers_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -2890,6 +3905,10 @@ func request_Nakama_RpcFunc_0(ctx context.Context, marshaler runtime.Marshaler, 
 	}
 
 	protoReq.Id, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
@@ -2931,14 +3950,22 @@ func local_request_Nakama_RpcFunc_0(ctx context.Context, marshaler runtime.Marsh
 	}
 
 	protoReq.Id, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 
+<<<<<<< HEAD
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_RpcFunc_0); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_RpcFunc_0); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -2968,6 +3995,10 @@ func request_Nakama_RpcFunc_1(ctx context.Context, marshaler runtime.Marshaler, 
 	}
 
 	protoReq.Id, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
@@ -3001,14 +4032,22 @@ func local_request_Nakama_RpcFunc_1(ctx context.Context, marshaler runtime.Marsh
 	}
 
 	protoReq.Id, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 
+<<<<<<< HEAD
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Nakama_RpcFunc_1); err != nil {
+=======
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Nakama_RpcFunc_1); err != nil {
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -3382,6 +4421,10 @@ func request_Nakama_UpdateGroup_0(ctx context.Context, marshaler runtime.Marshal
 	}
 
 	protoReq.GroupId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
 	}
@@ -3416,6 +4459,10 @@ func local_request_Nakama_UpdateGroup_0(ctx context.Context, marshaler runtime.M
 	}
 
 	protoReq.GroupId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "group_id", err)
 	}
@@ -3450,6 +4497,10 @@ func request_Nakama_WriteLeaderboardRecord_0(ctx context.Context, marshaler runt
 	}
 
 	protoReq.LeaderboardId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
 	}
@@ -3484,6 +4535,10 @@ func local_request_Nakama_WriteLeaderboardRecord_0(ctx context.Context, marshale
 	}
 
 	protoReq.LeaderboardId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "leaderboard_id", err)
 	}
@@ -3552,6 +4607,10 @@ func request_Nakama_WriteTournamentRecord_0(ctx context.Context, marshaler runti
 	}
 
 	protoReq.TournamentId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
 	}
@@ -3586,6 +4645,10 @@ func local_request_Nakama_WriteTournamentRecord_0(ctx context.Context, marshaler
 	}
 
 	protoReq.TournamentId, err = runtime.String(val)
+<<<<<<< HEAD
+=======
+
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tournament_id", err)
 	}
@@ -3598,22 +4661,33 @@ func local_request_Nakama_WriteTournamentRecord_0(ctx context.Context, marshaler
 // RegisterNakamaHandlerServer registers the http handlers for service Nakama to "mux".
 // UnaryRPC     :call NakamaServer directly.
 // StreamingRPC :currently unsupported pending https://github.com/grpc/grpc-go/issues/906.
+<<<<<<< HEAD
 // Note that using this registration option will cause many gRPC library features to stop working. Consider using RegisterNakamaHandlerFromEndpoint instead.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, server NakamaServer) error {
 
 	mux.Handle("POST", pattern_Nakama_AddFriends_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AddFriends")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AddFriends_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3627,16 +4701,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AddGroupUsers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AddGroupUsers")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AddGroupUsers_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3650,16 +4732,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AuthenticateApple_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AuthenticateApple")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AuthenticateApple_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3673,16 +4763,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AuthenticateCustom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AuthenticateCustom")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AuthenticateCustom_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3696,16 +4794,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AuthenticateDevice_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AuthenticateDevice")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AuthenticateDevice_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3719,16 +4825,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AuthenticateEmail_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AuthenticateEmail")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AuthenticateEmail_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3742,16 +4856,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AuthenticateFacebook_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AuthenticateFacebook")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AuthenticateFacebook_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3765,16 +4887,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AuthenticateFacebookInstantGame_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AuthenticateFacebookInstantGame")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AuthenticateFacebookInstantGame_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3788,16 +4918,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AuthenticateGameCenter_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AuthenticateGameCenter")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AuthenticateGameCenter_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3811,16 +4949,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AuthenticateGoogle_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AuthenticateGoogle")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AuthenticateGoogle_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3834,16 +4980,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_AuthenticateSteam_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/AuthenticateSteam")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_AuthenticateSteam_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3857,16 +5011,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_BanGroupUsers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/BanGroupUsers")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_BanGroupUsers_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3880,16 +5042,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_BlockFriends_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/BlockFriends")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_BlockFriends_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3903,16 +5073,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_CreateGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/CreateGroup")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_CreateGroup_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3926,16 +5104,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("DELETE", pattern_Nakama_DeleteFriends_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/DeleteFriends")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_DeleteFriends_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3949,16 +5135,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("DELETE", pattern_Nakama_DeleteGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/DeleteGroup")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_DeleteGroup_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3972,16 +5166,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("DELETE", pattern_Nakama_DeleteLeaderboardRecord_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/DeleteLeaderboardRecord")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_DeleteLeaderboardRecord_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -3995,16 +5197,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("DELETE", pattern_Nakama_DeleteNotifications_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/DeleteNotifications")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_DeleteNotifications_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4018,16 +5228,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("PUT", pattern_Nakama_DeleteStorageObjects_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/DeleteStorageObjects")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_DeleteStorageObjects_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4041,16 +5259,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_Event_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/Event")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_Event_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4064,16 +5290,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_GetAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/GetAccount")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_GetAccount_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4087,16 +5321,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_GetUsers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/GetUsers")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_GetUsers_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4110,16 +5352,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_Healthcheck_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/Healthcheck")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_Healthcheck_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4133,16 +5383,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_ImportFacebookFriends_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ImportFacebookFriends")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ImportFacebookFriends_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4156,16 +5414,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_JoinGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/JoinGroup")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_JoinGroup_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4179,16 +5445,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_JoinTournament_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/JoinTournament")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_JoinTournament_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4202,16 +5476,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_KickGroupUsers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/KickGroupUsers")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_KickGroupUsers_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4225,16 +5507,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LeaveGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LeaveGroup")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LeaveGroup_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4248,16 +5538,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LinkApple_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LinkApple")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LinkApple_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4271,16 +5569,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LinkCustom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LinkCustom")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LinkCustom_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4294,16 +5600,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LinkDevice_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LinkDevice")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LinkDevice_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4317,16 +5631,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LinkEmail_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LinkEmail")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LinkEmail_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4340,16 +5662,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LinkFacebook_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LinkFacebook")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LinkFacebook_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4363,16 +5693,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LinkFacebookInstantGame_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LinkFacebookInstantGame")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LinkFacebookInstantGame_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4386,16 +5724,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LinkGameCenter_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LinkGameCenter")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LinkGameCenter_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4409,16 +5755,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LinkGoogle_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LinkGoogle")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LinkGoogle_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4432,16 +5786,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_LinkSteam_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/LinkSteam")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_LinkSteam_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4455,16 +5817,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListChannelMessages_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListChannelMessages")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListChannelMessages_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4478,16 +5848,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListFriends_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListFriends")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListFriends_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4501,16 +5879,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListGroups_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListGroups")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListGroups_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4524,16 +5910,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListGroupUsers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListGroupUsers")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListGroupUsers_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4547,16 +5941,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListLeaderboardRecords_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListLeaderboardRecords")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListLeaderboardRecords_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4570,16 +5972,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListLeaderboardRecordsAroundOwner_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListLeaderboardRecordsAroundOwner")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListLeaderboardRecordsAroundOwner_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4593,16 +6003,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListMatches_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListMatches")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListMatches_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4616,16 +6034,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListNotifications_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListNotifications")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListNotifications_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4639,16 +6065,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListStorageObjects_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListStorageObjects")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListStorageObjects_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4662,16 +6096,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListStorageObjects_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListStorageObjects")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListStorageObjects_1(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4685,16 +6127,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListTournaments_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListTournaments")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListTournaments_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4708,16 +6158,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListTournamentRecords_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListTournamentRecords")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListTournamentRecords_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4731,16 +6189,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListTournamentRecordsAroundOwner_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListTournamentRecordsAroundOwner")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListTournamentRecordsAroundOwner_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4754,16 +6220,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_ListUserGroups_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ListUserGroups")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ListUserGroups_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4777,16 +6251,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_PromoteGroupUsers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/PromoteGroupUsers")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_PromoteGroupUsers_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4800,16 +6282,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_DemoteGroupUsers_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/DemoteGroupUsers")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_DemoteGroupUsers_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4823,16 +6313,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_ReadStorageObjects_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/ReadStorageObjects")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_ReadStorageObjects_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4846,16 +6344,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_RpcFunc_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/RpcFunc")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_RpcFunc_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4869,16 +6375,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("GET", pattern_Nakama_RpcFunc_1, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/RpcFunc")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_RpcFunc_1(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4892,16 +6406,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_UnlinkApple_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UnlinkApple")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UnlinkApple_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4915,16 +6437,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_UnlinkCustom_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UnlinkCustom")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UnlinkCustom_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4938,16 +6468,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_UnlinkDevice_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UnlinkDevice")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UnlinkDevice_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4961,16 +6499,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_UnlinkEmail_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UnlinkEmail")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UnlinkEmail_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -4984,16 +6530,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_UnlinkFacebook_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UnlinkFacebook")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UnlinkFacebook_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5007,16 +6561,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_UnlinkFacebookInstantGame_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UnlinkFacebookInstantGame")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UnlinkFacebookInstantGame_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5030,16 +6592,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_UnlinkGameCenter_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UnlinkGameCenter")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UnlinkGameCenter_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5053,16 +6623,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_UnlinkGoogle_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UnlinkGoogle")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UnlinkGoogle_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5076,16 +6654,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_UnlinkSteam_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UnlinkSteam")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UnlinkSteam_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5099,16 +6685,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("PUT", pattern_Nakama_UpdateAccount_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UpdateAccount")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UpdateAccount_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5122,16 +6716,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("PUT", pattern_Nakama_UpdateGroup_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/UpdateGroup")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_UpdateGroup_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5145,16 +6747,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("POST", pattern_Nakama_WriteLeaderboardRecord_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/WriteLeaderboardRecord")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_WriteLeaderboardRecord_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5168,16 +6778,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("PUT", pattern_Nakama_WriteStorageObjects_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/WriteStorageObjects")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_WriteStorageObjects_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5191,16 +6809,24 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	mux.Handle("PUT", pattern_Nakama_WriteTournamentRecord_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+<<<<<<< HEAD
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.api.Nakama/WriteTournamentRecord")
+=======
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 		resp, md, err := local_request_Nakama_WriteTournamentRecord_0(rctx, inboundMarshaler, server, req, pathParams)
+<<<<<<< HEAD
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -5214,8 +6840,11 @@ func RegisterNakamaHandlerServer(ctx context.Context, mux *runtime.ServeMux, ser
 	return nil
 }
 
+<<<<<<< HEAD
 =======
 >>>>>>> e5902fc3... Reimplement Nakama Console with Angular 10.
+=======
+>>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
 // RegisterNakamaHandlerFromEndpoint is same as RegisterNakamaHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
 func RegisterNakamaHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
@@ -6658,145 +8287,145 @@ func RegisterNakamaHandlerClient(ctx context.Context, mux *runtime.ServeMux, cli
 }
 
 var (
-	pattern_Nakama_AddFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "friend"}, ""))
+	pattern_Nakama_AddFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "friend"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AddGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "add"}, ""))
+	pattern_Nakama_AddGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "add"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AuthenticateApple_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "apple"}, ""))
+	pattern_Nakama_AuthenticateApple_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "apple"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AuthenticateCustom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "custom"}, ""))
+	pattern_Nakama_AuthenticateCustom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "custom"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AuthenticateDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "device"}, ""))
+	pattern_Nakama_AuthenticateDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "device"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AuthenticateEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "email"}, ""))
+	pattern_Nakama_AuthenticateEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "email"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AuthenticateFacebook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "facebook"}, ""))
+	pattern_Nakama_AuthenticateFacebook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "facebook"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AuthenticateFacebookInstantGame_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "facebookinstantgame"}, ""))
+	pattern_Nakama_AuthenticateFacebookInstantGame_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "facebookinstantgame"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AuthenticateGameCenter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "gamecenter"}, ""))
+	pattern_Nakama_AuthenticateGameCenter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "gamecenter"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AuthenticateGoogle_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "google"}, ""))
+	pattern_Nakama_AuthenticateGoogle_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "google"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_AuthenticateSteam_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "steam"}, ""))
+	pattern_Nakama_AuthenticateSteam_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "authenticate", "steam"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_BanGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "ban"}, ""))
+	pattern_Nakama_BanGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "ban"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_BlockFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "friend", "block"}, ""))
+	pattern_Nakama_BlockFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "friend", "block"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_CreateGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "group"}, ""))
+	pattern_Nakama_CreateGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "group"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_DeleteFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "friend"}, ""))
+	pattern_Nakama_DeleteFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "friend"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_DeleteGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "group", "group_id"}, ""))
+	pattern_Nakama_DeleteGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "group", "group_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_DeleteLeaderboardRecord_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "leaderboard", "leaderboard_id"}, ""))
+	pattern_Nakama_DeleteLeaderboardRecord_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "leaderboard", "leaderboard_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_DeleteNotifications_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "notification"}, ""))
+	pattern_Nakama_DeleteNotifications_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "notification"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_DeleteStorageObjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "storage", "delete"}, ""))
+	pattern_Nakama_DeleteStorageObjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "storage", "delete"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_Event_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "event"}, ""))
+	pattern_Nakama_Event_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "event"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_GetAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "account"}, ""))
+	pattern_Nakama_GetAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "account"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_GetUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "user"}, ""))
+	pattern_Nakama_GetUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "user"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_Healthcheck_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"healthcheck"}, ""))
+	pattern_Nakama_Healthcheck_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"healthcheck"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ImportFacebookFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "friend", "facebook"}, ""))
+	pattern_Nakama_ImportFacebookFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "friend", "facebook"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_JoinGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "join"}, ""))
+	pattern_Nakama_JoinGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "join"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_JoinTournament_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "tournament", "tournament_id", "join"}, ""))
+	pattern_Nakama_JoinTournament_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "tournament", "tournament_id", "join"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_KickGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "kick"}, ""))
+	pattern_Nakama_KickGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "kick"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LeaveGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "leave"}, ""))
+	pattern_Nakama_LeaveGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "leave"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LinkApple_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "apple"}, ""))
+	pattern_Nakama_LinkApple_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "apple"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LinkCustom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "custom"}, ""))
+	pattern_Nakama_LinkCustom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "custom"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LinkDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "device"}, ""))
+	pattern_Nakama_LinkDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "device"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LinkEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "email"}, ""))
+	pattern_Nakama_LinkEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "email"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LinkFacebook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "facebook"}, ""))
+	pattern_Nakama_LinkFacebook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "facebook"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LinkFacebookInstantGame_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "facebookinstantgame"}, ""))
+	pattern_Nakama_LinkFacebookInstantGame_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "facebookinstantgame"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LinkGameCenter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "gamecenter"}, ""))
+	pattern_Nakama_LinkGameCenter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "gamecenter"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LinkGoogle_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "google"}, ""))
+	pattern_Nakama_LinkGoogle_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "google"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_LinkSteam_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "steam"}, ""))
+	pattern_Nakama_LinkSteam_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "link", "steam"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListChannelMessages_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "channel", "channel_id"}, ""))
+	pattern_Nakama_ListChannelMessages_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "channel", "channel_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "friend"}, ""))
+	pattern_Nakama_ListFriends_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "friend"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListGroups_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "group"}, ""))
+	pattern_Nakama_ListGroups_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "group"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "user"}, ""))
+	pattern_Nakama_ListGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "user"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListLeaderboardRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "leaderboard", "leaderboard_id"}, ""))
+	pattern_Nakama_ListLeaderboardRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "leaderboard", "leaderboard_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListLeaderboardRecordsAroundOwner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v2", "leaderboard", "leaderboard_id", "owner", "owner_id"}, ""))
+	pattern_Nakama_ListLeaderboardRecordsAroundOwner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v2", "leaderboard", "leaderboard_id", "owner", "owner_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListMatches_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "match"}, ""))
+	pattern_Nakama_ListMatches_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "match"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListNotifications_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "notification"}, ""))
+	pattern_Nakama_ListNotifications_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "notification"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListStorageObjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "storage", "collection"}, ""))
+	pattern_Nakama_ListStorageObjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "storage", "collection"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListStorageObjects_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"v2", "storage", "collection", "user_id"}, ""))
+	pattern_Nakama_ListStorageObjects_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"v2", "storage", "collection", "user_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListTournaments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "tournament"}, ""))
+	pattern_Nakama_ListTournaments_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "tournament"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListTournamentRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "tournament", "tournament_id"}, ""))
+	pattern_Nakama_ListTournamentRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "tournament", "tournament_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListTournamentRecordsAroundOwner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v2", "tournament", "tournament_id", "owner", "owner_id"}, ""))
+	pattern_Nakama_ListTournamentRecordsAroundOwner_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"v2", "tournament", "tournament_id", "owner", "owner_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ListUserGroups_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "user", "user_id", "group"}, ""))
+	pattern_Nakama_ListUserGroups_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "user", "user_id", "group"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_PromoteGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "promote"}, ""))
+	pattern_Nakama_PromoteGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "promote"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_DemoteGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "demote"}, ""))
+	pattern_Nakama_DemoteGroupUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3}, []string{"v2", "group", "group_id", "demote"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_ReadStorageObjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "storage"}, ""))
+	pattern_Nakama_ReadStorageObjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "storage"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_RpcFunc_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "rpc", "id"}, ""))
+	pattern_Nakama_RpcFunc_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "rpc", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_RpcFunc_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "rpc", "id"}, ""))
+	pattern_Nakama_RpcFunc_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "rpc", "id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UnlinkApple_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "apple"}, ""))
+	pattern_Nakama_UnlinkApple_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "apple"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UnlinkCustom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "custom"}, ""))
+	pattern_Nakama_UnlinkCustom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "custom"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UnlinkDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "device"}, ""))
+	pattern_Nakama_UnlinkDevice_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "device"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UnlinkEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "email"}, ""))
+	pattern_Nakama_UnlinkEmail_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "email"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UnlinkFacebook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "facebook"}, ""))
+	pattern_Nakama_UnlinkFacebook_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "facebook"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UnlinkFacebookInstantGame_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "facebookinstantgame"}, ""))
+	pattern_Nakama_UnlinkFacebookInstantGame_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "facebookinstantgame"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UnlinkGameCenter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "gamecenter"}, ""))
+	pattern_Nakama_UnlinkGameCenter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "gamecenter"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UnlinkGoogle_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "google"}, ""))
+	pattern_Nakama_UnlinkGoogle_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "google"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UnlinkSteam_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "steam"}, ""))
+	pattern_Nakama_UnlinkSteam_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"v2", "account", "unlink", "steam"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UpdateAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "account"}, ""))
+	pattern_Nakama_UpdateAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "account"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_UpdateGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "group", "group_id"}, ""))
+	pattern_Nakama_UpdateGroup_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "group", "group_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_WriteLeaderboardRecord_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "leaderboard", "leaderboard_id"}, ""))
+	pattern_Nakama_WriteLeaderboardRecord_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "leaderboard", "leaderboard_id"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_WriteStorageObjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "storage"}, ""))
+	pattern_Nakama_WriteStorageObjects_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v2", "storage"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Nakama_WriteTournamentRecord_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "tournament", "tournament_id"}, ""))
+	pattern_Nakama_WriteTournamentRecord_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v2", "tournament", "tournament_id"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

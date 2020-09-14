@@ -100,6 +100,8 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"authenticateGoogle": n.authenticateGoogle(r),
 		"authenticateSteam": n.authenticateSteam(r),
 		"authenticateTokenGenerate": n.authenticateTokenGenerate(r),
+		"accountGetId": n.accountGetId(r),
+		"accountsGetId": n.accountsGetId(r),
 	}
 }
 
@@ -1153,7 +1155,7 @@ func (n *runtimeJavascriptNakamaModule) accountsGetId(r *goja.Runtime) func(goja
 			panic(r.NewTypeError("expects list of user ids"))
 		} else {
 			var ok bool
-			input, ok = f.Argument(1).Export().([]interface{})
+			input, ok = f.Argument(0).Export().([]interface{})
 			if !ok {
 				panic(r.NewTypeError("Invalid argument - user ids must be an array."))
 			}

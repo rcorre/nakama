@@ -64,9 +64,9 @@ export class ConsoleService {
   public deleteAccount(auth_token: string, id: string, record_deletion: boolean): Observable<any> {
     const urlPath = `/v2/console/account/${id}`;
     let params = new HttpParams();
-	  if (record_deletion) {
-		  params = params.set('record_deletion', String(record_deletion));
-	  }
+    if (record_deletion) {
+      params = params.set('record_deletion', String(record_deletion));
+    }
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
@@ -100,9 +100,9 @@ export class ConsoleService {
   public deleteStorageObject(auth_token: string, collection: string, key: string, user_id: string, version: string): Observable<any> {
     const urlPath = `/v2/console/storage/${collection}/${key}/${user_id}`;
     let params = new HttpParams();
-	  if (version) {
-		  params = params.set('version', version);
-	  }
+    if (version) {
+      params = params.set('version', version);
+    }
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
@@ -196,9 +196,9 @@ export class ConsoleService {
   public listStorage(auth_token: string, user_id: string): Observable<StorageList> {
     const urlPath = `/v2/console/storage`;
     let params = new HttpParams();
-	  if (user_id) {
-		  params = params.set('user_id', user_id);
-	  }
+    if (user_id) {
+      params = params.set('user_id', user_id);
+    }
     return this.httpClient.get<StorageList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
@@ -214,15 +214,15 @@ export class ConsoleService {
   public listUsers(auth_token: string, filter: string, banned: boolean, tombstones: boolean): Observable<UserList> {
     const urlPath = `/v2/console/user`;
     let params = new HttpParams();
-	  if (filter) {
-		  params = params.set('filter', filter);
-	  }
-	  if (banned) {
-		  params = params.set('banned', String(banned));
-	  }
-	  if (tombstones) {
-		  params = params.set('tombstones', String(tombstones));
-	  }
+    if (filter) {
+      params = params.set('filter', filter);
+    }
+    if (banned) {
+      params = params.set('banned', String(banned));
+    }
+    if (tombstones) {
+      params = params.set('tombstones', String(tombstones));
+    }
     return this.httpClient.get<UserList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
