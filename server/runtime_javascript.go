@@ -144,12 +144,13 @@ type RuntimeProviderJS struct {
 	leaderboardRankCache LeaderboardRankCache
 	sessionRegistry      SessionRegistry
 	matchRegistry        MatchRegistry
-
-	eventFn      RuntimeEventCustomFunction
-	poolCh       chan *RuntimeJS
-	maxCount     uint32
-	currentCount *atomic.Uint32
-	newFn        func() *RuntimeJS
+	tracker 						 Tracker
+	router							 MessageRouter
+	eventFn      				 RuntimeEventCustomFunction
+	poolCh       				 chan *RuntimeJS
+	maxCount     				 uint32
+	currentCount 				 *atomic.Uint32
+	newFn        				 func() *RuntimeJS
 }
 
 func (rp *RuntimeProviderJS) Rpc(ctx context.Context, id string, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
@@ -470,14 +471,17 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	}
 
 	runtimeProviderJS := &RuntimeProviderJS{
-		logger:       logger,
-		db:           db,
-		eventFn:      eventFn,
-		jsonpbMarshaler: jsonpbMarshaler,
+		config:            config,
+		logger:            logger,
+		db:                db,
+		eventFn:           eventFn,
+		jsonpbMarshaler:   jsonpbMarshaler,
 		jsonpbUnmarshaler: jsonpbUnmarshaler,
-		poolCh:       make(chan *RuntimeJS, config.GetRuntime().MaxCount),
-		maxCount:     uint32(config.GetRuntime().MaxCount),
-		currentCount: atomic.NewUint32(uint32(config.GetRuntime().MinCount)),
+		tracker:           tracker,
+		router:            router,
+		poolCh:            make(chan *RuntimeJS, config.GetRuntime().MaxCount),
+		maxCount:          uint32(config.GetRuntime().MaxCount),
+		currentCount:      atomic.NewUint32(uint32(config.GetRuntime().MinCount)),
 	}
 
 	rpcFunctions := make(map[string]RuntimeRpcFunction, 0)
@@ -1309,7 +1313,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
 		}
 
-		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, config, socialClient, router, eventFn)
+		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, config, socialClient, tracker, router, eventFn)
 		nk := runtime.ToValue(nakamaModule.Constructor(runtime))
 		nkInst, err := runtime.New(nk)
 		if err != nil {
@@ -1406,8 +1410,7 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, c
 		return nil, err
 	}
 
-	// TODO check if router is needed
-	nakamaModule := NewRuntimeJavascriptNakamaModule(rp.logger, rp.db, rp.config, rp.socialClient, nil, rp.eventFn)
+	nakamaModule := NewRuntimeJavascriptNakamaModule(rp.logger, rp.db, rp.config, rp.socialClient, rp.tracker, rp.router, rp.eventFn)
 	nk := r.ToValue(nakamaModule.Constructor(r))
 	nkInst, err := r.New(nk)
 	if err != nil {

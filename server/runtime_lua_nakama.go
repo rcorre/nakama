@@ -1743,7 +1743,7 @@ func (n *RuntimeLuaNakamaModule) loggerError(l *lua.LState) int {
 func (n *RuntimeLuaNakamaModule) accountGetId(l *lua.LState) int {
 	input := l.CheckString(1)
 	if input == "" {
-		l.ArgError(1, "invalid user id")
+		l.ArgError(1, "expects user id")
 		return 0
 	}
 	userID, err := uuid.FromString(input)

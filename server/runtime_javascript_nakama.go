@@ -14,6 +14,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -36,18 +37,20 @@ type runtimeJavascriptNakamaModule struct {
 	logger *zap.Logger
 	config Config
 	db *sql.DB
-	router MessageRouter
 	httpClient *http.Client
 	socialClient *social.Client
+	tracker Tracker
+	router MessageRouter
 	eventFn RuntimeEventCustomFunction
 }
 
-func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, config Config, socialClient *social.Client, router MessageRouter, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
+func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, config Config, socialClient *social.Client, tracker Tracker, router MessageRouter, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
 	return &runtimeJavascriptNakamaModule{
 		logger: logger,
 		config: config,
 		db: db,
 		router: router,
+		tracker: tracker,
 		socialClient: socialClient,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
@@ -1118,6 +1121,74 @@ func (n *runtimeJavascriptNakamaModule) authenticateTokenGenerate(r *goja.Runtim
 	}
 }
 
+func (n *runtimeJavascriptNakamaModule) accountGetId(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		input := getString(r, f.Argument(0))
+		if input == "" {
+			panic(r.NewTypeError("expects user id"))
+		}
+		userID, err := uuid.FromString(input)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		account, err := GetAccount(context.Background(), n.logger, n.db, n.tracker, userID)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error getting account: %v", err.Error())))
+		}
+
+		accountData, err := getAccountData(account)
+		if err != nil {
+			panic(r.ToValue(err.Error()))
+		}
+
+		return r.ToValue(accountData)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) accountsGetId(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		var input []interface{}
+		if f.Argument(0) == goja.Undefined() {
+			panic(r.NewTypeError("expects list of user ids"))
+		} else {
+			var ok bool
+			input, ok = f.Argument(1).Export().([]interface{})
+			if !ok {
+				panic(r.NewTypeError("Invalid argument - user ids must be an array."))
+			}
+		}
+
+		userIDs := make([]string, 0, len(input))
+		for _, userID := range input {
+			id, ok := userID.(string)
+			if !ok {
+				panic(r.NewTypeError(fmt.Sprintf("invalid user id: %v - must be a string", userID)))
+			}
+			if _, err := uuid.FromString(id); err != nil {
+				panic(r.NewTypeError(fmt.Sprintf("invalid user id: %v", userID)))
+			}
+			userIDs = append(userIDs, id)
+		}
+
+		accounts, err := GetAccounts(context.Background(), n.logger, n.db, n.tracker, userIDs)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to get accounts: %s", err.Error())))
+		}
+
+		accountsData := make([]map[string]interface{}, 0, len(accounts))
+		for _, account := range accounts {
+			accountData, err := getAccountData(account)
+			if err != nil {
+				panic(r.ToValue(err.Error()))
+			}
+			accountsData = append(accountsData, accountData)
+		}
+
+		return r.ToValue(accountsData)
+	}
+}
+
 func getString(r *goja.Runtime, v goja.Value) string {
 	s, ok := v.Export().(string)
 	if !ok {
@@ -1157,4 +1228,76 @@ func getBool(r *goja.Runtime, v goja.Value) bool {
 		panic(r.NewTypeError("Invalid argument - boolean expected."))
 	}
 	return b
+}
+
+func getAccountData(account *api.Account) (map[string]interface{}, error) {
+	accountData := make(map[string]interface{})
+	accountData["user_id"] = account.User.Id
+	accountData["username"] = account.User.Username
+	accountData["display_name"] = account.User.DisplayName
+	accountData["avatar_url"] = account.User.AvatarUrl
+	accountData["lang_tag"] = account.User.LangTag
+	accountData["location"] = account.User.Location
+	accountData["timezone"] = account.User.Timezone
+	if account.User.AppleId != "" {
+		accountData["apple_id"] = account.User.AppleId
+	}
+	if account.User.FacebookId != "" {
+		accountData["facebook_id"] = account.User.FacebookId
+	}
+	if account.User.FacebookInstantGameId != "" {
+		accountData["facebook_instant_game_id"] = account.User.FacebookInstantGameId
+	}
+	if account.User.GoogleId != "" {
+		accountData["google_id"] = account.User.GoogleId
+	}
+	if account.User.GamecenterId != "" {
+		accountData["gamecenter_id"] = account.User.GamecenterId
+	}
+	if account.User.SteamId != "" {
+		accountData["steam_id"] = account.User.SteamId
+	}
+	accountData["online"] = account.User.Online
+	accountData["edge_count"] = account.User.EdgeCount
+	accountData["create_time"] = account.User.CreateTime
+	accountData["update_time"] = account.User.UpdateTime
+
+	metadata := make(map[string]interface{})
+	err := json.Unmarshal([]byte(account.User.Metadata), &metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert metadata to json: %s", err.Error())
+	}
+	accountData["metadata"] = metadata
+
+	walletData := make(map[string]int64)
+	err = json.Unmarshal([]byte(account.Wallet), &walletData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert wallet to json: %s", err.Error())
+	}
+	accountData["wallet"] = walletData
+
+	if account.Email != "" {
+		accountData["email"] = account.Email
+	}
+	if len(account.Devices) != 0 {
+		devices := make([]map[string]string, 0, len(account.Devices))
+		for _, device := range account.Devices {
+			deviceData := make(map[string]string)
+			deviceData["id"] = device.Id
+			devices = append(devices, deviceData)
+		}
+		accountData["devices"] = devices
+	}
+
+	if account.CustomId != "" {
+		accountData["custom_id"] = account.CustomId
+	}
+	if account.VerifyTime != nil {
+		accountData["verify_time"] = account.VerifyTime.Seconds
+	}
+	if account.DisableTime != nil {
+		accountData["disable_time"] = account.DisableTime.Seconds
+	}
+
+	return accountData, nil
 }
