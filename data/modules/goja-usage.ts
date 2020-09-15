@@ -209,7 +209,7 @@ interface TokenGenerateResult {
 /**
  * Account object
  */
-interface UserAccount {
+interface Account {
     user_id: string;
     username: string;
     display_name: string;
@@ -239,7 +239,7 @@ interface UserAccount {
 /**
  * User object
  */
-interface UserAccount {
+interface User {
     user_id: string;
     username: string;
     display_name: string;
@@ -506,7 +506,7 @@ interface Nakama {
      * @param create - create user if not exists, defaults to true
      * @returns Object with authenticated user data.
      */
-    authenticateDevice(email: string, password: string, username?: string, create?: boolean): AuthResult
+    authenticateEmail(email: string, password: string, username?: string, create?: boolean): AuthResult
 
      /**
      * Authenticate using Facebook account.
@@ -517,7 +517,7 @@ interface Nakama {
      * @param create - create user if not exists, defaults to true
      * @returns Object with authenticated user data.
      */
-    authenticateDevice(token: string, importFriends?: boolean, username?: string, create?: boolean): AuthResult
+    authenticateFacebook(token: string, importFriends?: boolean, username?: string, create?: boolean): AuthResult
 
     /**
      * Authenticate using Facebook Instant Game.
@@ -550,7 +550,7 @@ interface Nakama {
         signature: string,
         publicKeyURL: string,
         username?: string,
-        create?: boolean
+        create?: boolean,
     ): AuthResult
 
     /**
@@ -589,7 +589,7 @@ interface Nakama {
      * @param userId - User ID.
      * @returns Object with account data.
      */
-    accountGetId(userId: string): UserAccount
+    accountGetId(userId: string): Account
 
     /**
      * Get accounts data by ids.
@@ -597,7 +597,7 @@ interface Nakama {
      * @param userIds - User IDs.
      * @returns Array containing accounts data.
      */
-    accountsGetId(userIds: string[]): UserAccount[]
+    accountsGetId(userIds: string[]): Account[]
 
     /**
      * Update user account
@@ -624,9 +624,187 @@ interface Nakama {
     /**
      * Get user data by ids.
      *
-     * @param userId - Target account.
+     * @param userIds - User IDs.
      */
-    usersGetId(userId: string): string
+    usersGetId(userIds: string[]): User[]
+
+    /**
+     * Get user data by usernames.
+     *
+     * @param usernames - Usernames.
+     */
+    usersGetUsername(usernames: string[]): User[]
+
+    /**
+     * Ban a group of users by id.
+     *
+     * @param userIds - User IDs.
+     */
+    usersBanId(userIds: string[])
+
+    /**
+     * Unban a group of users by id.
+     *
+     * @param userIds - User IDs.
+     */
+    usersUnbanId(userIds: string[])
+
+    /**
+     * Link an account to Apple sign in.
+     *
+     * @param userID - User ID.
+     * @param token - Apple sign in token.
+     */
+    linkApple(userID: string, token: string)
+
+    /**
+     * Link an account to a customID.
+     *
+     * @param userID - User ID.
+     * @param customID - Custom ID.
+     */
+    linkCustom(userID: string, customID: string)
+
+    /**
+     * Link account to a custom device.
+     *
+     * @param userID - User ID.
+     * @param deviceID - Device ID.
+     */
+    linkDevice(userID: string, deviceID: string)
+
+    /**
+     * Link account to username and password.
+     *
+     * @param userID - User ID.
+     * @param email - Email.
+     * @param password - Password.
+     */
+    linkEmail(userID: string, email: string, password: string)
+
+    /**
+     * Link account to Facebook.
+     *
+     * @param userID - User ID.
+     * @param username - Facebook username.
+     * @param token - Password.
+     * @param importFriends - Import Facebook Friends. Defaults to true.
+     */
+    linkFacebook(userID: string, username: string, token: string, importFriends?: boolean)
+
+    /**
+     * Link account to Facebook Instant Games.
+     *
+     * @param userID - User ID.
+     * @param signedPlayerInfo - Signed player info.
+     */
+    linkFacebookInstantGame(userID: string, signedPlayerInfo: string)
+
+    /**
+     * Link account to Apple Game Center.
+     *
+     * @param userID - User ID.
+     * @param playerId - Game center player ID.
+     * @param bundleId - Game center bundle ID.
+     * @param ts - Timestamp.
+     * @param salt - Salt.
+     * @param signature - Signature.
+     * @param publicKeyURL - Public Key URL.
+     */
+    linkGameCenter(
+        userID: string,
+        playerId: string,
+        bundleId: string,
+        ts: number,
+        salt: string,
+        signature: string,
+        publicKeyURL: string,
+    )
+
+    /**
+     * Unlink Apple sign in from an account.
+     *
+     * @param userID - User ID.
+     * @param token - Apple sign in token.
+     */
+    unlinkApple(userID: string, token: string)
+
+    /**
+     * Unlink a customID from an account.
+     *
+     * @param userID - User ID.
+     * @param customID - Custom ID.
+     */
+    unlinkCustom(userID: string, customID: string)
+
+    /**
+     * Unlink a custom device from an account.
+     *
+     * @param userID - User ID.
+     * @param deviceID - Device ID.
+     */
+    unlinkDevice(userID: string, deviceID: string)
+
+    /**
+     * Unlink username and password from an account.
+     *
+     * @param userID - User ID.
+     * @param email - Email.
+     */
+    unlinkEmail(userID: string, email: string)
+
+    /**
+     * Unlink Facebook from an account.
+     *
+     * @param userID - User ID.
+     * @param token - Password.
+     */
+    unlinkFacebook(userID: string, token: string)
+
+    /**
+     * Unlink Facebook Instant Games from an account.
+     *
+     * @param userID - User ID.
+     * @param signedPlayerInfo - Signed player info.
+     */
+    unlinkFacebookInstantGame(userID: string, signedPlayerInfo: string)
+
+    /**
+     * Unlink Apple Game Center from an account.
+     *
+     * @param userID - User ID.
+     * @param playerId - Game center player ID.
+     * @param bundleId - Game center bundle ID.
+     * @param ts - Timestamp.
+     * @param salt - Salt.
+     * @param signature - Signature.
+     * @param publicKeyURL - Public Key URL.
+     */
+    unlinkGameCenter(
+        userID: string,
+        playerId: string,
+        bundleId: string,
+        ts: number,
+        salt: string,
+        signature: string,
+        publicKeyURL: string,
+    )
+
+    /**
+     * Unlink Google from account.
+     *
+     * @param userID - User ID.
+     * @param token - Google token.
+     */
+    unlinkGoogle(userID: string, token: string)
+
+    /**
+     * Unlink Steam from an account.
+     *
+     * @param userID - User ID.
+     * @param token - Steam token.
+     */
+    unlinkSteam(userID: string, token: string)
 }
 
 /**

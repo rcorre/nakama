@@ -116,6 +116,24 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"usersGetUsername":                n.usersGetUsername(r),
 		"usersBanId":                      n.usersBanId(r),
 		"usersUnbanId":                    n.usersUnbanId(r),
+		"linkApple":                       n.linkApple(r),
+		"linkCustom":                      n.linkCustom(r),
+		"linkDevice":                      n.linkDevice(r),
+		"linkEmail":                       n.linkEmail(r),
+		"linkFacebook":                    n.linkFacebook(r),
+		"linkFacebookInstantGame":         n.linkFacebookInstantGame(r),
+		"linkGameCenter":                  n.linkGameCenter(r),
+		"linkGoogle":                      n.linkGoogle(r),
+		"linkSteam":                       n.linkSteam(r),
+		"unlinkApple":                     n.unlinkApple(r),
+		"unlinkCustom":                    n.unlinkCustom(r),
+		"unlinkDevice":                    n.unlinkDevice(r),
+		"unlinkEmail":                     n.unlinkEmail(r),
+		"unlinkFacebook":                  n.unlinkFacebook(r),
+		"unlinkFacebookInstantGame":       n.unlinkFacebookInstantGame(r),
+		"unlinkGameCenter":                n.unlinkGameCenter(r),
+		"unlinkGoogle":                    n.unlinkGoogle(r),
+		"unlinkSteam":                     n.unlinkSteam(r),
 	}
 }
 
@@ -1458,6 +1476,436 @@ func (n *runtimeJavascriptNakamaModule) usersUnbanId(r *goja.Runtime) func(goja.
 		err := UnbanUsers(context.Background(), n.logger, n.db, userIDs)
 		if err != nil {
 			panic(r.ToValue(fmt.Sprintf("failed to unban users: %s", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) linkApple(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		token := getString(r, f.Argument(1))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+
+		if err := LinkApple(context.Background(), n.logger, n.db, n.config, n.socialClient, id, token); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error linking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) linkCustom(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		customID := getString(r, f.Argument(1))
+		if customID == "" {
+			panic(r.NewTypeError("expects custom ID string"))
+		}
+
+		if err := LinkCustom(context.Background(), n.logger, n.db, id, customID); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error linking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) linkDevice(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		deviceID := getString(r, f.Argument(1))
+		if deviceID == "" {
+			panic(r.NewTypeError("expects device ID string"))
+		}
+
+		if err := LinkCustom(context.Background(), n.logger, n.db, id, deviceID); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error linking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) linkEmail(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		email := getString(r, f.Argument(1))
+		if email == "" {
+			panic(r.NewTypeError("expects email string"))
+		}
+		password := getString(r, f.Argument(2))
+		if password == "" {
+			panic(r.NewTypeError("expects password string"))
+		}
+
+		if err := LinkEmail(context.Background(), n.logger, n.db, id, email, password); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error linking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) linkFacebook(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		username := getString(r, f.Argument(1))
+		if username == "" {
+			panic(r.NewTypeError("expects username string"))
+		}
+		token := getString(r, f.Argument(2))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+		importFriends := true
+		if f.Argument(3) != goja.Undefined() {
+			importFriends = getBool(r, f.Argument(3))
+		}
+
+		if err := LinkFacebook(context.Background(), n.logger, n.db, n.socialClient, n.router, id, username, token, importFriends); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error linking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) linkFacebookInstantGame(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		signedPlayerInfo := getString(r, f.Argument(1))
+		if signedPlayerInfo == "" {
+			panic(r.NewTypeError("expects signed player info string"))
+		}
+
+		if err := LinkFacebookInstantGame(context.Background(), n.logger, n.db, n.config, n.socialClient, id, signedPlayerInfo); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error linking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) linkGameCenter(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		playerID := getString(r, f.Argument(1))
+		if playerID == "" {
+			panic(r.NewTypeError("expects player ID string"))
+		}
+		bundleID := getString(r, f.Argument(2))
+		if bundleID == "" {
+			panic(r.NewTypeError("expects bundle ID string"))
+		}
+		ts := getInt(r, f.Argument(3))
+		if ts == 0 {
+			panic(r.NewTypeError("expects timestamp value"))
+		}
+		salt := getString(r, f.Argument(4))
+		if salt == "" {
+			panic(r.NewTypeError("expects salt string"))
+		}
+		signature := getString(r, f.Argument(5))
+		if signature == "" {
+			panic(r.NewTypeError("expects signature string"))
+		}
+		publicKeyURL := getString(r, f.Argument(6))
+		if publicKeyURL == "" {
+			panic(r.NewTypeError("expects public key URL string"))
+		}
+
+		if err := LinkGameCenter(context.Background(), n.logger, n.db, n.socialClient, id, playerID, bundleID, ts, salt, signature, publicKeyURL); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error linking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) linkGoogle(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		token := getString(r, f.Argument(1))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+
+		if err := LinkGoogle(context.Background(), n.logger, n.db, n.socialClient, id, token); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error linking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) linkSteam(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		token := getString(r, f.Argument(1))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+
+		if err := LinkSteam(context.Background(), n.logger, n.db, n.config, n.socialClient, id, token); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error linking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) unlinkApple(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		token := getString(r, f.Argument(1))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+
+		if err := UnlinkApple(context.Background(), n.logger, n.db, n.config, n.socialClient, id, token); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error unlinking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) unlinkCustom(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		customID := getString(r, f.Argument(1))
+		if customID == "" {
+			panic(r.NewTypeError("expects custom ID string"))
+		}
+
+		if err := UnlinkCustom(context.Background(), n.logger, n.db, id, customID); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error unlinking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) unlinkDevice(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		deviceID := getString(r, f.Argument(1))
+		if deviceID == "" {
+			panic(r.NewTypeError("expects device ID string"))
+		}
+
+		if err := UnlinkDevice(context.Background(), n.logger, n.db, id, deviceID); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error unlinking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) unlinkEmail(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		email := getString(r, f.Argument(1))
+		if email == "" {
+			panic(r.NewTypeError("expects email string"))
+		}
+
+		if err := UnlinkEmail(context.Background(), n.logger, n.db, id, email); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error unlinking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) unlinkFacebook(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		token := getString(r, f.Argument(1))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+
+		if err := UnlinkFacebook(context.Background(), n.logger, n.db, n.socialClient, id, token); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error unlinking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) unlinkFacebookInstantGame(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		signedPlayerInfo := getString(r, f.Argument(1))
+		if signedPlayerInfo == "" {
+			panic(r.NewTypeError("expects signed player info string"))
+		}
+
+		if err := UnlinkFacebookInstantGame(context.Background(), n.logger, n.db, n.config, n.socialClient, id, signedPlayerInfo); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error unlinking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) unlinkGameCenter(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		playerID := getString(r, f.Argument(1))
+		if playerID == "" {
+			panic(r.NewTypeError("expects player ID string"))
+		}
+		bundleID := getString(r, f.Argument(2))
+		if bundleID == "" {
+			panic(r.NewTypeError("expects bundle ID string"))
+		}
+		ts := getInt(r, f.Argument(3))
+		if ts == 0 {
+			panic(r.NewTypeError("expects timestamp value"))
+		}
+		salt := getString(r, f.Argument(4))
+		if salt == "" {
+			panic(r.NewTypeError("expects salt string"))
+		}
+		signature := getString(r, f.Argument(5))
+		if signature == "" {
+			panic(r.NewTypeError("expects signature string"))
+		}
+		publicKeyURL := getString(r, f.Argument(6))
+		if publicKeyURL == "" {
+			panic(r.NewTypeError("expects public key URL string"))
+		}
+
+		if err := UnlinkGameCenter(context.Background(), n.logger, n.db, n.socialClient, id, playerID, bundleID, ts, salt, signature, publicKeyURL); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error unlinking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) unlinkGoogle(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		token := getString(r, f.Argument(1))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+
+		if err := UnlinkGoogle(context.Background(), n.logger, n.db, n.socialClient, id, token); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error unlinking: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) unlinkSteam(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userID := getString(r, f.Argument(0))
+		id, err := uuid.FromString(userID)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		token := getString(r, f.Argument(1))
+		if token == "" {
+			panic(r.NewTypeError("expects token string"))
+		}
+
+		if err := UnlinkSteam(context.Background(), n.logger, n.db, n.config, n.socialClient, id, token); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error unlinking: %v", err.Error())))
 		}
 
 		return goja.Undefined()
