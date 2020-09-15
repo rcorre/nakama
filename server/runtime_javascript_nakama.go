@@ -18,6 +18,12 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
+	"strings"
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
 	"github.com/gofrs/uuid"
@@ -28,11 +34,6 @@ import (
 	"github.com/heroiclabs/nakama/v2/social"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"strings"
-	"time"
 )
 
 type runtimeJavascriptNakamaModule struct {
@@ -50,14 +51,14 @@ type runtimeJavascriptNakamaModule struct {
 
 func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, tracker Tracker, router MessageRouter, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
 	return &runtimeJavascriptNakamaModule{
-		logger: logger,
-		config: config,
-		db: db,
-		jsonpbMarshaler: jsonpbMarshaler,
+		logger:            logger,
+		config:            config,
+		db:                db,
+		jsonpbMarshaler:   jsonpbMarshaler,
 		jsonpbUnmarshaler: jsonpbUnmarshaler,
-		router: router,
-		tracker: tracker,
-		socialClient: socialClient,
+		router:            router,
+		tracker:           tracker,
+		socialClient:      socialClient,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
 		},
@@ -77,38 +78,44 @@ func (n *runtimeJavascriptNakamaModule) Constructor(r *goja.Runtime) func(goja.C
 }
 
 func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]func(goja.FunctionCall) goja.Value {
-	return map[string]func(goja.FunctionCall) goja.Value {
-		"event": n.event(r),
-		"uuidv4": n.uuidV4(r),
-		"sqlExec": n.sqlExec(r),
-		"sqlQuery": n.sqlQuery(r),
-		"httpRequest": n.httpRequest(r),
-		"base64UrlEncode": n.base64UrlEncode(r),
-		"base64UrlDecode": n.base64UrlDecode(r),
-		"jwtGenerate": n.jwtGenerate(r),
-		"aes128Encrypt": n.aes128Encrypt(r),
-		"aes128Decrypt": n.aes128Decrypt(r),
-		"aes256Encrypt": n.aes256Encrypt(r),
-		"aes256Decrypt": n.aes256Decrypt(r),
-		"md5Hash": n.md5Hash(r),
-		"sha256Hash": n.sha256Hash(r),
-		"hmacSha256Hash": n.hmacSHA256Hash(r),
-		"rsaSha256Hash": n.rsaSHA256Hash(r),
-		"bcryptHash": n.bcryptHash(r),
-		"bcryptCompare": n.bcryptCompare(r),
-		"authenticateApple": n.authenticateApple(r),
-		"authenticateCustom": n.authenticateCustom(r),
-		"authenticateDevice": n.authenticateDevice(r),
-		"authenticateEmail": n.authenticateEmail(r),
-		"authenticateFacebook": n.authenticateFacebook(r),
+	return map[string]func(goja.FunctionCall) goja.Value{
+		"event":                           n.event(r),
+		"uuidv4":                          n.uuidV4(r),
+		"sqlExec":                         n.sqlExec(r),
+		"sqlQuery":                        n.sqlQuery(r),
+		"httpRequest":                     n.httpRequest(r),
+		"base64UrlEncode":                 n.base64UrlEncode(r),
+		"base64UrlDecode":                 n.base64UrlDecode(r),
+		"jwtGenerate":                     n.jwtGenerate(r),
+		"aes128Encrypt":                   n.aes128Encrypt(r),
+		"aes128Decrypt":                   n.aes128Decrypt(r),
+		"aes256Encrypt":                   n.aes256Encrypt(r),
+		"aes256Decrypt":                   n.aes256Decrypt(r),
+		"md5Hash":                         n.md5Hash(r),
+		"sha256Hash":                      n.sha256Hash(r),
+		"hmacSha256Hash":                  n.hmacSHA256Hash(r),
+		"rsaSha256Hash":                   n.rsaSHA256Hash(r),
+		"bcryptHash":                      n.bcryptHash(r),
+		"bcryptCompare":                   n.bcryptCompare(r),
+		"authenticateApple":               n.authenticateApple(r),
+		"authenticateCustom":              n.authenticateCustom(r),
+		"authenticateDevice":              n.authenticateDevice(r),
+		"authenticateEmail":               n.authenticateEmail(r),
+		"authenticateFacebook":            n.authenticateFacebook(r),
 		"authenticateFacebookInstantGame": n.authenticateFacebookInstantGame(r),
-		"authenticateGamecenter": n.authenticateGameCenter(r),
-		"authenticateGoogle": n.authenticateGoogle(r),
-		"authenticateSteam": n.authenticateSteam(r),
-		"authenticateTokenGenerate": n.authenticateTokenGenerate(r),
-		"accountGetId": n.accountGetId(r),
-		"accountsGetId": n.accountsGetId(r),
-		"accountUpdateId": n.accountUpdateId(r),
+		"authenticateGamecenter":          n.authenticateGameCenter(r),
+		"authenticateGoogle":              n.authenticateGoogle(r),
+		"authenticateSteam":               n.authenticateSteam(r),
+		"authenticateTokenGenerate":       n.authenticateTokenGenerate(r),
+		"accountGetId":                    n.accountGetId(r),
+		"accountsGetId":                   n.accountsGetId(r),
+		"accountUpdateId":                 n.accountUpdateId(r),
+		"accountDeleteId":                 n.accountDeleteId(r),
+		"accountExportId":                 n.accountExportId(r),
+		"usersGetId":                      n.usersGetId(r),
+		"usersGetUsername":                n.usersGetUsername(r),
+		"usersBanId":                      n.usersBanId(r),
+		"usersUnbanId":                    n.usersUnbanId(r),
 	}
 }
 
@@ -129,10 +136,10 @@ func (n *runtimeJavascriptNakamaModule) event(r *goja.Runtime) func(goja.Functio
 
 		if n.eventFn != nil {
 			n.eventFn(context.Background(), &api.Event{
-				Name:                 eventName,
-				Properties:           properties,
-				Timestamp:            ts,
-				External:             external,
+				Name:       eventName,
+				Properties: properties,
+				Timestamp:  ts,
+				External:   external,
 			})
 		}
 
@@ -297,10 +304,10 @@ func (n *runtimeJavascriptNakamaModule) httpRequest(r *goja.Runtime) func(goja.F
 			respHeaders[h] = v
 		}
 
-		returnVal := map[string]interface{} {
-			"code": resp.StatusCode,
+		returnVal := map[string]interface{}{
+			"code":    resp.StatusCode,
 			"headers": respHeaders,
-			"body": string(responseBody),
+			"body":    string(responseBody),
 		}
 
 		return r.ToValue(returnVal)
@@ -713,9 +720,9 @@ func (n *runtimeJavascriptNakamaModule) authenticateApple(r *goja.Runtime) func(
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"user_id": dbUserID,
+			"user_id":  dbUserID,
 			"username": dbUsername,
-			"created": created,
+			"created":  created,
 		})
 	}
 }
@@ -755,9 +762,9 @@ func (n *runtimeJavascriptNakamaModule) authenticateCustom(r *goja.Runtime) func
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"user_id": dbUserID,
+			"user_id":  dbUserID,
 			"username": dbUsername,
-			"created": created,
+			"created":  created,
 		})
 	}
 }
@@ -797,9 +804,9 @@ func (n *runtimeJavascriptNakamaModule) authenticateDevice(r *goja.Runtime) func
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"user_id": dbUserID,
+			"user_id":  dbUserID,
 			"username": dbUsername,
-			"created": created,
+			"created":  created,
 		})
 	}
 }
@@ -865,9 +872,9 @@ func (n *runtimeJavascriptNakamaModule) authenticateEmail(r *goja.Runtime) func(
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"user_id": dbUserID,
+			"user_id":  dbUserID,
 			"username": username,
-			"created": created,
+			"created":  created,
 		})
 	}
 }
@@ -913,9 +920,9 @@ func (n *runtimeJavascriptNakamaModule) authenticateFacebook(r *goja.Runtime) fu
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"user_id": dbUserID,
+			"user_id":  dbUserID,
 			"username": username,
-			"created": created,
+			"created":  created,
 		})
 	}
 }
@@ -951,9 +958,9 @@ func (n *runtimeJavascriptNakamaModule) authenticateFacebookInstantGame(r *goja.
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"user_id": dbUserID,
+			"user_id":  dbUserID,
 			"username": dbUsername,
-			"created": created,
+			"created":  created,
 		})
 	}
 }
@@ -1009,9 +1016,9 @@ func (n *runtimeJavascriptNakamaModule) authenticateGameCenter(r *goja.Runtime) 
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"user_id": dbUserID,
+			"user_id":  dbUserID,
 			"username": dbUsername,
-			"created": created,
+			"created":  created,
 		})
 	}
 }
@@ -1047,9 +1054,9 @@ func (n *runtimeJavascriptNakamaModule) authenticateGoogle(r *goja.Runtime) func
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"user_id": dbUserID,
+			"user_id":  dbUserID,
 			"username": dbUsername,
-			"created": created,
+			"created":  created,
 		})
 	}
 }
@@ -1089,9 +1096,9 @@ func (n *runtimeJavascriptNakamaModule) authenticateSteam(r *goja.Runtime) func(
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"user_id": dbUserID,
+			"user_id":  dbUserID,
 			"username": dbUsername,
-			"created": created,
+			"created":  created,
 		})
 	}
 }
@@ -1125,7 +1132,7 @@ func (n *runtimeJavascriptNakamaModule) authenticateTokenGenerate(r *goja.Runtim
 
 		return r.ToValue(map[string]interface{}{
 			"token": token,
-			"exp": exp,
+			"exp":   exp,
 		})
 	}
 }
@@ -1300,6 +1307,163 @@ func (n *runtimeJavascriptNakamaModule) accountExportId(r *goja.Runtime) func(go
 	}
 }
 
+func (n *runtimeJavascriptNakamaModule) usersGetId(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		var input []interface{}
+		if f.Argument(0) == goja.Undefined() {
+			panic(r.NewTypeError("expects list of user ids"))
+		} else {
+			var ok bool
+			input, ok = f.Argument(0).Export().([]interface{})
+			if !ok {
+				panic(r.NewTypeError("Invalid argument - user ids must be an array."))
+			}
+		}
+
+		userIDs := make([]string, 0, len(input))
+		for _, userID := range input {
+			id, ok := userID.(string)
+			if !ok {
+				panic(r.NewTypeError(fmt.Sprintf("invalid user id: %v - must be a string", userID)))
+			} else if _, err := uuid.FromString(id); err != nil {
+				panic(r.NewTypeError(fmt.Sprintf("invalid user id: %v", userID)))
+			}
+			userIDs = append(userIDs, id)
+		}
+
+		users, err := GetUsers(context.Background(), n.logger, n.db, n.tracker, userIDs, nil, nil)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to get users: %s", err.Error())))
+		}
+
+		usersData := make([]map[string]interface{}, 0, len(users.Users))
+		for _, user := range users.Users {
+			userData, err := getUserData(user)
+			if err != nil {
+				panic(r.ToValue(err.Error()))
+			}
+			usersData = append(usersData, userData)
+		}
+
+		return r.ToValue(usersData)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) usersGetUsername(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		var input []interface{}
+		if f.Argument(0) == goja.Undefined() {
+			panic(r.NewTypeError("expects list of usernames"))
+		} else {
+			var ok bool
+			input, ok = f.Argument(0).Export().([]interface{})
+			if !ok {
+				panic(r.NewTypeError("Invalid argument - usernames must be an array."))
+			}
+		}
+
+		usernames := make([]string, 0, len(input))
+		for _, userID := range input {
+			id, ok := userID.(string)
+			if !ok {
+				panic(r.NewTypeError(fmt.Sprintf("invalid username: %v - must be a string", userID)))
+			}
+			usernames = append(usernames, id)
+		}
+
+		users, err := GetUsers(context.Background(), n.logger, n.db, n.tracker, nil, usernames, nil)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to get users: %s", err.Error())))
+		}
+
+		usersData := make([]map[string]interface{}, 0, len(users.Users))
+		for _, user := range users.Users {
+			userData, err := getUserData(user)
+			if err != nil {
+				panic(r.ToValue(err.Error()))
+			}
+			usersData = append(usersData, userData)
+		}
+
+		return r.ToValue(usersData)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) usersBanId(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		var input []interface{}
+		if f.Argument(0) == goja.Undefined() {
+			panic(r.NewTypeError("expects list of user ids"))
+		} else {
+			var ok bool
+			input, ok = f.Argument(0).Export().([]interface{})
+			if !ok {
+				panic(r.NewTypeError("Invalid argument - user ids must be an array."))
+			}
+		}
+
+		userIDs := make([]string, 0, len(input))
+		for _, userID := range input {
+			id, ok := userID.(string)
+			if !ok {
+				panic(r.NewTypeError(fmt.Sprintf("invalid user id: %v - must be a string", userID)))
+			} else if _, err := uuid.FromString(id); err != nil {
+				panic(r.NewTypeError(fmt.Sprintf("invalid user id: %v", userID)))
+			}
+			userIDs = append(userIDs, id)
+		}
+
+		err := BanUsers(context.Background(), n.logger, n.db, userIDs)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to ban users: %s", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) usersUnbanId(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		var input []interface{}
+		if f.Argument(0) == goja.Undefined() {
+			panic(r.NewTypeError("expects list of user ids"))
+		} else {
+			var ok bool
+			input, ok = f.Argument(0).Export().([]interface{})
+			if !ok {
+				panic(r.NewTypeError("Invalid argument - user ids must be an array."))
+			}
+		}
+
+		userIDs := make([]string, 0, len(input))
+		for _, userID := range input {
+			id, ok := userID.(string)
+			if !ok {
+				panic(r.NewTypeError(fmt.Sprintf("invalid user id: %v - must be a string", userID)))
+			} else if _, err := uuid.FromString(id); err != nil {
+				panic(r.NewTypeError(fmt.Sprintf("invalid user id: %v", userID)))
+			}
+			userIDs = append(userIDs, id)
+		}
+
+		usernames := make([]string, 0, len(input))
+		for _, userID := range input {
+			id, ok := userID.(string)
+			if !ok {
+				panic(r.NewTypeError(fmt.Sprintf("invalid username: %v - must be a string", userID)))
+			}
+			usernames = append(usernames, id)
+		}
+
+		err := UnbanUsers(context.Background(), n.logger, n.db, userIDs)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to unban users: %s", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
 func getString(r *goja.Runtime, v goja.Value) string {
 	s, ok := v.Export().(string)
 	if !ok {
@@ -1411,4 +1575,46 @@ func getAccountData(account *api.Account) (map[string]interface{}, error) {
 	}
 
 	return accountData, nil
+}
+
+func getUserData(user *api.User) (map[string]interface{}, error) {
+	userData := make(map[string]interface{})
+	userData["user_id"] = user.Id
+	userData["username"] = user.Username
+	userData["display_name"] = user.DisplayName
+	userData["avatar_url"] = user.AvatarUrl
+	userData["lang_tag"] = user.LangTag
+	userData["location"] = user.Location
+	userData["timezone"] = user.Timezone
+	if user.AppleId != "" {
+		userData["apple_id"] = user.AppleId
+	}
+	if user.FacebookId != "" {
+		userData["facebook_id"] = user.FacebookId
+	}
+	if user.FacebookInstantGameId != "" {
+		userData["facebook_instant_game_id"] = user.FacebookInstantGameId
+	}
+	if user.GoogleId != "" {
+		userData["google_id"] = user.GoogleId
+	}
+	if user.GamecenterId != "" {
+		userData["gamecenter_id"] = user.GamecenterId
+	}
+	if user.SteamId != "" {
+		userData["steam_id"] = user.SteamId
+	}
+	userData["online"] = user.Online
+	userData["edge_count"] = user.EdgeCount
+	userData["create_time"] = user.CreateTime
+	userData["update_time"] = user.UpdateTime
+
+	metadata := make(map[string]interface{})
+	err := json.Unmarshal([]byte(user.Metadata), &metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert metadata to json: %s", err.Error())
+	}
+	userData["metadata"] = metadata
+
+	return userData, nil
 }

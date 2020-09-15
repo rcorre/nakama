@@ -207,7 +207,7 @@ interface TokenGenerateResult {
 }
 
 /**
- * User account object
+ * Account object
  */
 interface UserAccount {
     user_id: string;
@@ -234,6 +234,30 @@ interface UserAccount {
     custom_id: string;
     verify_time: number;
     disable_time: number;
+}
+
+/**
+ * User object
+ */
+interface UserAccount {
+    user_id: string;
+    username: string;
+    display_name: string;
+    avatar_url: string;
+    lang_tag: string;
+    location: string;
+    timezone: string;
+    apple_id: string;
+    facebook_id: string;
+    facebook_instant_game_id: string;
+    google_id: string;
+    gamecenter_id: string;
+    steam_id: string;
+    online: boolean;
+    edge_count: string;
+    create_time: number;
+    update_time: number;
+    metadata: object;
 }
 
 /**
@@ -582,6 +606,27 @@ interface Nakama {
      * @param data - Object with the data to update.
      */
     accountUpdateId(userId: string, data: UserUpdateAccount)
+
+    /**
+     * Delete user account
+     *
+     * @param userId - Target account.
+     */
+    accountDeleteId(userId: string)
+
+    /**
+     * Export user account data to JSON encoded string
+     *
+     * @param userId - Target account.
+     */
+    accountExportId(userId: string): string
+
+    /**
+     * Get user data by ids.
+     *
+     * @param userId - Target account.
+     */
+    usersGetId(userId: string): string
 }
 
 /**
