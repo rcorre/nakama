@@ -48,14 +48,16 @@ type runtimeJavascriptNakamaModule struct {
 	socialClient      *social.Client
 	tracker           Tracker
 	sessionRegistry   SessionRegistry
+	matchRegistry     MatchRegistry
 	streamManager     StreamManager
 	router            MessageRouter
-	eventFn           RuntimeEventCustomFunction
 
 	node string
+	matchCreateFn       RuntimeMatchCreateFunction
+	eventFn           RuntimeEventCustomFunction
 }
 
-func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, sessionRegistry SessionRegistry, tracker Tracker, streamManager StreamManager, router MessageRouter, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
+func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, sessionRegistry SessionRegistry, matchRegistry MatchRegistry, tracker Tracker, streamManager StreamManager, router MessageRouter, eventFn RuntimeEventCustomFunction, matchCreateFn RuntimeMatchCreateFunction) *runtimeJavascriptNakamaModule {
 	return &runtimeJavascriptNakamaModule{
 		logger:            logger,
 		config:            config,
@@ -64,14 +66,17 @@ func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMars
 		jsonpbUnmarshaler: jsonpbUnmarshaler,
 		streamManager:     streamManager,
 		sessionRegistry:   sessionRegistry,
+		matchRegistry:     matchRegistry,
 		router:            router,
 		tracker:           tracker,
 		socialClient:      socialClient,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
 		},
-		eventFn: eventFn,
+
 		node: config.GetName(),
+		eventFn: eventFn,
+		matchCreateFn: matchCreateFn,
 	}
 }
 
@@ -154,6 +159,9 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"streamSend":                      n.streamSend(r),
 		"streamSendRaw":                   n.streamSendRaw(r),
 		"sessionDisconnect":               n.sessionDisconnect(r),
+		"matchCreate":                     n.matchCreate(r),
+		"matchGet":                        n.matchGet(r),
+		"matchList":                       n.matchList(r),
 	}
 }
 
@@ -2049,7 +2057,7 @@ func (n *runtimeJavascriptNakamaModule) streamUserJoin(r *goja.Runtime) func(goj
 			hidden = getBool(r, f.Argument(3))
 		}
 		// By default persistence is enabled, if the stream supports it.
-		persistence := false
+		persistence := true
 		if f.Argument(4) != goja.Undefined() {
 			persistence = getBool(r, f.Argument(4))
 		}
@@ -2111,7 +2119,7 @@ func (n *runtimeJavascriptNakamaModule) streamUserUpdate(r *goja.Runtime) func(g
 			hidden = getBool(r, f.Argument(3))
 		}
 		// By default persistence is enabled, if the stream supports it.
-		persistence := false
+		persistence := true
 		if f.Argument(4) != goja.Undefined() {
 			persistence = getBool(r, f.Argument(4))
 		}
@@ -2485,6 +2493,115 @@ func (n *runtimeJavascriptNakamaModule) sessionDisconnect(r *goja.Runtime) func(
 		}
 
 		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) matchCreate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		module := getString(r, f.Argument(0))
+		if module == "" {
+			panic(r.ToValue("expects module name"))
+		}
+
+		params := f.Argument(1)
+		var paramsMap map[string]interface{}
+		if params == goja.Undefined() {
+			paramsMap = make(map[string]interface{})
+		} else {
+			var ok bool
+			paramsMap, ok = params.Export().(map[string]interface{})
+			if !ok {
+				panic(r.ToValue("expects params to be an object"))
+			}
+		}
+
+		id, err := n.matchRegistry.CreateMatch(context.Background(), n.logger, n.matchCreateFn, module, paramsMap)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error creating match: %s", err.Error())))
+		}
+
+		return r.ToValue(id)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) matchGet(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getString(r, f.Argument(0))
+
+		result, err := n.matchRegistry.GetMatch(context.Background(), id)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to get match: %s", err.Error())))
+		}
+
+		matchData := map[string]interface{}{
+			"match_id": result.MatchId,
+			"authoritative": result.Authoritative,
+			"size": result.Size,
+		}
+		if result.Label == nil {
+			matchData["label"] = nil
+		} else {
+			matchData["label"] = result.Label.Value
+		}
+
+		return r.ToValue(matchData)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) matchList(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		limit := 1
+		if f.Argument(0) != goja.Undefined() {
+			limit = int(getInt(r, f.Argument(0)))
+		}
+
+		var authoritative *wrappers.BoolValue
+		if f.Argument(1) != goja.Undefined() && f.Argument(1) != goja.Null() {
+			authoritative = &wrappers.BoolValue{Value: getBool(r, f.Argument(1))}
+		}
+
+		var label *wrappers.StringValue
+		if f.Argument(2) != goja.Undefined() && f.Argument(2) != goja.Null() {
+			label = &wrappers.StringValue{Value: getString(r, f.Argument(2))}
+		}
+
+		var minSize *wrappers.Int32Value
+		if f.Argument(3) != goja.Undefined() && f.Argument(3) != goja.Null() {
+			minSize = &wrappers.Int32Value{Value: int32(getInt(r, f.Argument(3)))}
+		}
+
+		var maxSize *wrappers.Int32Value
+		if f.Argument(4) != goja.Undefined() && f.Argument(4) != goja.Null() {
+			maxSize = &wrappers.Int32Value{Value: int32(getInt(r, f.Argument(4)))}
+		}
+
+		var query *wrappers.StringValue
+		if f.Argument(5) != goja.Undefined() && f.Argument(5) != goja.Null() {
+			query = &wrappers.StringValue{Value: getString(r, f.Argument(5))}
+		}
+
+		results, err := n.matchRegistry.ListMatches(context.Background(), limit, authoritative, label, minSize, maxSize, query)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to list matches: %s", err.Error())))
+		}
+
+		matches := make([]map[string]interface{}, 0, len(results))
+		for _, match := range results {
+			matchData := map[string]interface{}{
+				"match_id": match.MatchId,
+				"authoritative": match.Authoritative,
+				"size": match.Size,
+			}
+			if match.Label == nil {
+				matchData["label"] = nil
+			} else {
+				matchData["label"] = match.Label.Value
+			}
+
+			matches = append(matches, matchData)
+		}
+
+		return r.ToValue(matches)
 	}
 }
 

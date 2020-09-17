@@ -283,6 +283,9 @@ interface Stream {
     label: string;
 }
 
+/**
+ * Presence object
+ */
 interface Presence {
     user_id: string;
     session_id: string;
@@ -291,6 +294,15 @@ interface Presence {
     persistence: boolean;
     username: string;
     status: string;
+}
+
+/**
+ * Match Object
+ */
+interface Match {
+    "match_id": string;
+    "authoritative": boolean;
+    "size": number;
 }
 
 /**
@@ -832,8 +844,133 @@ interface Nakama {
      * @param stream - Stream object.
      * @param includeHidden - Optional argument to include hidden presences in the list or not, default true.
      * @param includeNotHidden - Optional argument to include not hidden presences in the list or not, default true.
+     * @returns List of presence objects.
      */
     streamUserList(stream: Stream, includeHidden?: boolean, includeNotHidden?: boolean): Presence[]
+
+    /**
+     * Get presence of user in a stream.
+     *
+     * @param userID - User ID.
+     * @param sessionID - Session ID.
+     * @param stream - Stream data.
+     * @returns Presence object.
+     */
+    streamUserGet(userID: string, sessionID: string, stream: Stream): Presence
+
+     /**
+     * Add a user to a stream.
+     *
+     * @param userID - User ID.
+     * @param sessionID - Session ID.
+     * @param stream - Stream data.
+     * @param hidden - Opt. If hidden no presence events are generated for the user.
+     * @param persistence - Opt. By default persistence is enabled, if the stream supports it.
+     * @param status - Opt. By default no status is set for the user.
+     */
+    streamUserJoin(userID: string, sessionID: string, stream: Stream, hidden?: boolean, persistence?: boolean, status?: string)
+
+    /**
+     * Update user status in a stream.
+     *
+     * @param userID - User ID.
+     * @param sessionID - Session ID.
+     * @param stream - Stream data.
+     * @param hidden - Opt. If hidden no presence events are generated for the user.
+     * @param persistence - Opt. By default persistence is enabled, if the stream supports it.
+     * @param status - Opt. By default no status is set for the user.
+     */
+    streamUserUpdate(userID: string, sessionID: string, stream: Stream, hidden?: boolean, persistence?: boolean, status?: string)
+
+    /**
+     * Have a user leave a stream.
+     *
+     * @param userID - User ID.
+     * @param sessionID - Session ID.
+     * @param stream - Stream data.
+     */
+    streamUserLeave(userID: string, sessionID: string, stream: Stream)
+
+    /**
+     * Kick user from a stream.
+     *
+     * @param presence - User presence data.
+     * @param stream - Stream data.
+     */
+    streamUserKick(presence: Presence, stream: Stream)
+
+    /**
+     * Count the users in a stream.
+     *
+     * @param stream - Stream data.
+     * @returns the number of users in the stream.
+     */
+    streamCount(stream: Stream): number
+
+    /**
+     * Close a stream.
+     *
+     * @param stream - Stream data.
+     * @returns the number of users in the stream.
+     */
+    streamClose(stream: Stream)
+
+    /**
+     * Send data to users in a stream.
+     *
+     * @param stream - Stream data.
+     * @param data - Data string to send.
+     * @param presences - Opt. List of presences in the stream to send the data to. If nil or empty, data is sent to all the users.
+     * @param reliable - Opt. If data is sent with delivery guarantees. Defaults to true
+     */
+    streamSend(stream: Stream, data: string, presences?: Presence[], reliable?: boolean)
+
+    /**
+     * Send envelope data to users in a stream.
+     *
+     * @param stream - Stream data.
+     * @param envelope - Envelope object. // TODO define envelope interface
+     * @param presences - Opt. List of presences in the stream to send the data to. If nil or empty, data is sent to all the users.
+     * @param reliable - Opt. If data is sent with delivery guarantees. Defaults to true
+     */
+    streamSendRaw(stream: Stream, data: string, presences?: Presence[], reliable?: boolean)
+
+    /**
+     * Disconnect session.
+     *
+     * @param sessionID - Session ID.
+     */
+    sessionDisconnect(sessionID: string)
+
+    /**
+     * Create a new match.
+     *
+     * @param module - Name of the module the match will run.
+     * @param params - Opt. Object with the initial state of the match. // TODO define params interface
+     */
+    matchCreate(module: string, params: Object)
+
+    /**
+     * Get a running match info.
+     *
+     * @param matchID - Match ID.
+     * @returns match data.
+     */
+    matchGet(id: string): Match
+
+    /**
+     * Find matches with filters.
+     *
+     *
+     * @param limit - Opt. Max number of matches to return. Defaults to 1.
+     * @param authoritative - Filter authoritative or non-authoritative matches. If NULL or no value is provided, both authoritative and non-authoritative match.
+     * @param label - Filter by a label. If NULL or no value is provided, all labels are matched.
+     * @param minSize - Filter by min number of players in a match. If NULL or no value is provided, there is no lower player bound.
+     * @param MaxSize - Filter by max number of players in a match. If NULL or no value is provided, there is no upper player bound.
+     * @param query - Query by match properties (https://heroiclabs.com/docs/gameplay-matchmaker/#query). If no value is provided, all properties match.
+     * @returns list of running game matches that match the specified filters.
+     */
+    matchList(id: string): Match[]
 }
 
 /**
