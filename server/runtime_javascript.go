@@ -145,6 +145,7 @@ type RuntimeProviderJS struct {
 	sessionRegistry      SessionRegistry
 	matchRegistry        MatchRegistry
 	tracker 						 Tracker
+	streamManager        StreamManager
 	router							 MessageRouter
 	eventFn      				 RuntimeEventCustomFunction
 	poolCh       				 chan *RuntimeJS
@@ -478,6 +479,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		jsonpbMarshaler:   jsonpbMarshaler,
 		jsonpbUnmarshaler: jsonpbUnmarshaler,
 		tracker:           tracker,
+		streamManager:     streamManager,
 		router:            router,
 		poolCh:            make(chan *RuntimeJS, config.GetRuntime().MaxCount),
 		maxCount:          uint32(config.GetRuntime().MaxCount),
@@ -1313,7 +1315,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
 		}
 
-		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, tracker, router, eventFn)
+		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, sessionRegistry, tracker, streamManager, router, eventFn)
 		nk := runtime.ToValue(nakamaModule.Constructor(runtime))
 		nkInst, err := runtime.New(nk)
 		if err != nil {
@@ -1410,7 +1412,7 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, c
 		return nil, err
 	}
 
-	nakamaModule := NewRuntimeJavascriptNakamaModule(rp.logger, rp.db, rp.jsonpbMarshaler, rp.jsonpbUnmarshaler, rp.config, rp.socialClient, rp.tracker, rp.router, rp.eventFn)
+	nakamaModule := NewRuntimeJavascriptNakamaModule(rp.logger, rp.db, rp.jsonpbMarshaler, rp.jsonpbUnmarshaler, rp.config, rp.socialClient, rp.sessionRegistry, rp.tracker, rp.streamManager, rp.router, rp.eventFn)
 	nk := r.ToValue(nakamaModule.Constructor(r))
 	nkInst, err := r.New(nk)
 	if err != nil {

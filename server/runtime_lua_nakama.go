@@ -3599,13 +3599,13 @@ func (n *RuntimeLuaNakamaModule) streamSendRaw(l *lua.LState) int {
 	envelopeMap := RuntimeLuaConvertLuaTable(l.CheckTable(2))
 	envelopeBytes, err := json.Marshal(envelopeMap)
 	if err != nil {
-		l.ArgError(2, fmt.Sprintf("failed to convert envlope: %s", err.Error()))
+		l.ArgError(2, fmt.Sprintf("failed to convert envelope: %s", err.Error()))
 		return 0
 	}
 
 	msg := &rtapi.Envelope{}
 	if err = n.jsonpbUnmarshaler.Unmarshal(bytes.NewReader(envelopeBytes), msg); err != nil {
-		l.ArgError(2, fmt.Sprintf("not a valid envlope: %s", err.Error()))
+		l.ArgError(2, fmt.Sprintf("not a valid envelope: %s", err.Error()))
 		return 0
 	}
 

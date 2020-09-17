@@ -274,6 +274,26 @@ interface UserUpdateAccount {
 }
 
 /**
+ * Stream object
+ */
+interface Stream {
+    mode: string;
+    subject: string;
+    subcontext: string;
+    label: string;
+}
+
+interface Presence {
+    user_id: string;
+    session_id: string;
+    node_id: string;
+    hidden: boolean;
+    persistence: boolean;
+    username: string;
+    status: string;
+}
+
+/**
  * The server APIs available in the game server.
  */
 interface Nakama {
@@ -805,6 +825,15 @@ interface Nakama {
      * @param token - Steam token.
      */
     unlinkSteam(userID: string, token: string)
+
+    /**
+     * List stream presences.
+     *
+     * @param stream - Stream object.
+     * @param includeHidden - Optional argument to include hidden presences in the list or not, default true.
+     * @param includeNotHidden - Optional argument to include not hidden presences in the list or not, default true.
+     */
+    streamUserList(stream: Stream, includeHidden?: boolean, includeNotHidden?: boolean): Presence[]
 }
 
 /**

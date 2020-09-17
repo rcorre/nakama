@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto"
 	"crypto/aes"
@@ -18,6 +19,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/heroiclabs/nakama-common/rtapi"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -45,17 +47,23 @@ type runtimeJavascriptNakamaModule struct {
 	httpClient        *http.Client
 	socialClient      *social.Client
 	tracker           Tracker
+	sessionRegistry   SessionRegistry
+	streamManager     StreamManager
 	router            MessageRouter
 	eventFn           RuntimeEventCustomFunction
+
+	node string
 }
 
-func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, tracker Tracker, router MessageRouter, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
+func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, sessionRegistry SessionRegistry, tracker Tracker, streamManager StreamManager, router MessageRouter, eventFn RuntimeEventCustomFunction) *runtimeJavascriptNakamaModule {
 	return &runtimeJavascriptNakamaModule{
 		logger:            logger,
 		config:            config,
 		db:                db,
 		jsonpbMarshaler:   jsonpbMarshaler,
 		jsonpbUnmarshaler: jsonpbUnmarshaler,
+		streamManager:     streamManager,
+		sessionRegistry:   sessionRegistry,
 		router:            router,
 		tracker:           tracker,
 		socialClient:      socialClient,
@@ -63,6 +71,7 @@ func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMars
 			Timeout: 5 * time.Second,
 		},
 		eventFn: eventFn,
+		node: config.GetName(),
 	}
 }
 
@@ -134,6 +143,17 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"unlinkGameCenter":                n.unlinkGameCenter(r),
 		"unlinkGoogle":                    n.unlinkGoogle(r),
 		"unlinkSteam":                     n.unlinkSteam(r),
+		"streamUserList":                  n.streamUserList(r),
+		"streamUserGet":                   n.streamUserGet(r),
+		"streamUserJoin":                  n.streamUserJoin(r),
+		"streamUserUpdate":                n.streamUserUpdate(r),
+		"streamUserLeave":                 n.streamUserLeave(r),
+		"streamUserKick":                  n.streamUserKick(r),
+		"streamCount":                     n.streamCount(r),
+		"streamClose":                     n.streamClose(r),
+		"streamSend":                      n.streamSend(r),
+		"streamSendRaw":                   n.streamSendRaw(r),
+		"sessionDisconnect":               n.sessionDisconnect(r),
 	}
 }
 
@@ -1912,6 +1932,562 @@ func (n *runtimeJavascriptNakamaModule) unlinkSteam(r *goja.Runtime) func(goja.F
 	}
 }
 
+func (n *runtimeJavascriptNakamaModule) streamUserList(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		streamIn := f.Argument(0)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+		includeHidden := true
+		if f.Argument(1) != goja.Undefined() {
+			includeHidden = getBool(r, f.Argument(1))
+		}
+		includeNotHidden := true
+		if f.Argument(2) != goja.Undefined() {
+			includeNotHidden = getBool(r, f.Argument(2))
+		}
+
+		stream := getStreamData(r, streamObj)
+		presences := n.tracker.ListByStream(stream, includeHidden, includeNotHidden)
+
+		presencesList := make([]map[string]interface{}, 0, len(presences))
+		for _, p := range presences {
+			presenceObj := make(map[string]interface{})
+			presenceObj["user_id"] = p.UserID.String()
+			presenceObj["session_id"] = p.ID.SessionID.String()
+			presenceObj["node_id"] = p.ID.Node
+			presenceObj["hidden"] = p.Meta.Hidden
+			presenceObj["persistence"] = p.Meta.Persistence
+			presenceObj["username"] = p.Meta.Username
+			presenceObj["status"] = p.Meta.Status
+		}
+
+		return r.ToValue(presencesList)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) streamUserGet(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userIDString := getString(r, f.Argument(0))
+		if userIDString == "" {
+			panic(r.ToValue(r.NewTypeError("expects user id")))
+		}
+		userID, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		sessionIDString := getString(r, f.Argument(1))
+		if sessionIDString == "" {
+			panic(r.NewTypeError("expects session id"))
+		}
+		sessionID, err := uuid.FromString(sessionIDString)
+		if err != nil {
+			panic(r.NewTypeError("invalid session id"))
+		}
+
+		streamIn := f.Argument(2)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+
+		stream := getStreamData(r, streamObj)
+		meta := n.tracker.GetLocalBySessionIDStreamUserID(sessionID, stream, userID)
+		if meta == nil {
+			return nil
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"hidden": meta.Hidden,
+			"persistence": meta.Persistence,
+			"username": meta.Username,
+			"status": meta.Status,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) streamUserJoin(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userIDString := getString(r, f.Argument(0))
+		if userIDString == "" {
+			panic(r.ToValue(r.NewTypeError("expects user id")))
+		}
+		userID, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		sessionIDString := getString(r, f.Argument(1))
+		if sessionIDString == "" {
+			panic(r.NewTypeError("expects session id"))
+		}
+		sessionID, err := uuid.FromString(sessionIDString)
+		if err != nil {
+			panic(r.NewTypeError("invalid session id"))
+		}
+
+		streamIn := f.Argument(2)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+
+		// By default generate presence events.
+		hidden := false
+		if f.Argument(3) != goja.Undefined() {
+			hidden = getBool(r, f.Argument(3))
+		}
+		// By default persistence is enabled, if the stream supports it.
+		persistence := false
+		if f.Argument(4) != goja.Undefined() {
+			persistence = getBool(r, f.Argument(4))
+		}
+		// By default no status is set.
+		status := ""
+		if f.Argument(5) != goja.Undefined() {
+			status = getString(r, f.Argument(5))
+		}
+
+		stream := getStreamData(r, streamObj)
+
+		success, newlyTracked, err := n.streamManager.UserJoin(stream, userID, sessionID, hidden, persistence, status)
+		if err != nil {
+			if err == ErrSessionNotFound {
+				panic(r.ToValue("session id does not exist"))
+			}
+			panic(r.ToValue(fmt.Sprintf("stream user join failed: %v", err.Error())))
+		}
+		if !success {
+			panic(r.ToValue("tracker rejected new presence, session is closing"))
+		}
+
+		return r.ToValue(newlyTracked)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) streamUserUpdate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userIDString := getString(r, f.Argument(0))
+		if userIDString == "" {
+			panic(r.ToValue(r.NewTypeError("expects user id")))
+		}
+		userID, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		sessionIDString := getString(r, f.Argument(1))
+		if sessionIDString == "" {
+			panic(r.NewTypeError("expects session id"))
+		}
+		sessionID, err := uuid.FromString(sessionIDString)
+		if err != nil {
+			panic(r.NewTypeError("invalid session id"))
+		}
+
+		streamIn := f.Argument(2)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+
+		// By default generate presence events.
+		hidden := false
+		if f.Argument(3) != goja.Undefined() {
+			hidden = getBool(r, f.Argument(3))
+		}
+		// By default persistence is enabled, if the stream supports it.
+		persistence := false
+		if f.Argument(4) != goja.Undefined() {
+			persistence = getBool(r, f.Argument(4))
+		}
+		// By default no status is set.
+		status := ""
+		if f.Argument(5) != goja.Undefined() {
+			status = getString(r, f.Argument(5))
+		}
+
+		stream := getStreamData(r, streamObj)
+
+		success, err := n.streamManager.UserUpdate(stream, userID, sessionID, hidden, persistence, status)
+		if err != nil {
+			if err == ErrSessionNotFound {
+				panic(r.ToValue("session id does not exist"))
+			}
+			panic(r.ToValue(fmt.Sprintf("stream user update failed: %v", err.Error())))
+		}
+		if !success {
+			panic(r.ToValue("tracker rejected updated presence, session is closing"))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) streamUserLeave(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userIDString := getString(r, f.Argument(0))
+		if userIDString == "" {
+			panic(r.ToValue(r.NewTypeError("expects user id")))
+		}
+		userID, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("invalid user id"))
+		}
+
+		sessionIDString := getString(r, f.Argument(1))
+		if sessionIDString == "" {
+			panic(r.NewTypeError("expects session id"))
+		}
+		sessionID, err := uuid.FromString(sessionIDString)
+		if err != nil {
+			panic(r.NewTypeError("invalid session id"))
+		}
+
+		streamIn := f.Argument(2)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+
+		stream := getStreamData(r, streamObj)
+
+		if err := n.streamManager.UserLeave(stream, userID, sessionID); err != nil {
+			panic(r.ToValue(fmt.Sprintf("stream user leave failed: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) streamUserKick(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		presenceIn := f.Argument(0)
+		if presenceIn == goja.Undefined() {
+			panic(r.NewTypeError("expects presence object"))
+		}
+		presence, ok := presenceIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a presence object"))
+		}
+
+		userID := uuid.Nil
+		sessionID := uuid.Nil
+		node := n.node
+
+		userIDRaw, ok := presence["user_id"]
+		if ok {
+			userIDString, ok := userIDRaw.(string)
+			if !ok {
+				panic(r.ToValue("presence user_id must be a string"))
+			}
+			id, err := uuid.FromString(userIDString)
+			if err != nil {
+				panic(r.ToValue("invalid user_id"))
+			}
+			userID = id
+		}
+
+		sessionIdRaw, ok := presence["session_id"]
+		if ok {
+			sessionIDString, ok := sessionIdRaw.(string)
+			if !ok {
+				panic(r.ToValue("presence session_id must be a string"))
+			}
+			id, err := uuid.FromString(sessionIDString)
+			if err != nil {
+				panic(r.ToValue("invalid session_id"))
+			}
+			sessionID = id
+		}
+
+		nodeRaw, ok := presence["node"]
+		if ok {
+			nodeString, ok := nodeRaw.(string)
+			if !ok {
+				panic(r.ToValue("expects node to be a string"))
+			}
+			node = nodeString
+		}
+
+		if userID == uuid.Nil || sessionID == uuid.Nil || node == "" {
+			panic(r.ToValue("expects each presence to have a valid user_id, session_id, and node"))
+		}
+
+		streamIn := f.Argument(1)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+
+		stream := getStreamData(r, streamObj)
+
+		if err := n.streamManager.UserLeave(stream, userID, sessionID); err != nil {
+			panic(r.ToValue(fmt.Sprintf("stream user kick failed: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) streamCount(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		streamIn := f.Argument(0)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+
+		stream := getStreamData(r, streamObj)
+
+		count := n.tracker.CountByStream(stream)
+
+		return r.ToValue(count)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) streamClose(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		streamIn := f.Argument(0)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+
+		stream := getStreamData(r, streamObj)
+
+		n.tracker.UntrackByStream(stream)
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) streamSend(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		streamIn := f.Argument(0)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+
+		stream := getStreamData(r, streamObj)
+
+		data := getString(r, f.Argument(1))
+
+		presencesIn := f.Argument(2)
+		var presences []interface{}
+		if presencesIn == goja.Undefined() || presencesIn == goja.Null() {
+			presences = make([]interface{}, 0)
+		} else {
+			presences, ok = presencesIn.Export().([]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects a presences array"))
+			}
+		}
+
+		presenceIDs := make([]*PresenceID, 0, len(presences))
+		for _, presenceRaw := range presences {
+			presence, ok := presenceRaw.(map[string]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects a presence object"))
+			}
+
+			presenceID := &PresenceID{}
+			sessionIdRaw, ok := presence["session_id"]
+			if ok {
+				sessionIDString, ok := sessionIdRaw.(string)
+				if !ok {
+					panic(r.ToValue("presence session_id must be a string"))
+				}
+				id, err := uuid.FromString(sessionIDString)
+				if err != nil {
+					panic(r.ToValue("invalid presence session_id"))
+				}
+				presenceID.SessionID = id
+			}
+
+			nodeIDRaw, ok := presence["node_id"]
+			if ok {
+				nodeString, ok := nodeIDRaw.(string)
+				if !ok {
+					panic(r.ToValue("expects node id to be a string"))
+				}
+				presenceID.Node = nodeString
+			}
+
+			presenceIDs = append(presenceIDs, presenceID)
+		}
+
+		reliable := true
+		if f.Argument(3) != goja.Undefined() {
+			reliable = getBool(r, f.Argument(3))
+		}
+
+		streamWire := &rtapi.Stream{
+			Mode:  int32(stream.Mode),
+			Label: stream.Label,
+		}
+		if stream.Subject != uuid.Nil {
+			streamWire.Subject = stream.Subject.String()
+		}
+		if stream.Subcontext != uuid.Nil {
+			streamWire.Subcontext = stream.Subcontext.String()
+		}
+		msg := &rtapi.Envelope{Message: &rtapi.Envelope_StreamData{StreamData: &rtapi.StreamData{
+			Stream: streamWire,
+			// No sender.
+			Data:     data,
+			Reliable: reliable,
+		}}}
+
+		if len(presenceIDs) == 0 {
+			// Sending to whole stream.
+			n.router.SendToStream(n.logger, stream, msg, reliable)
+		} else {
+			// Sending to a subset of stream users.
+			n.router.SendToPresenceIDs(n.logger, presenceIDs, msg, reliable)
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) streamSendRaw(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		streamIn := f.Argument(0)
+		if streamIn == goja.Undefined() {
+			panic(r.NewTypeError("expects stream object"))
+		}
+		streamObj, ok := streamIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a stream object"))
+		}
+
+		stream := getStreamData(r, streamObj)
+
+		envelopeMap, ok := f.Argument(1).Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects envelope object"))
+		}
+		envelopeBytes, err := json.Marshal(envelopeMap)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to convert envelope: %s", err.Error())))
+		}
+
+		msg := &rtapi.Envelope{}
+		if err = n.jsonpbUnmarshaler.Unmarshal(bytes.NewReader(envelopeBytes), msg); err != nil {
+			panic(r.ToValue(fmt.Sprintf("not a valid envelope: %s", err.Error())))
+		}
+
+		presencesIn := f.Argument(2)
+		var presences []interface{}
+		if presencesIn == goja.Undefined() || presencesIn == goja.Null() {
+			presences = make([]interface{}, 0)
+		} else {
+			presences, ok = presencesIn.Export().([]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects a presences array"))
+			}
+		}
+
+		presenceIDs := make([]*PresenceID, 0, len(presences))
+		for _, presenceRaw := range presences {
+			presence, ok := presenceRaw.(map[string]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects a presence object"))
+			}
+
+			presenceID := &PresenceID{}
+			sessionIdRaw, ok := presence["session_id"]
+			if ok {
+				sessionIDString, ok := sessionIdRaw.(string)
+				if !ok {
+					panic(r.ToValue("presence session_id must be a string"))
+				}
+				id, err := uuid.FromString(sessionIDString)
+				if err != nil {
+					panic(r.ToValue("invalid presence session_id"))
+				}
+				presenceID.SessionID = id
+			}
+
+			nodeIDRaw, ok := presence["node_id"]
+			if ok {
+				nodeString, ok := nodeIDRaw.(string)
+				if !ok {
+					panic(r.ToValue("expects node id to be a string"))
+				}
+				presenceID.Node = nodeString
+			}
+
+			presenceIDs = append(presenceIDs, presenceID)
+		}
+
+		reliable := true
+		if f.Argument(3) != goja.Undefined() {
+			reliable = getBool(r, f.Argument(3))
+		}
+
+		if len(presenceIDs) == 0 {
+			// Sending to whole stream.
+			n.router.SendToStream(n.logger, stream, msg, reliable)
+		} else {
+			// Sending to a subset of stream users.
+			n.router.SendToPresenceIDs(n.logger, presenceIDs, msg, reliable)
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) sessionDisconnect(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		sessionIDString := getString(r, f.Argument(0))
+		if sessionIDString == "" {
+			panic(r.NewTypeError("expects a session id"))
+		}
+		sessionID, err := uuid.FromString(sessionIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects a valid session id"))
+		}
+
+		if err := n.sessionRegistry.Disconnect(context.Background(), sessionID); err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to disconnect: %s", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
 func getString(r *goja.Runtime, v goja.Value) string {
 	s, ok := v.Export().(string)
 	if !ok {
@@ -2065,4 +2641,54 @@ func getUserData(user *api.User) (map[string]interface{}, error) {
 	userData["metadata"] = metadata
 
 	return userData, nil
+}
+
+func getStreamData(r *goja.Runtime, streamObj map[string]interface{}) PresenceStream {
+	stream := PresenceStream{}
+
+	modeRaw, ok := streamObj["mode"]
+	if ok {
+		mode, ok := modeRaw.(int64)
+		if !ok {
+			panic(r.NewTypeError("stream mode must be a number"))
+		}
+		stream.Mode = uint8(mode)
+	}
+
+	subjectRaw, ok := streamObj["subject"]
+	if ok {
+		subject, ok := subjectRaw.(string)
+		if !ok {
+			panic(r.NewTypeError("stream subject must be a string"))
+		}
+		uuid, err := uuid.FromString(subject)
+		if err != nil {
+			panic(r.NewTypeError("stream subject must be a valid identifier"))
+		}
+		stream.Subject = uuid
+	}
+
+	subcontextRaw, ok := streamObj["subcontext"]
+	if ok {
+		subcontext, ok := subcontextRaw.(string)
+		if !ok {
+			panic(r.NewTypeError("stream subcontext must be a string"))
+		}
+		uuid, err := uuid.FromString(subcontext)
+		if err != nil {
+			panic(r.NewTypeError("stream subcontext must be a valid identifier"))
+		}
+		stream.Subcontext = uuid
+	}
+
+	labelRaw, ok := streamObj["label"]
+	if ok {
+		label, ok := labelRaw.(string)
+		if !ok {
+			panic(r.NewTypeError("stream label must be a string"))
+		}
+		stream.Label = label
+	}
+
+	return stream
 }
