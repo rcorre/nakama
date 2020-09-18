@@ -306,6 +306,18 @@ interface Match {
 }
 
 /**
+ * Notification Object
+ */
+interface Notification {
+    code: number;
+    content: Object;
+    persistent: boolean;
+    sender: string;
+    subject: string;
+    userID: string;
+}
+
+/**
  * The server APIs available in the game server.
  */
 interface Nakama {
@@ -961,7 +973,6 @@ interface Nakama {
     /**
      * Find matches with filters.
      *
-     *
      * @param limit - Opt. Max number of matches to return. Defaults to 1.
      * @param authoritative - Filter authoritative or non-authoritative matches. If NULL or no value is provided, both authoritative and non-authoritative match.
      * @param label - Filter by a label. If NULL or no value is provided, all labels are matched.
@@ -971,6 +982,25 @@ interface Nakama {
      * @returns list of running game matches that match the specified filters.
      */
     matchList(id: string): Match[]
+
+    /**
+     * Send a notification.
+     *
+     * @param userID - User ID.
+     * @param subject - Subject of the notification.
+     * @param content - Key value object to send as the notification content.
+     * @param code - Custom code for the notification. Must be a positive integer.
+     * @param senderID - Sender ID.
+     * @param persistent - A non-persistent message will only be received by a client which is currently connected to the server.
+     */
+    notificationSend(userID: string, subject: string, content: Object, code: number, senderID: string, persistent: boolean)
+
+    /**
+     * Send several notifications at once.
+     *
+     * @param notifications - Array of notifications to be sent.
+     */
+    notificationsSend(notifications: Notification[])
 }
 
 /**

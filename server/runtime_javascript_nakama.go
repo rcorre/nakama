@@ -162,6 +162,8 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"matchCreate":                     n.matchCreate(r),
 		"matchGet":                        n.matchGet(r),
 		"matchList":                       n.matchList(r),
+		"notificationSend":                n.notificationSend(r),
+		"notificationsSend":               n.notificationsSend(r),
 	}
 }
 
@@ -2602,6 +2604,188 @@ func (n *runtimeJavascriptNakamaModule) matchList(r *goja.Runtime) func(goja.Fun
 		}
 
 		return r.ToValue(matches)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) notificationSend(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userIDString := getString(r, f.Argument(0))
+		userID, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects valid user id"))
+		}
+
+		subject := getString(r, f.Argument(1))
+		if subject == "" {
+			panic(r.NewTypeError("expects subject to be a non empty string"))
+		}
+
+		contentIn := f.Argument(2)
+		if contentIn == goja.Undefined() {
+			panic(r.NewTypeError("expects content"))
+		}
+		contentMap, ok := contentIn.Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects content to be an object"))
+		}
+		contentBytes, err := json.Marshal(contentMap)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to convert content: %s", err.Error())))
+		}
+		content := string(contentBytes)
+
+		code := getInt(r, f.Argument(3))
+		if code <= 0 {
+			panic(r.ToValue("expects code number to be a positive integer"))
+		}
+
+		senderIdIn := f.Argument(4)
+		senderID := uuid.Nil.String()
+		if senderIdIn != goja.Undefined() && senderIdIn != goja.Null() {
+			suid, err := uuid.FromString(getString(r, senderIdIn))
+			if err != nil {
+				panic(r.NewTypeError("expects sender_id to either be not set, empty string or a valid UUID"))
+			}
+			senderID = suid.String()
+		}
+
+		persistent := false
+		if f.Argument(5) != goja.Undefined() {
+			persistent = getBool(r, f.Argument(5))
+		}
+
+		nots := []*api.Notification{{
+			Id:         uuid.Must(uuid.NewV4()).String(),
+			Subject:    subject,
+			Content:    content,
+			Code:       int32(code),
+			SenderId:   senderID,
+			Persistent: persistent,
+			CreateTime: &timestamp.Timestamp{Seconds: time.Now().UTC().Unix()},
+		}}
+		notifications := map[uuid.UUID][]*api.Notification{
+			userID: nots,
+		}
+
+		if err := NotificationSend(context.Background(), n.logger, n.db, n.router, notifications); err != nil {
+			panic(fmt.Sprintf("failed to send notifications: %s", err.Error()))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) notificationsSend(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		notificationsIn := f.Argument(0)
+		if notificationsIn == goja.Undefined() {
+			panic(r.NewTypeError("expects a valid set of notifications"))
+		}
+
+		notificationsSlice, ok := notificationsIn.Export().([]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects notifications to be an array"))
+		}
+
+		notifications := make(map[uuid.UUID][]*api.Notification)
+		for _, notificationRaw := range notificationsSlice {
+			notificationObj, ok := notificationRaw.(map[string]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects notification to be an object"))
+			}
+
+			notification := &api.Notification{}
+			userID := uuid.Nil
+			senderID := uuid.Nil
+
+			var persistent bool
+			if _, ok := notificationObj["persistent"]; ok {
+				persistent, ok = notificationObj["persistent"].(bool)
+				if !ok {
+					panic(r.NewTypeError("expects 'persistent' key value to be a boolean"))
+				}
+				notification.Persistent = persistent
+			}
+
+			if _, ok := notificationObj["subject"]; ok {
+				subject, ok := notificationObj["subject"].(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'subject' key value to be a string"))
+				}
+				notification.Subject = subject
+			}
+
+			if _, ok := notificationObj["content"]; ok {
+				content, ok := notificationObj["content"].(map[string]interface{})
+				if !ok {
+					panic(r.NewTypeError("expects 'content' key value to be an object"))
+				}
+				contentBytes, err := json.Marshal(content)
+				if err != nil {
+					panic(r.ToValue(fmt.Sprintf("failed to convert content: %s", err.Error())))
+				}
+				notification.Content = string(contentBytes)
+			}
+
+			if _, ok := notificationObj["code"]; ok {
+				code, ok := notificationObj["code"].(int32)
+				if !ok {
+					panic(r.NewTypeError("expects 'code' key value to be a number"))
+				}
+				notification.Code = code
+			}
+
+			if _, ok := notificationObj["user_id"]; ok {
+				userIDStr, ok := notificationObj["user_id"].(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'user_id' key value to be a string"))
+				}
+				uid, err := uuid.FromString(userIDStr)
+				if err != nil {
+					panic(r.NewTypeError("expects 'user_id' key value to be a valid id"))
+				}
+				userID = uid
+			}
+
+			if _, ok := notificationObj["sender_id"]; ok {
+				senderIDStr, ok := notificationObj["sender_id"].(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'user_id' key value to be a string"))
+				}
+				uid, err := uuid.FromString(senderIDStr)
+				if err != nil {
+					panic(r.NewTypeError("expects 'user_id' key value to be a valid id"))
+				}
+				senderID = uid
+			}
+
+			if notification.Subject == "" {
+				panic(r.NewTypeError("expects subject to be provided and to be non-empty"))
+			} else if len(notification.Content) == 0 {
+				panic(r.NewTypeError("expects content to be provided and be valid JSON"))
+			} else if userID == uuid.Nil {
+				panic(r.NewTypeError("expects user_id to be provided and be a valid UUID"))
+			} else if notification.Code == 0 {
+				panic(r.NewTypeError("expects code to be provided and be a number above 0"))
+			}
+
+			notification.Id = uuid.Must(uuid.NewV4()).String()
+			notification.CreateTime = &timestamp.Timestamp{Seconds: time.Now().UTC().Unix()}
+			notification.SenderId = senderID.String()
+
+			no := notifications[userID]
+			if no == nil {
+				no = make([]*api.Notification, 0)
+			}
+			no = append(no, notification)
+			notifications[userID] = no
+		}
+
+		if err := NotificationSend(context.Background(), n.logger, n.db, n.router, notifications); err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to send notifications: %s", err.Error())))
+		}
+
+		return goja.Undefined()
 	}
 }
 
