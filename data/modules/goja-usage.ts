@@ -318,6 +318,37 @@ interface Notification {
 }
 
 /**
+ * Wallet Update
+ */
+interface WalletUpdate {
+    user_id: string;
+    changeset: {[key: string]: number};
+    metadata: Object;
+}
+
+/**
+ * Wallet Update Result
+ */
+interface WalletUpdateResult {
+    // Wether the value has changed from the update.
+    updated: boolean;
+    // The wallet value prior to the update.
+    previous: number;
+}
+
+/**
+ * Wallet Ledger Update Result
+ */
+interface WalletLedgerResult {
+    id: string;
+    user_ud: string;
+    create_time: number;
+    update_time: number;
+    changeset: {[key: string]: number};
+    metadata: Object;
+}
+
+/**
  * The server APIs available in the game server.
  */
 interface Nakama {
@@ -996,11 +1027,40 @@ interface Nakama {
     notificationSend(userID: string, subject: string, content: Object, code: number, senderID: string, persistent: boolean)
 
     /**
-     * Send several notifications at once.
+     * Update user wallet.
      *
-     * @param notifications - Array of notifications to be sent.
+     * @param userID - User ID.
+     * @param changeset - Object with the wallet changeset data.
+     * @param metadata - Opt. Metadata.
+     * @param updateLedger - Opt. ??
      */
-    notificationsSend(notifications: Notification[])
+    walletUpdate(userID: string, changeset: Object, metadata?: {[key: string]: string}, updateLedger?: boolean): WalletUpdateResult
+
+    /**
+     * Update multiple user wallet.
+     *
+     * @param updates - Array with the wallet update objects.
+     */
+    walletsUpdate(updates: WalletUpdate[]): WalletUpdateResult[]
+
+    /**
+     * Update user wallet ledger.
+     *
+     * @param ledgerID - The ledger id.
+     * @param metadata - Object with the ledger metadata to set.
+     * @returns updated ledger data.
+     */
+    walletLedgerUpdate(ledgerID: string, metadata: Object): WalletLedgerResult
+
+    /**
+     * Update user wallet ledger.
+     *
+     * @param userID - User ID
+     * @param limit - Opt. Maximum number of items to list. Defaults to 100.
+     * @param cursor - Opt. Pagination cursor.
+     * @returns Object containing an array of wallet ledger results and a cursor for the next page of results, if there is one.
+     */
+    walletLedgerList(ledgerID: string, metadata: Object): {"items": WalletLedgerResult, "cursor": string}
 }
 
 /**

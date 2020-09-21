@@ -19,12 +19,13 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"github.com/heroiclabs/nakama-common/rtapi"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/heroiclabs/nakama-common/rtapi"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dop251/goja"
@@ -52,9 +53,9 @@ type runtimeJavascriptNakamaModule struct {
 	streamManager     StreamManager
 	router            MessageRouter
 
-	node string
-	matchCreateFn       RuntimeMatchCreateFunction
-	eventFn           RuntimeEventCustomFunction
+	node          string
+	matchCreateFn RuntimeMatchCreateFunction
+	eventFn       RuntimeEventCustomFunction
 }
 
 func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, sessionRegistry SessionRegistry, matchRegistry MatchRegistry, tracker Tracker, streamManager StreamManager, router MessageRouter, eventFn RuntimeEventCustomFunction, matchCreateFn RuntimeMatchCreateFunction) *runtimeJavascriptNakamaModule {
@@ -74,8 +75,8 @@ func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMars
 			Timeout: 5 * time.Second,
 		},
 
-		node: config.GetName(),
-		eventFn: eventFn,
+		node:          config.GetName(),
+		eventFn:       eventFn,
 		matchCreateFn: matchCreateFn,
 	}
 }
@@ -164,6 +165,10 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"matchList":                       n.matchList(r),
 		"notificationSend":                n.notificationSend(r),
 		"notificationsSend":               n.notificationsSend(r),
+		"walletUpdate":                    n.walletUpdate(r),
+		"walletsUpdate":                   n.walletsUpdate(r),
+		"walletLedgerUpdate":              n.walletLedgerUpdate(r),
+		"walletLedgerList":                n.walletLedgerList(r),
 	}
 }
 
@@ -2016,10 +2021,10 @@ func (n *runtimeJavascriptNakamaModule) streamUserGet(r *goja.Runtime) func(goja
 		}
 
 		return r.ToValue(map[string]interface{}{
-			"hidden": meta.Hidden,
+			"hidden":      meta.Hidden,
 			"persistence": meta.Persistence,
-			"username": meta.Username,
-			"status": meta.Status,
+			"username":    meta.Username,
+			"status":      meta.Status,
 		})
 	}
 }
@@ -2536,9 +2541,9 @@ func (n *runtimeJavascriptNakamaModule) matchGet(r *goja.Runtime) func(goja.Func
 		}
 
 		matchData := map[string]interface{}{
-			"match_id": result.MatchId,
+			"match_id":      result.MatchId,
 			"authoritative": result.Authoritative,
-			"size": result.Size,
+			"size":          result.Size,
 		}
 		if result.Label == nil {
 			matchData["label"] = nil
@@ -2590,9 +2595,9 @@ func (n *runtimeJavascriptNakamaModule) matchList(r *goja.Runtime) func(goja.Fun
 		matches := make([]map[string]interface{}, 0, len(results))
 		for _, match := range results {
 			matchData := map[string]interface{}{
-				"match_id": match.MatchId,
+				"match_id":      match.MatchId,
 				"authoritative": match.Authoritative,
-				"size": match.Size,
+				"size":          match.Size,
 			}
 			if match.Label == nil {
 				matchData["label"] = nil
@@ -2786,6 +2791,239 @@ func (n *runtimeJavascriptNakamaModule) notificationsSend(r *goja.Runtime) func(
 		}
 
 		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) walletUpdate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		uid := getString(r, f.Argument(0))
+		if uid == "" {
+			panic(r.NewTypeError("expects a valid user id"))
+		}
+		userID, err := uuid.FromString(uid)
+		if err != nil {
+			panic(r.NewTypeError("expects a valid user id"))
+		}
+
+		changeSetMap, ok := f.Argument(1).Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects a changeset object"))
+		}
+		changeSet := make(map[string]int64)
+		for k, v := range changeSetMap {
+			i64, ok := v.(int64)
+			if !ok {
+				panic(r.NewTypeError("expects changeset values to be whole numbers"))
+			}
+			changeSet[k] = i64
+		}
+
+		metadataBytes := []byte("{}")
+		metadataIn := f.Argument(2)
+		if metadataIn != goja.Undefined() || metadataIn != goja.Null() {
+			metadataMap, ok := metadataIn.Export().(map[string]interface{})
+			if !ok {
+				panic(r.ToValue("expects metadata to be a key value object"))
+			}
+			metadataBytes, err = json.Marshal(metadataMap)
+			if err != nil {
+				panic(r.ToValue(fmt.Sprintf("failed to convert metadata: %s", err.Error())))
+			}
+		}
+
+		updateLedger := true
+		if f.Argument(3) != goja.Undefined() {
+			updateLedger = getBool(r, f.Argument(3))
+		}
+
+		results, err := UpdateWallets(context.Background(), n.logger, n.db, []*walletUpdate{{
+			UserID:    userID,
+			Changeset: changeSet,
+			Metadata:  string(metadataBytes),
+		}}, updateLedger)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to update user wallet: %s", err.Error())))
+		}
+
+		if len(results) == 0 {
+			return goja.Null()
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"updated":  results[0].Updated,
+			"previous": results[0].Previous,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) walletsUpdate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		updatesIn, ok := f.Argument(0).Export().([]interface{})
+		if !ok {
+			panic(r.ToValue("expects an array of wallet update objects"))
+		}
+
+		updates := make([]*walletUpdate, 0, len(updatesIn))
+		for _, updateIn := range updatesIn {
+			updateMap, ok := updateIn.(map[string]interface{})
+			if !ok {
+				panic(r.ToValue("expects an update to be a wallet update object"))
+			}
+
+			update := &walletUpdate{}
+
+			uidRaw, ok := updateMap["user_id"]
+			if !ok {
+				panic(r.NewTypeError("expects a user id"))
+			}
+			uid, ok := uidRaw.(string)
+			if !ok {
+				panic(r.NewTypeError("expects a valid user id"))
+			}
+			userID, err := uuid.FromString(uid)
+			if err != nil {
+				panic(r.NewTypeError("expects a valid user id"))
+			}
+			update.UserID = userID
+
+			changeSetRaw, ok := updateMap["changeset"]
+			if !ok {
+				panic(r.NewTypeError("expects changeset object"))
+			}
+			changeSetMap, ok := changeSetRaw.(map[string]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects changeset object"))
+			}
+			changeSet := make(map[string]int64)
+			for k, v := range changeSetMap {
+				i64, ok := v.(int64)
+				if !ok {
+					panic(r.NewTypeError("expects changeset values to be whole numbers"))
+				}
+				changeSet[k] = i64
+			}
+			update.Changeset = changeSet
+
+			metadataBytes := []byte("{}")
+			metadataRaw, ok := updateMap["metadata"]
+			if ok {
+				metadataMap, ok := metadataRaw.(map[string]interface{})
+				if !ok {
+					panic(r.NewTypeError("expects metadata object"))
+				}
+				metadataBytes, err = json.Marshal(metadataMap)
+				if err != nil {
+					panic(r.ToValue(fmt.Sprintf("failed to convert metadata: %s", err.Error())))
+				}
+			}
+			update.Metadata = string(metadataBytes)
+
+			updates = append(updates, update)
+		}
+
+		updateLedger := false
+		if f.Argument(1) != goja.Undefined() {
+			updateLedger = getBool(r, f.Argument(1))
+		}
+
+		results, err := UpdateWallets(context.Background(), n.logger, n.db, updates, updateLedger)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to update user wallet: %s", err.Error())))
+		}
+
+		retResults := make([]map[string]interface{}, 0, len(results))
+		for _, r := range results {
+			retResults = append(retResults,
+				map[string]interface{}{
+					"updated":  r.Updated,
+					"previous": r.Previous,
+				},
+			)
+		}
+
+		return r.ToValue(retResults)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) walletLedgerUpdate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		// Parse ledger ID.
+		id := getString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects a valid id"))
+		}
+		itemID, err := uuid.FromString(id)
+		if err != nil {
+			panic(r.NewTypeError("expects a valid id"))
+		}
+
+		metadataBytes := []byte("{}")
+		metadataMap, ok := f.Argument(1).Export().(map[string]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects metadata object"))
+		}
+		metadataBytes, err = json.Marshal(metadataMap)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to convert metadata: %s", err.Error())))
+		}
+		item, err := UpdateWalletLedger(context.Background(), n.logger, n.db, itemID, string(metadataBytes))
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to update user wallet ledger: %s", err.Error())))
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"id":          id,
+			"user_id":     item.UserID,
+			"create_time": item.CreateTime,
+			"update_time": item.UpdateTime,
+			"changeset":   metadataMap,
+			"metadata":    item.Metadata,
+		})
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) walletLedgerList(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects a valid user id"))
+		}
+		userID, err := uuid.FromString(id)
+		if err != nil {
+			panic(r.NewTypeError("expects a valid user id"))
+		}
+
+		limit := 100
+		if f.Argument(1) != goja.Undefined() {
+			limit = int(getInt(r, f.Argument(1)))
+		}
+
+		cursor := ""
+		if f.Argument(2) != goja.Undefined() {
+			cursor = getString(r, f.Argument(2))
+		}
+
+		items, newCursor, err := ListWalletLedger(context.Background(), n.logger, n.db, userID, &limit, cursor)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to retrieve user wallet ledger: %s", err.Error())))
+		}
+
+		results := make([]interface{}, 0, len(items))
+		for _, item := range items {
+			results = append(results, map[string]interface{}{
+				"id":          item.ID,
+				"user_id":     id,
+				"create_time": item.CreateTime,
+				"update_time": item.UpdateTime,
+				"changeset":   item.Changeset,
+				"metadata":    item.Metadata,
+			})
+		}
+
+		return r.ToValue(map[string]interface{}{
+			"items":  results,
+			"cursor": newCursor,
+		})
 	}
 }
 
