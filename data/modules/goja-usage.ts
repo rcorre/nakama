@@ -300,9 +300,9 @@ interface Presence {
  * Match Object
  */
 interface Match {
-    "match_id": string;
-    "authoritative": boolean;
-    "size": number;
+    match_id: string;
+    authoritative: boolean;
+    size: number;
 }
 
 /**
@@ -347,6 +347,66 @@ interface WalletLedgerResult {
     changeset: {[key: string]: number};
     metadata: Object;
 }
+
+/**
+ * Storage Object
+ */
+interface StorageObject {
+    key: string;
+	collection: string;
+	user_id: string;
+	version: string;
+	permission_read: number;
+	permission_write: number;
+	create_time: number;
+	update_time: number;
+	value: Object;
+}
+
+/**
+ * Storage Read Request
+ */
+interface StorageReadRequest {
+    key: string;
+	collection: string;
+	user_id: string;
+}
+
+/**
+ * Storage Write Request
+ */
+interface StorageWriteRequest {
+    key: string;
+	collection: string;
+    user_id: string;
+    value: Object;
+    version?: string;
+    permission_read?: number;
+    permission_write?: number;
+}
+
+/**
+ * Storage Write Ack
+ */
+interface StorageWriteAck {
+    key: string;
+	collection: string;
+    user_id: string;
+    version: string;
+}
+
+/**
+ * Storage Delete Request
+ */
+interface StorageDeleteRequest {
+    key: string;
+	collection: string;
+    user_id: string;
+    value: Object;
+    version: string;
+}
+
+
 
 /**
  * The server APIs available in the game server.
@@ -1060,7 +1120,42 @@ interface Nakama {
      * @param cursor - Opt. Pagination cursor.
      * @returns Object containing an array of wallet ledger results and a cursor for the next page of results, if there is one.
      */
-    walletLedgerList(ledgerID: string, metadata: Object): {"items": WalletLedgerResult, "cursor": string}
+    walletLedgerList(user_id: string, limit?: number, cursor?: string): {items: WalletLedgerResult, cursor: string}
+
+    /**
+     * List user's storage objects from a collection.
+     *
+     * @param userID - User ID
+     * @param collection - Storage collection.
+     * @param limit - Opt. Maximum number of items to list. Defaults to 100.
+     * @param cursor - Opt. Pagination cursor.
+     * @returns Object containing an array of storage objects and a cursor for the next page of results, if there is one.
+     */
+    storageList(userID: string, collection: string, limit?: number, cursor?: string): {items: StorageObject, cursor: string}
+
+    /**
+     * Get all storage objects matching the parameters.
+     *
+     * @param keys - Array of storage read objects.
+     * @returns Object containing an array of storage objects and a cursor for the next page of results, if there is one.
+     */
+    storageRead(keys: StorageReadRequest[]): StorageObject[]
+
+    /**
+     * Write storage objects.
+     *
+     * @param keys - Array of storage objects to write.
+     * @returns List of written objects acks
+     */
+    storageWrite(keys: StorageWriteRequest[]): StorageWriteAck[]
+
+     /**
+     * Delete storage objects.
+     *
+     * @param keys - Array of storage objects to write.
+     * @returns List of written objects acks
+     */
+    storageDelete(keys: StorageDeleteRequest[])
 }
 
 /**

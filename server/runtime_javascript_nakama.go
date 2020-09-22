@@ -2707,7 +2707,7 @@ func (n *runtimeJavascriptNakamaModule) notificationsSend(r *goja.Runtime) func(
 			if _, ok := notificationObj["persistent"]; ok {
 				persistent, ok = notificationObj["persistent"].(bool)
 				if !ok {
-					panic(r.NewTypeError("expects 'persistent' key value to be a boolean"))
+					panic(r.NewTypeError("expects 'persistent' value to be a boolean"))
 				}
 				notification.Persistent = persistent
 			}
@@ -2715,7 +2715,7 @@ func (n *runtimeJavascriptNakamaModule) notificationsSend(r *goja.Runtime) func(
 			if _, ok := notificationObj["subject"]; ok {
 				subject, ok := notificationObj["subject"].(string)
 				if !ok {
-					panic(r.NewTypeError("expects 'subject' key value to be a string"))
+					panic(r.NewTypeError("expects 'subject' value to be a string"))
 				}
 				notification.Subject = subject
 			}
@@ -2723,7 +2723,7 @@ func (n *runtimeJavascriptNakamaModule) notificationsSend(r *goja.Runtime) func(
 			if _, ok := notificationObj["content"]; ok {
 				content, ok := notificationObj["content"].(map[string]interface{})
 				if !ok {
-					panic(r.NewTypeError("expects 'content' key value to be an object"))
+					panic(r.NewTypeError("expects 'content' value to be an object"))
 				}
 				contentBytes, err := json.Marshal(content)
 				if err != nil {
@@ -2735,7 +2735,7 @@ func (n *runtimeJavascriptNakamaModule) notificationsSend(r *goja.Runtime) func(
 			if _, ok := notificationObj["code"]; ok {
 				code, ok := notificationObj["code"].(int32)
 				if !ok {
-					panic(r.NewTypeError("expects 'code' key value to be a number"))
+					panic(r.NewTypeError("expects 'code' value to be a number"))
 				}
 				notification.Code = code
 			}
@@ -2743,11 +2743,11 @@ func (n *runtimeJavascriptNakamaModule) notificationsSend(r *goja.Runtime) func(
 			if _, ok := notificationObj["user_id"]; ok {
 				userIDStr, ok := notificationObj["user_id"].(string)
 				if !ok {
-					panic(r.NewTypeError("expects 'user_id' key value to be a string"))
+					panic(r.NewTypeError("expects 'user_id' value to be a string"))
 				}
 				uid, err := uuid.FromString(userIDStr)
 				if err != nil {
-					panic(r.NewTypeError("expects 'user_id' key value to be a valid id"))
+					panic(r.NewTypeError("expects 'user_id' value to be a valid id"))
 				}
 				userID = uid
 			}
@@ -2755,11 +2755,11 @@ func (n *runtimeJavascriptNakamaModule) notificationsSend(r *goja.Runtime) func(
 			if _, ok := notificationObj["sender_id"]; ok {
 				senderIDStr, ok := notificationObj["sender_id"].(string)
 				if !ok {
-					panic(r.NewTypeError("expects 'user_id' key value to be a string"))
+					panic(r.NewTypeError("expects 'user_id' value to be a string"))
 				}
 				uid, err := uuid.FromString(senderIDStr)
 				if err != nil {
-					panic(r.NewTypeError("expects 'user_id' key value to be a valid id"))
+					panic(r.NewTypeError("expects 'user_id' value to be a valid id"))
 				}
 				senderID = uid
 			}
@@ -3020,10 +3020,405 @@ func (n *runtimeJavascriptNakamaModule) walletLedgerList(r *goja.Runtime) func(g
 			})
 		}
 
-		return r.ToValue(map[string]interface{}{
-			"items":  results,
-			"cursor": newCursor,
-		})
+		returnObj := map[string]interface{}{
+			"items": results,
+		}
+		if newCursor == "" {
+			returnObj["cursor"] = nil
+		} else {
+			returnObj["cursor"] = newCursor
+		}
+
+		return r.ToValue(returnObj)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) storageList(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userIDString := ""
+		if f.Argument(0) != goja.Undefined() {
+			userIDString = getString(r, f.Argument(0))
+		}
+		uid, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects empty or valid user id"))
+		}
+
+		collection := ""
+		if f.Argument(1) != goja.Undefined() {
+			collection = getString(r, f.Argument(1))
+		}
+
+		limit := 100
+		if f.Argument(2) != goja.Undefined() {
+			limit = int(getInt(r, f.Argument(2)))
+		}
+
+		cursor := ""
+		if f.Argument(3) != goja.Undefined() {
+			cursor = getString(r, f.Argument(3))
+		}
+
+		objectList, _, err := StorageListObjects(context.Background(), n.logger, n.db, uuid.Nil, &uid, collection, limit, cursor)
+
+		objects := make([]interface{}, 0, len(objectList.Objects))
+		for _, o := range objectList.Objects {
+			objectMap := make(map[string]interface{})
+			objectMap["key"] = o.Key
+			objectMap["collection"] = o.Collection
+			if o.UserId != "" {
+				objectMap["user_id"] = o.UserId
+			} else {
+				objectMap["user_id"] = nil
+			}
+			objectMap["version"] = o.Version
+			objectMap["permission_read"] = o.PermissionRead
+			objectMap["permission_write"] = o.PermissionWrite
+			objectMap["create_time"] = o.CreateTime.Seconds
+			objectMap["update_time"] = o.UpdateTime.Seconds
+
+			valueMap := make(map[string]interface{})
+			err = json.Unmarshal([]byte(o.Value), &valueMap)
+			if err != nil {
+				panic(r.ToValue(fmt.Sprintf("failed to convert value to json: %s", err.Error())))
+			}
+			objectMap["value"] = valueMap
+
+			objects = append(objects, objectMap)
+		}
+
+		returnObj := map[string]interface{}{
+			"items": objects,
+		}
+		if cursor == "" {
+			returnObj["cursor"] = nil
+		} else {
+			returnObj["cursor"] = cursor
+		}
+
+		return r.ToValue(returnObj)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) storageRead(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		keysIn := f.Argument(0)
+		if keysIn == goja.Undefined() {
+			panic(r.ToValue("expects an array ok keys"))
+		}
+
+		keysSlice, ok := keysIn.Export().([]interface{})
+		if !ok {
+			panic(r.ToValue("expects an array of keys"))
+		}
+
+		if len(keysSlice) == 0 {
+			return r.ToValue([]interface{}{})
+		}
+
+		objectIDs := make([]*api.ReadStorageObjectId, 0, len(keysSlice))
+		for _, obj := range keysSlice {
+			objMap, ok := obj.(map[string]interface{})
+			if !ok {
+				panic(r.ToValue("expects an object"))
+			}
+
+			objectID := &api.ReadStorageObjectId{}
+
+			if collectionIn, ok := objMap["collection"]; ok {
+				collection, ok := collectionIn.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'collection' value to be a string"))
+				}
+				if collectionIn == "" {
+					panic(r.NewTypeError("expects 'collection' value to be a non empty string"))
+				}
+				objectID.Collection = collection
+			}
+
+			if keyIn, ok := objMap["key"]; ok {
+				key, ok := keyIn.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'key' value to be a string"))
+				}
+				objectID.Key = key
+			}
+
+			if userID, ok := objMap["user_id"]; ok {
+				userIDStr, ok := userID.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'user_id' value to be a string"))
+				}
+				_, err := uuid.FromString(userIDStr)
+				if err != nil {
+					panic(r.NewTypeError("expects 'user_id' value to be a valid id"))
+				}
+				objectID.UserId = userIDStr
+			}
+
+			if objectID.UserId == "" {
+				// Default to server-owned data if no owner is supplied.
+				objectID.UserId = uuid.Nil.String()
+			}
+
+			objectIDs = append(objectIDs, objectID)
+		}
+
+		objects, err := StorageReadObjects(context.Background(), n.logger, n.db, uuid.Nil, objectIDs)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to read storage objects: %s", err.Error())))
+		}
+
+		results := make([]interface{}, 0, len(objects.Objects))
+		for _, o := range objects.GetObjects() {
+			oMap := make(map[string]interface{})
+
+			oMap["key"] = o.Key
+			oMap["collection"] = o.Collection
+			if o.UserId != "" {
+				oMap["user_id"] = o.UserId
+			} else {
+				oMap["user_id"] = nil
+			}
+			oMap["version"] = o.Version
+			oMap["permission_read"] = o.PermissionRead
+			oMap["permission_write"] = o.PermissionWrite
+			oMap["create_time"] = o.CreateTime.Seconds
+			oMap["update_time"] = o.UpdateTime.Seconds
+
+			valueMap := make(map[string]interface{})
+			err = json.Unmarshal([]byte(o.Value), &valueMap)
+			if err != nil {
+				panic(r.ToValue(fmt.Sprintf("failed to convert value to json: %s", err.Error())))
+			}
+			oMap["value"] = valueMap
+
+			results = append(results, oMap)
+		}
+
+		return r.ToValue(results)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) storageWrite(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		data := f.Argument(0)
+		if data == goja.Undefined() {
+			panic(r.ToValue("expects a valid array of data"))
+		}
+		dataSlice, ok := data.Export().([]interface{})
+		if !ok {
+			panic(r.ToValue(r.NewTypeError("expects a valid array of data")))
+		}
+
+		ops := make(StorageOpWrites, 0, len(dataSlice))
+		for _, data := range dataSlice {
+			dataMap, ok := data.(map[string]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects a data entry to be an object"))
+			}
+
+			var userID uuid.UUID
+			writeOp := &api.WriteStorageObject{}
+
+			if collectionIn, ok := dataMap["collectionIn"]; ok {
+				collection, ok := collectionIn.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'collection' value to be a string"))
+				}
+				if collection == "" {
+					panic(r.NewTypeError("expects 'collection' value to be non-empty"))
+				}
+				writeOp.Collection = collection
+			}
+
+			if keyIn, ok := dataMap["key"]; ok {
+				key, ok := keyIn.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'key' value to be a string"))
+				}
+				if key == "" {
+					panic(r.NewTypeError("expects 'key' value to be non-empty"))
+				}
+				writeOp.Key = key
+			}
+
+			if userID, ok := dataMap["user_id"]; ok {
+				userIDStr, ok := userID.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'user_id' value to be a string"))
+				}
+				var err error
+				userID, err = uuid.FromString(userIDStr)
+				if err != nil {
+					panic(r.NewTypeError("expects 'user_id' value to be a valid id"))
+				}
+			}
+
+			if valueIn, ok := dataMap["value"]; ok {
+				valueMap, ok := valueIn.(map[string]interface{})
+				if !ok {
+					panic(r.NewTypeError("expects 'value' value to be an object"))
+				}
+				valueBytes, err := json.Marshal(valueMap)
+				if err != nil {
+					panic(r.ToValue(fmt.Sprintf("failed to convert value: %s", err.Error())))
+				}
+				writeOp.Value = string(valueBytes)
+			}
+
+			if versionIn, ok := dataMap["version"]; ok {
+				version, ok := versionIn.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'version' value to be a string"))
+				}
+				if version == "" {
+					panic(r.NewTypeError("expects 'version' value to be a non-empty string"))
+				}
+				writeOp.Version = version
+			}
+
+			if permissionReadIn, ok := dataMap["permission_read"]; ok {
+				permissionRead, ok := permissionReadIn.(int64)
+				if !ok {
+					panic(r.NewTypeError("expects 'permission_read' value to be a number"))
+				}
+				writeOp.PermissionRead = &wrappers.Int32Value{Value: int32(permissionRead)}
+			} else {
+				writeOp.PermissionRead = &wrappers.Int32Value{Value: 1}
+			}
+
+			if permissionWriteIn, ok := dataMap["permission_write"]; ok {
+				permissionWrite, ok := permissionWriteIn.(int64)
+				if !ok {
+					panic(r.NewTypeError("expects 'permission_write' value to be a number"))
+				}
+				writeOp.PermissionWrite = &wrappers.Int32Value{Value: int32(permissionWrite)}
+			} else {
+				writeOp.PermissionWrite = &wrappers.Int32Value{Value: 1}
+			}
+
+			if writeOp.Collection == "" {
+				panic(r.NewTypeError("expects collection to be supplied"))
+			} else if writeOp.Key == "" {
+				panic(r.NewTypeError("expects key to be supplied"))
+			} else if writeOp.Value == "" {
+				panic(r.NewTypeError("expects value to be supplied"))
+			}
+
+			ops = append(ops, &StorageOpWrite{
+				OwnerID: userID.String(),
+				Object:  writeOp,
+			})
+		}
+
+		acks, _, err := StorageWriteObjects(context.Background(), n.logger, n.db, true, ops)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to write storage objects: %s", err.Error())))
+		}
+
+		results := make([]interface{}, 0, len(acks.Acks))
+		for _, ack := range acks.Acks {
+			result := make(map[string]interface{})
+			result["key"] = ack.Key
+			result["collection"] = ack.Collection
+			if ack.UserId != "" {
+				result["user_id"] = ack.UserId
+			} else {
+				result["user_id"] = nil
+			}
+			result["version"] = ack.Version
+
+			results = append(results, result)
+		}
+
+		return r.ToValue(results)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) storageDelete(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		keysIn := f.Argument(0)
+		if keysIn == goja.Undefined() {
+			panic(r.ToValue("expects an array ok keys"))
+		}
+		keysSlice, ok := keysIn.Export().([]interface{})
+		if !ok {
+			panic(r.ToValue("expects an array of keys"))
+		}
+
+		ops := make(StorageOpDeletes, 0, len(keysSlice))
+		for _, data := range keysSlice {
+			dataMap, ok := data.(map[string]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects a data entry to be an object"))
+			}
+
+			var userID uuid.UUID
+			objectID := &api.DeleteStorageObjectId{}
+
+			if collectionIn, ok := dataMap["collectionIn"]; ok {
+				collection, ok := collectionIn.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'collection' value to be a string"))
+				}
+				if collection == "" {
+					panic(r.NewTypeError("expects 'collection' value to be non-empty"))
+				}
+				objectID.Collection = collection
+			}
+
+			if keyIn, ok := dataMap["key"]; ok {
+				key, ok := keyIn.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'key' value to be a string"))
+				}
+				if key == "" {
+					panic(r.NewTypeError("expects 'key' value to be non-empty"))
+				}
+				objectID.Key = key
+			}
+
+			if userID, ok := dataMap["user_id"]; ok {
+				userIDStr, ok := userID.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'user_id' value to be a string"))
+				}
+				var err error
+				userID, err = uuid.FromString(userIDStr)
+				if err != nil {
+					panic(r.NewTypeError("expects 'user_id' value to be a valid id"))
+				}
+			}
+
+			if versionIn, ok := dataMap["version"]; ok {
+				version, ok := versionIn.(string)
+				if !ok {
+					panic(r.NewTypeError("expects 'version' value to be a string"))
+				}
+				if version == "" {
+					panic(r.NewTypeError("expects 'version' value to be a non-empty string"))
+				}
+				objectID.Version = version
+			}
+
+			if objectID.Collection == "" {
+				panic(r.NewTypeError("expects collection to be supplied"))
+			} else if objectID.Key == "" {
+				panic(r.NewTypeError("expects key to be supplied"))
+			}
+
+			ops = append(ops, &StorageOpDelete{
+				OwnerID:  userID.String(),
+				ObjectID: objectID,
+			})
+		}
+
+		if _, err := StorageDeleteObjects(context.Background(), n.logger, n.db, true, ops); err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to remove storage: %s", err.Error())))
+		}
+
+		return goja.Undefined()
 	}
 }
 
