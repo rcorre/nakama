@@ -1149,13 +1149,24 @@ interface Nakama {
      */
     storageWrite(keys: StorageWriteRequest[]): StorageWriteAck[]
 
-     /**
+    /**
      * Delete storage objects.
      *
      * @param keys - Array of storage objects to write.
      * @returns List of written objects acks
      */
     storageDelete(keys: StorageDeleteRequest[])
+
+    /**
+     * Update multiple entities.
+     * Passing nil to any of the arguments will ignore the corresponding update.
+     *
+     * @param accountUpdates - Array of account updates
+     * @param walletUpdates - Array of wallet updates
+     * @param storageObjectsUpdates - Array of storage objects updates
+     * @returns An object with the results from wallets and storage objects updates
+     */
+    multiUpdate(accountUpdates: UserUpdateAccount[], walletUpdates: WalletUpdate[], storageObjectsUpdates: StorageWriteRequest[]): {storage_write_acks: StorageWriteAck[], wallet_update_acks: WalletUpdateResult[]}
 }
 
 /**

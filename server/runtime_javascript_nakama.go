@@ -169,6 +169,11 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"walletsUpdate":                   n.walletsUpdate(r),
 		"walletLedgerUpdate":              n.walletLedgerUpdate(r),
 		"walletLedgerList":                n.walletLedgerList(r),
+		"storageList":                     n.storageList(r),
+		"storageRead":                     n.storageRead(r),
+		"storageWrite":                    n.storageWrite(r),
+		"storageDelete":                   n.storageDelete(r),
+		"multiUpdate":                     n.multiUpdate(r),
 	}
 }
 
@@ -1262,47 +1267,78 @@ func (n *runtimeJavascriptNakamaModule) accountUpdateId(r *goja.Runtime) func(go
 	return func(f goja.FunctionCall) goja.Value {
 		userID, err := uuid.FromString(getString(r, f.Argument(0)))
 		if err != nil {
-			panic(r.ToValue("invalid user id"))
+			panic(r.ToValue("expects a valid user id"))
 		}
 
 		data, ok := f.Argument(1).Export().(map[string]interface{})
 		if !ok {
-			panic(r.NewTypeError("invalid data - must be an object"))
+			panic(r.NewTypeError("expects an object"))
 		}
 
 		var username string
-		if _, ok := data["username"]; ok {
-			username = data["username"].(string)
+		if usernameIn, ok := data["username"]; ok {
+			username, ok = usernameIn.(string)
+			if !ok {
+				panic(r.NewTypeError("expects a string"))
+			}
 		}
 
 		var displayName *wrappers.StringValue
-		if _, ok := data["display_name"]; ok {
-			displayName = &wrappers.StringValue{Value: data["display_name"].(string)}
+		if displayNameIn, ok := data["display_name"]; ok {
+			displayNameStr, ok := displayNameIn.(string)
+			if !ok {
+				panic(r.NewTypeError("expects a string"))
+			}
+			displayName = &wrappers.StringValue{Value: displayNameStr}
 		}
 
 		var timezone *wrappers.StringValue
-		if _, ok := data["timezone"]; ok {
-			timezone = &wrappers.StringValue{Value: data["timezone"].(string)}
+		if timezoneIn, ok := data["timezone"]; ok {
+			timezoneStr, ok := timezoneIn.(string)
+			if !ok {
+				panic(r.NewTypeError("expects a string"))
+			}
+			timezone = &wrappers.StringValue{Value: timezoneStr}
 		}
 
 		var location *wrappers.StringValue
-		if _, ok := data["location"]; ok {
-			location = &wrappers.StringValue{Value: data["location"].(string)}
+		if locationIn, ok := data["location"]; ok {
+			locationStr, ok := locationIn.(string)
+			if !ok {
+				panic(r.NewTypeError("expects a string"))
+			}
+			location = &wrappers.StringValue{Value: locationStr}
 		}
 
 		var lang *wrappers.StringValue
-		if _, ok := data["lang_tag"]; ok {
-			lang = &wrappers.StringValue{Value: data["lang_tag"].(string)}
+		if langIn, ok := data["lang_tag"]; ok {
+			langStr, ok := langIn.(string)
+			if !ok {
+				panic(r.NewTypeError("expects a string"))
+			}
+			lang = &wrappers.StringValue{Value: langStr}
 		}
 
 		var avatar *wrappers.StringValue
-		if _, ok := data["avatar_url"]; ok {
-			avatar = &wrappers.StringValue{Value: data["avatar_url"].(string)}
+		if avatarIn, ok := data["avatar_url"]; ok {
+			avatarStr, ok := avatarIn.(string)
+			if !ok {
+				panic(r.NewTypeError("expects a string"))
+			}
+			avatar = &wrappers.StringValue{Value: avatarStr}
 		}
 
 		var metadata *wrappers.StringValue
-		if _, ok := data["metadata"]; ok {
-			metadata = &wrappers.StringValue{Value: data["metadata"].(string)}
+		if metadataIn, ok := data["metadata"]; ok {
+			metadataMap, ok := metadataIn.(map[string]interface{})
+			if !ok {
+				panic(r.ToValue("expects metadata to be a key value object"))
+			}
+			metadataBytes, err := json.Marshal(metadataMap)
+			if err != nil {
+				panic(r.ToValue(fmt.Sprintf("failed to convert metadata: %s", err.Error())))
+			}
+			metadata = &wrappers.StringValue{Value: string(metadataBytes)}
 		}
 
 		if err = UpdateAccounts(context.Background(), n.logger, n.db, []*accountUpdate{{
@@ -3419,6 +3455,327 @@ func (n *runtimeJavascriptNakamaModule) storageDelete(r *goja.Runtime) func(goja
 		}
 
 		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) multiUpdate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		returnObj := make(map[string]interface{})
+
+		// Process account update inputs.
+		var accountUpdates []*accountUpdate
+		if f.Argument(0) != goja.Undefined() || f.Argument(0) != goja.Null() {
+			accountUpdatesSlice, ok := f.Argument(0).Export().([]interface{})
+			if !ok {
+				panic(r.ToValue("expects an array of account updates"))
+			}
+
+			accountUpdates = make([]*accountUpdate, 0, len(accountUpdatesSlice))
+			for _, accUpdate := range accountUpdatesSlice {
+				accUpdateObj, ok := accUpdate.(map[string]interface{})
+				if !ok {
+					panic(r.NewTypeError("expects an account update object"))
+				}
+
+				update := &accountUpdate{}
+				if userIDIn, ok := accUpdateObj["user_id"]; ok {
+					userIDStr, ok := userIDIn.(string)
+					if !ok {
+						panic(r.NewTypeError("expects 'user_id' value to be a string"))
+					}
+					uid, err := uuid.FromString(userIDStr)
+					if err != nil {
+						panic(r.NewTypeError("expects 'user_id' value to be a valid id"))
+					}
+					update.userID = uid
+				}
+
+				if usernameIn, ok := accUpdateObj["username"]; ok {
+					username, ok := usernameIn.(string)
+					if !ok {
+						panic(r.NewTypeError("expects a string"))
+					}
+					update.username = username
+				}
+
+				if displayNameIn, ok := accUpdateObj["display_name"]; ok {
+					displayNameStr, ok := displayNameIn.(string)
+					if !ok {
+						panic(r.NewTypeError("expects a string"))
+					}
+					update.displayName = &wrappers.StringValue{Value: displayNameStr}
+				}
+
+				if timezoneIn, ok := accUpdateObj["timezone"]; ok {
+					timezoneStr, ok := timezoneIn.(string)
+					if !ok {
+						panic(r.NewTypeError("expects a string"))
+					}
+					update.timezone = &wrappers.StringValue{Value: timezoneStr}
+				}
+
+				if locationIn, ok := accUpdateObj["location"]; ok {
+					locationStr, ok := locationIn.(string)
+					if !ok {
+						panic(r.NewTypeError("expects a string"))
+					}
+					update.location = &wrappers.StringValue{Value: locationStr}
+				}
+
+				if langIn, ok := accUpdateObj["lang_tag"]; ok {
+					langStr, ok := langIn.(string)
+					if !ok {
+						panic(r.NewTypeError("expects a string"))
+					}
+					update.langTag = &wrappers.StringValue{Value: langStr}
+				}
+
+				if avatarIn, ok := accUpdateObj["avatar_url"]; ok {
+					avatarStr, ok := avatarIn.(string)
+					if !ok {
+						panic(r.NewTypeError("expects a string"))
+					}
+					update.avatarURL = &wrappers.StringValue{Value: avatarStr}
+				}
+
+				if metadataIn, ok := accUpdateObj["metadata"]; ok {
+					metadataMap, ok := metadataIn.(map[string]interface{})
+					if !ok {
+						panic(r.ToValue("expects metadata to be a key value object"))
+					}
+					metadataBytes, err := json.Marshal(metadataMap)
+					if err != nil {
+						panic(r.ToValue(fmt.Sprintf("failed to convert metadata: %s", err.Error())))
+					}
+					update.metadata = &wrappers.StringValue{Value: string(metadataBytes)}
+				}
+
+				accountUpdates = append(accountUpdates, update)
+			}
+
+			// Process storage update inputs.
+			var storageWriteOps StorageOpWrites
+			if f.Argument(1) != goja.Undefined() || f.Argument(1) != goja.Null() {
+				data := f.Argument(1)
+				dataSlice, ok := data.Export().([]interface{})
+				if !ok {
+					panic(r.ToValue(r.NewTypeError("expects a valid array of data")))
+				}
+
+				storageWriteOps = make(StorageOpWrites, 0, len(dataSlice))
+				for _, data := range dataSlice {
+					dataMap, ok := data.(map[string]interface{})
+					if !ok {
+						panic(r.NewTypeError("expects a data entry to be an object"))
+					}
+
+					var userID uuid.UUID
+					writeOp := &api.WriteStorageObject{}
+
+					if collectionIn, ok := dataMap["collectionIn"]; ok {
+						collection, ok := collectionIn.(string)
+						if !ok {
+							panic(r.NewTypeError("expects 'collection' value to be a string"))
+						}
+						if collection == "" {
+							panic(r.NewTypeError("expects 'collection' value to be non-empty"))
+						}
+						writeOp.Collection = collection
+					}
+
+					if keyIn, ok := dataMap["key"]; ok {
+						key, ok := keyIn.(string)
+						if !ok {
+							panic(r.NewTypeError("expects 'key' value to be a string"))
+						}
+						if key == "" {
+							panic(r.NewTypeError("expects 'key' value to be non-empty"))
+						}
+						writeOp.Key = key
+					}
+
+					if userID, ok := dataMap["user_id"]; ok {
+						userIDStr, ok := userID.(string)
+						if !ok {
+							panic(r.NewTypeError("expects 'user_id' value to be a string"))
+						}
+						var err error
+						userID, err = uuid.FromString(userIDStr)
+						if err != nil {
+							panic(r.NewTypeError("expects 'user_id' value to be a valid id"))
+						}
+					}
+
+					if valueIn, ok := dataMap["value"]; ok {
+						valueMap, ok := valueIn.(map[string]interface{})
+						if !ok {
+							panic(r.NewTypeError("expects 'value' value to be an object"))
+						}
+						valueBytes, err := json.Marshal(valueMap)
+						if err != nil {
+							panic(r.ToValue(fmt.Sprintf("failed to convert value: %s", err.Error())))
+						}
+						writeOp.Value = string(valueBytes)
+					}
+
+					if versionIn, ok := dataMap["version"]; ok {
+						version, ok := versionIn.(string)
+						if !ok {
+							panic(r.NewTypeError("expects 'version' value to be a string"))
+						}
+						if version == "" {
+							panic(r.NewTypeError("expects 'version' value to be a non-empty string"))
+						}
+						writeOp.Version = version
+					}
+
+					if permissionReadIn, ok := dataMap["permission_read"]; ok {
+						permissionRead, ok := permissionReadIn.(int64)
+						if !ok {
+							panic(r.NewTypeError("expects 'permission_read' value to be a number"))
+						}
+						writeOp.PermissionRead = &wrappers.Int32Value{Value: int32(permissionRead)}
+					} else {
+						writeOp.PermissionRead = &wrappers.Int32Value{Value: 1}
+					}
+
+					if permissionWriteIn, ok := dataMap["permission_write"]; ok {
+						permissionWrite, ok := permissionWriteIn.(int64)
+						if !ok {
+							panic(r.NewTypeError("expects 'permission_write' value to be a number"))
+						}
+						writeOp.PermissionWrite = &wrappers.Int32Value{Value: int32(permissionWrite)}
+					} else {
+						writeOp.PermissionWrite = &wrappers.Int32Value{Value: 1}
+					}
+
+					if writeOp.Collection == "" {
+						panic(r.NewTypeError("expects collection to be supplied"))
+					} else if writeOp.Key == "" {
+						panic(r.NewTypeError("expects key to be supplied"))
+					} else if writeOp.Value == "" {
+						panic(r.NewTypeError("expects value to be supplied"))
+					}
+
+					storageWriteOps = append(storageWriteOps, &StorageOpWrite{
+						OwnerID: userID.String(),
+						Object:  writeOp,
+					})
+				}
+
+				acks, _, err := StorageWriteObjects(context.Background(), n.logger, n.db, true, storageWriteOps)
+				if err != nil {
+					panic(r.ToValue(fmt.Sprintf("failed to write storage objects: %s", err.Error())))
+				}
+
+				storgeWritesResults := make([]interface{}, 0, len(acks.Acks))
+				for _, ack := range acks.Acks {
+					result := make(map[string]interface{})
+					result["key"] = ack.Key
+					result["collection"] = ack.Collection
+					if ack.UserId != "" {
+						result["user_id"] = ack.UserId
+					} else {
+						result["user_id"] = nil
+					}
+					result["version"] = ack.Version
+
+					storgeWritesResults = append(storgeWritesResults, result)
+				}
+
+				returnObj["storage_write_acks"] = storgeWritesResults
+			}
+
+			// Process wallet update inputs.
+			var walletUpdates []*walletUpdate
+			if f.Argument(2) != goja.Undefined() || f.Argument(2) != goja.Null() {
+				updatesIn, ok := f.Argument(0).Export().([]interface{})
+				if !ok {
+					panic(r.ToValue("expects an array of wallet update objects"))
+				}
+
+				walletUpdates = make([]*walletUpdate, 0, len(updatesIn))
+				for _, updateIn := range updatesIn {
+					updateMap, ok := updateIn.(map[string]interface{})
+					if !ok {
+						panic(r.ToValue("expects an update to be a wallet update object"))
+					}
+
+					update := &walletUpdate{}
+
+					uidRaw, ok := updateMap["user_id"]
+					if !ok {
+						panic(r.NewTypeError("expects a user id"))
+					}
+					uid, ok := uidRaw.(string)
+					if !ok {
+						panic(r.NewTypeError("expects a valid user id"))
+					}
+					userID, err := uuid.FromString(uid)
+					if err != nil {
+						panic(r.NewTypeError("expects a valid user id"))
+					}
+					update.UserID = userID
+
+					changeSetRaw, ok := updateMap["changeset"]
+					if !ok {
+						panic(r.NewTypeError("expects changeset object"))
+					}
+					changeSetMap, ok := changeSetRaw.(map[string]interface{})
+					if !ok {
+						panic(r.NewTypeError("expects changeset object"))
+					}
+					changeSet := make(map[string]int64)
+					for k, v := range changeSetMap {
+						i64, ok := v.(int64)
+						if !ok {
+							panic(r.NewTypeError("expects changeset values to be whole numbers"))
+						}
+						changeSet[k] = i64
+					}
+					update.Changeset = changeSet
+
+					metadataBytes := []byte("{}")
+					metadataRaw, ok := updateMap["metadata"]
+					if ok {
+						metadataMap, ok := metadataRaw.(map[string]interface{})
+						if !ok {
+							panic(r.NewTypeError("expects metadata object"))
+						}
+						metadataBytes, err = json.Marshal(metadataMap)
+						if err != nil {
+							panic(r.ToValue(fmt.Sprintf("failed to convert metadata: %s", err.Error())))
+						}
+					}
+					update.Metadata = string(metadataBytes)
+
+					walletUpdates = append(walletUpdates, update)
+				}
+			}
+
+			updateLedger := false
+			if f.Argument(3) == goja.Undefined() || f.Argument(3) == goja.Null() {
+				updateLedger = getBool(r, f.Argument(3))
+			}
+
+			results, err := UpdateWallets(context.Background(), n.logger, n.db, walletUpdates, updateLedger)
+			if err != nil {
+				panic(r.ToValue(fmt.Sprintf("failed to update user wallet: %s", err.Error())))
+			}
+
+			updateWalletResults := make([]map[string]interface{}, 0, len(results))
+			for _, r := range results {
+				updateWalletResults = append(updateWalletResults,
+					map[string]interface{}{
+						"updated":  r.Updated,
+						"previous": r.Previous,
+					},
+				)
+			}
+			returnObj["wallet_update_acks"] = updateWalletResults
+		}
+
+		return r.ToValue(returnObj)
 	}
 }
 
