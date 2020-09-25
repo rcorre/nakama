@@ -472,18 +472,22 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	}
 
 	runtimeProviderJS := &RuntimeProviderJS{
-		config:            config,
-		logger:            logger,
-		db:                db,
-		eventFn:           eventFn,
-		jsonpbMarshaler:   jsonpbMarshaler,
-		jsonpbUnmarshaler: jsonpbUnmarshaler,
-		tracker:           tracker,
-		streamManager:     streamManager,
-		router:            router,
-		poolCh:            make(chan *RuntimeJS, config.GetRuntime().MaxCount),
-		maxCount:          uint32(config.GetRuntime().MaxCount),
-		currentCount:      atomic.NewUint32(uint32(config.GetRuntime().MinCount)),
+		config:               config,
+		logger:               logger,
+		db:                   db,
+		eventFn:              eventFn,
+		jsonpbMarshaler:      jsonpbMarshaler,
+		jsonpbUnmarshaler:    jsonpbUnmarshaler,
+		socialClient:         socialClient,
+		leaderboardCache:     leaderboardCache,
+		leaderboardRankCache: leaderboardRankCache,
+		sessionRegistry:      sessionRegistry,
+		tracker:              tracker,
+		streamManager:        streamManager,
+		router:               router,
+		poolCh:               make(chan *RuntimeJS, config.GetRuntime().MaxCount),
+		maxCount:             uint32(config.GetRuntime().MaxCount),
+		currentCount:         atomic.NewUint32(uint32(config.GetRuntime().MinCount)),
 	}
 
 	rpcFunctions := make(map[string]RuntimeRpcFunction, 0)
@@ -492,7 +496,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	beforeReqFunctions := &RuntimeBeforeReqFunctions{}
 	afterReqFunctions := &RuntimeAfterReqFunctions{}
 
-	callbacks, err := evalRuntimeModules(runtimeProviderJS, modCache, config, goMatchCreateFn, func(mode RuntimeExecutionMode, id string) {
+	callbacks, err := evalRuntimeModules(runtimeProviderJS, modCache, config, goMatchCreateFn, leaderboardScheduler, func(mode RuntimeExecutionMode, id string) {
 		switch mode {
 		case RuntimeExecutionModeRPC:
 			rpcFunctions[id] = func(ctx context.Context, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
@@ -1315,7 +1319,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
 		}
 
-		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, sessionRegistry, matchRegistry, tracker, streamManager, router, eventFn, goMatchCreateFn)
+		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, streamManager, router, eventFn, goMatchCreateFn)
 		nk := runtime.ToValue(nakamaModule.Constructor(runtime))
 		nkInst, err := runtime.New(nk)
 		if err != nil {
@@ -1355,7 +1359,8 @@ func CheckRuntimeProviderJavascript(logger *zap.Logger, config Config, paths []s
 	if err != nil {
 		return err
 	}
-	_, err = evalRuntimeModules(nil, modCache, config, nil, func(RuntimeExecutionMode, string){})
+	// TODO: revise these params
+	_, err = evalRuntimeModules(nil, modCache, config, nil, nil, func(RuntimeExecutionMode, string){})
 	return err
 }
 
@@ -1394,8 +1399,7 @@ func cacheJavascriptModules(logger *zap.Logger, rootPath string, paths []string)
 	return moduleCache, nil
 }
 
-// TODO: revise these params
-func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, config Config, matchCreateFn RuntimeMatchCreateFunction, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, error) {
+func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, config Config, matchCreateFn RuntimeMatchCreateFunction, leaderboardScheduler LeaderboardScheduler, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, error) {
 	r := goja.New()
 	logger := rp.logger
 
@@ -1413,7 +1417,7 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, c
 		return nil, err
 	}
 
-	nakamaModule := NewRuntimeJavascriptNakamaModule(rp.logger, rp.db, rp.jsonpbMarshaler, rp.jsonpbUnmarshaler, rp.config, rp.socialClient, rp.sessionRegistry, rp.matchRegistry, rp.tracker, rp.streamManager, rp.router, rp.eventFn, matchCreateFn)
+	nakamaModule := NewRuntimeJavascriptNakamaModule(rp.logger, rp.db, rp.jsonpbMarshaler, rp.jsonpbUnmarshaler, rp.config, rp.socialClient, rp.leaderboardCache, rp.leaderboardRankCache, leaderboardScheduler, rp.sessionRegistry, rp.matchRegistry, rp.tracker, rp.streamManager, rp.router, rp.eventFn, matchCreateFn)
 	nk := r.ToValue(nakamaModule.Constructor(r))
 	nkInst, err := r.New(nk)
 	if err != nil {

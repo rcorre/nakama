@@ -19,6 +19,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/heroiclabs/nakama/v2/cronexpr"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -40,37 +41,43 @@ import (
 )
 
 type runtimeJavascriptNakamaModule struct {
-	logger            *zap.Logger
-	config            Config
-	db                *sql.DB
-	jsonpbMarshaler   *jsonpb.Marshaler
-	jsonpbUnmarshaler *jsonpb.Unmarshaler
-	httpClient        *http.Client
-	socialClient      *social.Client
-	tracker           Tracker
-	sessionRegistry   SessionRegistry
-	matchRegistry     MatchRegistry
-	streamManager     StreamManager
-	router            MessageRouter
+	logger                *zap.Logger
+	config                Config
+	db                    *sql.DB
+	jsonpbMarshaler       *jsonpb.Marshaler
+	jsonpbUnmarshaler     *jsonpb.Unmarshaler
+	httpClient            *http.Client
+	socialClient          *social.Client
+	leaderboardCache      LeaderboardCache
+	rankCache             LeaderboardRankCache
+	leaderboardScheduler  LeaderboardScheduler
+	tracker               Tracker
+	sessionRegistry       SessionRegistry
+	matchRegistry         MatchRegistry
+	streamManager         StreamManager
+	router                MessageRouter
 
 	node          string
 	matchCreateFn RuntimeMatchCreateFunction
 	eventFn       RuntimeEventCustomFunction
 }
 
-func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, sessionRegistry SessionRegistry, matchRegistry MatchRegistry, tracker Tracker, streamManager StreamManager, router MessageRouter, eventFn RuntimeEventCustomFunction, matchCreateFn RuntimeMatchCreateFunction) *runtimeJavascriptNakamaModule {
+func NewRuntimeJavascriptNakamaModule(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, leaderboardCache LeaderboardCache, rankCache LeaderboardRankCache, leaderboardScheduler LeaderboardScheduler, sessionRegistry SessionRegistry, matchRegistry MatchRegistry, tracker Tracker, streamManager StreamManager, router MessageRouter, eventFn RuntimeEventCustomFunction, matchCreateFn RuntimeMatchCreateFunction) *runtimeJavascriptNakamaModule {
 	return &runtimeJavascriptNakamaModule{
-		logger:            logger,
-		config:            config,
-		db:                db,
-		jsonpbMarshaler:   jsonpbMarshaler,
-		jsonpbUnmarshaler: jsonpbUnmarshaler,
-		streamManager:     streamManager,
-		sessionRegistry:   sessionRegistry,
-		matchRegistry:     matchRegistry,
-		router:            router,
-		tracker:           tracker,
-		socialClient:      socialClient,
+		logger:               logger,
+		config:               config,
+		db:                   db,
+		jsonpbMarshaler:      jsonpbMarshaler,
+		jsonpbUnmarshaler:    jsonpbUnmarshaler,
+		streamManager:        streamManager,
+		sessionRegistry:      sessionRegistry,
+		matchRegistry:        matchRegistry,
+		router:               router,
+		tracker:              tracker,
+		socialClient:         socialClient,
+		leaderboardCache:     leaderboardCache,
+		rankCache:            rankCache,
+		leaderboardScheduler: leaderboardScheduler,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
 		},
@@ -174,6 +181,11 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"storageWrite":                    n.storageWrite(r),
 		"storageDelete":                   n.storageDelete(r),
 		"multiUpdate":                     n.multiUpdate(r),
+		"leaderboardCreate":               n.leaderboardCreate(r),
+		"leaderboardDelete":               n.leaderboardDelete(r),
+		"leaderboardRecordsList":          n.leaderboardRecordsList(r),
+		"leaderboardRecordWrite":          n.leaderboardRecordWrite(r),
+		"leaderboardRecordDelete":         n.leaderboardRecordDelete(r),
 	}
 }
 
@@ -2856,7 +2868,7 @@ func (n *runtimeJavascriptNakamaModule) walletUpdate(r *goja.Runtime) func(goja.
 
 		metadataBytes := []byte("{}")
 		metadataIn := f.Argument(2)
-		if metadataIn != goja.Undefined() || metadataIn != goja.Null() {
+		if metadataIn != goja.Undefined() && metadataIn != goja.Null() {
 			metadataMap, ok := metadataIn.Export().(map[string]interface{})
 			if !ok {
 				panic(r.ToValue("expects metadata to be a key value object"))
@@ -3464,7 +3476,7 @@ func (n *runtimeJavascriptNakamaModule) multiUpdate(r *goja.Runtime) func(goja.F
 
 		// Process account update inputs.
 		var accountUpdates []*accountUpdate
-		if f.Argument(0) != goja.Undefined() || f.Argument(0) != goja.Null() {
+		if f.Argument(0) != goja.Undefined() && f.Argument(0) != goja.Null() {
 			accountUpdatesSlice, ok := f.Argument(0).Export().([]interface{})
 			if !ok {
 				panic(r.ToValue("expects an array of account updates"))
@@ -3555,7 +3567,7 @@ func (n *runtimeJavascriptNakamaModule) multiUpdate(r *goja.Runtime) func(goja.F
 
 			// Process storage update inputs.
 			var storageWriteOps StorageOpWrites
-			if f.Argument(1) != goja.Undefined() || f.Argument(1) != goja.Null() {
+			if f.Argument(1) != goja.Undefined() && f.Argument(1) != goja.Null() {
 				data := f.Argument(1)
 				dataSlice, ok := data.Export().([]interface{})
 				if !ok {
@@ -3688,7 +3700,7 @@ func (n *runtimeJavascriptNakamaModule) multiUpdate(r *goja.Runtime) func(goja.F
 
 			// Process wallet update inputs.
 			var walletUpdates []*walletUpdate
-			if f.Argument(2) != goja.Undefined() || f.Argument(2) != goja.Null() {
+			if f.Argument(2) != goja.Undefined() && f.Argument(2) != goja.Null() {
 				updatesIn, ok := f.Argument(0).Export().([]interface{})
 				if !ok {
 					panic(r.ToValue("expects an array of wallet update objects"))
@@ -3776,6 +3788,329 @@ func (n *runtimeJavascriptNakamaModule) multiUpdate(r *goja.Runtime) func(goja.F
 		}
 
 		return r.ToValue(returnObj)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) leaderboardCreate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects a leaderboard ID string"))
+		}
+
+		authoritative := false
+		if f.Argument(1) != goja.Undefined() {
+			authoritative = getBool(r, f.Argument(1))
+		}
+
+		sortOrder := "desc"
+		if f.Argument(2) != goja.Undefined() {
+			sortOrder = getString(r, f.Argument(2))
+		}
+
+		var sortOrderNumber int
+		switch sortOrder {
+		case "asc":
+			sortOrderNumber = LeaderboardSortOrderAscending
+		case "desc":
+			sortOrderNumber = LeaderboardSortOrderDescending
+		default:
+			panic(r.NewTypeError("expects sort order to be 'asc' or 'desc'"))
+		}
+
+		operator := "best"
+		if f.Argument(3) != goja.Undefined() {
+			operator = getString(r, f.Argument(3))
+		}
+		var operatorNumber int
+		switch operator {
+		case "best":
+			operatorNumber = LeaderboardOperatorBest
+		case "set":
+			operatorNumber = LeaderboardOperatorSet
+		case "incr":
+			operatorNumber = LeaderboardOperatorIncrement
+		default:
+			panic(r.NewTypeError("expects sort order to be 'best', 'set', or 'incr'"))
+		}
+
+		resetSchedule := ""
+		if f.Argument(4) != goja.Undefined() && f.Argument(4) != goja.Null()  {
+			resetSchedule = getString(r, f.Argument(4))
+		}
+		if resetSchedule != "" {
+			if _, err := cronexpr.Parse(resetSchedule); err != nil {
+				panic(r.NewTypeError("expects reset schedule to be a valid CRON expression"))
+			}
+		}
+
+		metadataStr := "{}"
+		if f.Argument(5) != goja.Undefined() {
+			metadataMap, ok := f.Argument(5).Export().(map[string]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects metadata to be an object"))
+			}
+			metadataBytes, err := json.Marshal(metadataMap)
+			if err != nil {
+				panic(r.NewTypeError(fmt.Sprintf("error encoding metadata: %v", err.Error())))
+			}
+			metadataStr = string(metadataBytes)
+		}
+
+		if _, err := n.leaderboardCache.Create(context.Background(), id, authoritative, sortOrderNumber, operatorNumber, resetSchedule, metadataStr); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error creating leaderboard: %v", err.Error())))
+		}
+
+		n.leaderboardScheduler.Update()
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) leaderboardDelete(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects a leaderboard ID string"))
+		}
+
+		if err := n.leaderboardCache.Delete(context.Background(), id); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error deleting leaderboard: %v", err.Error())))
+		}
+
+		n.leaderboardScheduler.Update()
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) leaderboardRecordsList(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects a leaderboard ID string"))
+		}
+
+		var ownerIds []string
+		owners := f.Argument(1)
+		if owners != nil {
+			if owners == goja.Undefined() {
+				panic(r.NewTypeError("expects an array of owner ids or null"))
+			}
+			ownersSlice, ok := owners.Export().([]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects an array of owner ids"))
+			}
+			ownerIds := make([]string, 0, len(ownersSlice))
+			for _, owner := range ownersSlice {
+				ownerStr, ok := owner.(string)
+				if !ok {
+					panic(r.NewTypeError("expects a valid owner string"))
+				}
+				ownerIds = append(ownerIds, ownerStr)
+			}
+		}
+
+		limitNumber := 0
+		if f.Argument(2) != goja.Undefined() {
+			limitNumber = int(getInt(r, f.Argument(2)))
+		}
+		var limit *wrappers.Int32Value
+		if limitNumber != 0 {
+			limit = &wrappers.Int32Value{Value: int32(limitNumber)}
+		}
+
+		cursor := ""
+		if f.Argument(3) != goja.Undefined() {
+			cursor = getString(r, f.Argument(3))
+		}
+
+		overrideExpiry := int64(0)
+		if f.Argument(4) != goja.Undefined() {
+			overrideExpiry = getInt(r, f.Argument(4))
+		}
+
+		records, err := LeaderboardRecordsList(context.Background(), n.logger, n.db, n.leaderboardCache, n.rankCache, id, limit, cursor, ownerIds, overrideExpiry)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error listing leaderboard records: %v", err.Error())))
+		}
+
+		recordsSlice := make([]interface{}, 0, len(records.Records))
+		for _, record := range records.Records {
+			recordMap := make(map[string]interface{})
+			recordMap["leaderboard_id"] = record.LeaderboardId
+			recordMap["owner_id"] = record.OwnerId
+			if record.Username != nil {
+				recordMap["username"] = record.Username
+			} else {
+				recordMap["username"] = nil
+			}
+			recordMap["score"] = record.Score
+			recordMap["subscore"] = record.Subscore
+			recordMap["num_scoore"] = record.NumScore
+			metadataMap := make(map[string]interface{})
+			err = json.Unmarshal([]byte(record.Metadata), &metadataMap)
+			if err != nil {
+				panic(r.ToValue(fmt.Sprintf("failed to convert metadata to json: %s", err.Error())))
+			}
+			metadataMap["metadata"] = metadataMap
+			metadataMap["create_time"] = record.CreateTime.Seconds
+			metadataMap["update_time"] = record.UpdateTime.Seconds
+			if record.ExpiryTime != nil {
+				recordMap["expiry_time"] = record.ExpiryTime.Seconds
+			} else {
+				recordMap["expiry_time"] = nil
+			}
+			recordMap["rank"] = record.Rank
+
+			recordsSlice = append(recordsSlice, recordMap)
+		}
+
+		ownerRecordsSlice := make([]interface{}, 0, len(records.OwnerRecords))
+		for _, record := range records.OwnerRecords {
+			recordMap := make(map[string]interface{})
+			recordMap["leaderboard_id"] = record.LeaderboardId
+			recordMap["owner_id"] = record.OwnerId
+			if record.Username != nil {
+				recordMap["username"] = record.Username
+			} else {
+				recordMap["username"] = nil
+			}
+			recordMap["score"] = record.Score
+			recordMap["subscore"] = record.Subscore
+			recordMap["num_scoore"] = record.NumScore
+			metadataMap := make(map[string]interface{})
+			err = json.Unmarshal([]byte(record.Metadata), &metadataMap)
+			if err != nil {
+				panic(r.ToValue(fmt.Sprintf("failed to convert metadata to json: %s", err.Error())))
+			}
+			metadataMap["metadata"] = metadataMap
+			metadataMap["create_time"] = record.CreateTime.Seconds
+			metadataMap["update_time"] = record.UpdateTime.Seconds
+			if record.ExpiryTime != nil {
+				recordMap["expiry_time"] = record.ExpiryTime.Seconds
+			} else {
+				recordMap["expiry_time"] = nil
+			}
+			recordMap["rank"] = record.Rank
+
+			ownerRecordsSlice = append(ownerRecordsSlice, recordMap)
+		}
+
+		resultMap := make(map[string]interface{})
+
+		resultMap["records"] = recordsSlice
+		resultMap["owner_records"] = ownerRecordsSlice
+
+		if records.NextCursor != "" {
+			resultMap["next_cursor"] = records.NextCursor
+		} else {
+			resultMap["next_cursor"] = nil
+		}
+
+		if records.PrevCursor != "" {
+			resultMap["prev_cursor"] = records.PrevCursor
+		} else {
+			resultMap["prev_cursor"] = nil
+		}
+
+		return r.ToValue(resultMap)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) leaderboardRecordWrite(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects a leaderboard ID string"))
+		}
+
+		ownerID := getString(r, f.Argument(1))
+		if _, err := uuid.FromString(ownerID); err != nil {
+			panic(r.NewTypeError("expects owner ID to be a valid identifier"))
+		}
+
+		username := ""
+		if f.Argument(2) != goja.Undefined() {
+			username = getString(r, f.Argument(2))
+		}
+
+		var score int64
+		if f.Argument(3) != goja.Undefined() {
+			score = getInt(r, f.Argument(3))
+		}
+
+		var subscore int64
+		if f.Argument(4) != goja.Undefined() {
+			subscore = getInt(r, f.Argument(4))
+		}
+
+		metadata := f.Argument(5)
+		metadataStr := ""
+		if metadata != goja.Undefined() && metadata != goja.Null() {
+			metadataMap, ok := f.Argument(4).Export().(map[string]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects metadata to be an object"))
+			}
+			metadataBytes, err := json.Marshal(metadataMap)
+			if err != nil {
+				panic(r.ToValue(fmt.Sprintf("error encoding metadata: %v", err.Error())))
+			}
+			metadataStr = string(metadataBytes)
+		}
+
+		record, err := LeaderboardRecordWrite(context.Background(), n.logger, n.db, n.leaderboardCache, n.rankCache, uuid.Nil, id, ownerID, username, score, subscore, metadataStr)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("error writing leaderboard record: %v", err.Error())))
+		}
+
+		resultMap := make(map[string]interface{})
+
+		resultMap["leaderboard_id"] = record.LeaderboardId
+		resultMap["owner_id"] = record.OwnerId
+		if record.Username != nil {
+			resultMap["username"] = record.Username
+		} else {
+			resultMap["username"] = nil
+		}
+		resultMap["score"] = record.Score
+		resultMap["subscore"] = record.Subscore
+		resultMap["num_scoore"] = record.NumScore
+		metadataMap := make(map[string]interface{})
+		err = json.Unmarshal([]byte(record.Metadata), &metadataMap)
+		if err != nil {
+			panic(r.ToValue(fmt.Sprintf("failed to convert metadata to json: %s", err.Error())))
+		}
+		metadataMap["metadata"] = metadataMap
+		metadataMap["create_time"] = record.CreateTime.Seconds
+		metadataMap["update_time"] = record.UpdateTime.Seconds
+		if record.ExpiryTime != nil {
+			resultMap["expiry_time"] = record.ExpiryTime.Seconds
+		} else {
+			resultMap["expiry_time"] = nil
+		}
+
+		return r.ToValue(resultMap)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) leaderboardRecordDelete(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects a leaderboard ID string"))
+		}
+
+		ownerID := getString(r, f.Argument(1))
+		if _, err := uuid.FromString(ownerID); err != nil {
+			panic(r.NewTypeError("expects owner ID to be a valid identifier"))
+		}
+
+		if err := LeaderboardRecordDelete(context.Background(), n.logger, n.db, n.leaderboardCache, n.rankCache, uuid.Nil, id, ownerID); err != nil {
+			panic(r.ToValue(fmt.Sprintf("error deleting leaderboard record: %v", err.Error())))
+		}
+
+		return goja.Undefined()
 	}
 }
 

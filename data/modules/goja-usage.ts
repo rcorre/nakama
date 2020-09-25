@@ -406,7 +406,21 @@ interface StorageDeleteRequest {
     version: string;
 }
 
-
+/**
+ * Leaderboard Record Entry
+ */
+interface LeaderBoardRecord {
+    leaderboard_id: string;
+	owner_id: string;
+    username: string;
+	score: number;
+	subscore: number;
+	num_score: number;
+	metadata: Object;
+	create_time: number;
+	update_time: number;
+    expiry_time: number;
+}
 
 /**
  * The server APIs available in the game server.
@@ -1145,7 +1159,7 @@ interface Nakama {
      * Write storage objects.
      *
      * @param keys - Array of storage objects to write.
-     * @returns List of written objects acks
+     * @returns List of written objects acks.
      */
     storageWrite(keys: StorageWriteRequest[]): StorageWriteAck[]
 
@@ -1153,7 +1167,7 @@ interface Nakama {
      * Delete storage objects.
      *
      * @param keys - Array of storage objects to write.
-     * @returns List of written objects acks
+     * @returns List of written objects acks.
      */
     storageDelete(keys: StorageDeleteRequest[])
 
@@ -1161,12 +1175,70 @@ interface Nakama {
      * Update multiple entities.
      * Passing nil to any of the arguments will ignore the corresponding update.
      *
-     * @param accountUpdates - Array of account updates
-     * @param walletUpdates - Array of wallet updates
-     * @param storageObjectsUpdates - Array of storage objects updates
-     * @returns An object with the results from wallets and storage objects updates
+     * @param accountUpdates - Array of account updates.
+     * @param walletUpdates - Array of wallet updates.
+     * @param storageObjectsUpdates - Array of storage objects updates.
+     * @returns An object with the results from wallets and storage objects updates.
      */
     multiUpdate(accountUpdates: UserUpdateAccount[], walletUpdates: WalletUpdate[], storageObjectsUpdates: StorageWriteRequest[]): {storage_write_acks: StorageWriteAck[], wallet_update_acks: WalletUpdateResult[]}
+
+    /**
+     * Create a new leaderboard.
+     *
+     * @param leaderboardID - Leaderboard id.
+     * @param authoritative - Opt. Authoritative Leaderboard if true. // TODO what does this do?
+     * @param sortOrder - Opt. Sort leaderboard in desc or asc order. Defauts to "desc".
+     * @param operator - Opt. Score operator "best", "set" or "incr" (refer to the docs for more info). Defaults to "best".
+     * @param resetSchedule - Cron string to set the periodicity of the leaderboard reset. Set as null to never reset.
+     * @param metadata - Opt. metadata object.
+     */
+    leaderboardCreate(
+        leaderboardID: string,
+        authoritative: boolean,
+        sortOrder?: 'desc' | 'asc',
+        operator?: 'best' | 'set' | 'incr',
+        resetSchedule?: null | string,
+        metadata?: Object,
+    )
+
+    /**
+     * Delete a leaderboard.
+     *
+     * @param leaderboardID - Leaderboard id.
+     */
+    leaderboardDelete(leaderboardID: string)
+
+    /**
+     * List records of a leaderboard.
+     *
+     * @param leaderboardID - Leaderboard id.
+     * @param leaderboardOwners - Array of leaderboard owners.
+     * @param limit - Max number of records to return.
+     * @param cursor - Page cursor.
+     * @param overrideExpiry - Override the time expiry of the leaderboard. (Unix epoch)
+     */
+    leaderboardRecordsList(leaderboardID: string, leaderboardOwners?: string[], limit?: number, cursor?: string, overrideExpiry?: number): LeaderBoardRecord[]
+
+    /**
+     * Write a new leaderboard record.
+     *
+     * @param leaderboardID - Leaderboard id.
+     * @param ownerID - Array of leaderboard owners.
+     * @param username - Username of the scorer.
+     * @param score - Score.
+     * @param subscore - Subscore.
+     * @param metadata - Opt. metadata object.
+     * @returns - The created leaderboard record.
+     */
+    leaderboardRecordWrite(leaderboardID: string, ownerID: string, username: string, score: number, subscore: number, metadata: Object): LeaderBoardRecord
+
+    /**
+     * Delete a leaderboard record.
+     *
+     * @param leaderboardID - Leaderboard id.
+     * @param ownerID - Array of leaderboard owners.
+     */
+    leaderboardRecordDelete(leaderboardID: string, ownerID: string)
 }
 
 /**
