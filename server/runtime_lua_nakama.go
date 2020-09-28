@@ -5465,7 +5465,7 @@ func (n *RuntimeLuaNakamaModule) leaderboardRecordDelete(l *lua.LState) int {
 func (n *RuntimeLuaNakamaModule) tournamentCreate(l *lua.LState) int {
 	id := l.CheckString(1)
 	if id == "" {
-		l.ArgError(1, "expects a leaderboard ID string")
+		l.ArgError(1, "expects a tournament ID string")
 		return 0
 	}
 

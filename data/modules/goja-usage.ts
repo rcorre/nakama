@@ -423,6 +423,29 @@ interface LeaderBoardRecord {
 }
 
 /**
+ * Leaderboard Record Entry
+ */
+interface Tournament {
+    id: string;
+    title: string;
+    description: string;
+    category: number;
+    sort_order: 'asc' | 'desc';
+    size: number;
+    max_size: number;
+    max_num_score: number;
+    duration: number;
+    start_active: number;
+    end_active: number;
+    can_enter: boolean;
+    next_reset: string;
+    metadata: Object;
+    create_time: number;
+    start_time: number;
+    end_time: number;
+}
+
+/**
  * The server APIs available in the game server.
  */
 interface Nakama {
@@ -1239,6 +1262,123 @@ interface Nakama {
      * @param ownerID - Array of leaderboard owners.
      */
     leaderboardRecordDelete(leaderboardID: string, ownerID: string)
+
+    /**
+     * Create a new tournament.
+     *
+     * @param tournamentID - Tournament id.
+     * @param sortOrder - Opt. Sort tournament in desc or asc order. Defauts to "desc".
+     * @param operator - Opt. Score operator "best", "set" or "incr" (refer to the docs for more info). Defaults to "best".
+     * @param duration - Opt. Duration of the tournament (unix epoch).
+     * @param resetSchedule - Opt. Tournament reset schedule (cron synthax).
+     * @param metadata - Opt. metadata object.
+     * @param title -  Opt. Tournament title.
+     * @param description - Opt. Tournament description.
+     * @param category - Opt. Tournament category (1-127).
+     * @param startTime - Opt. Tournament start time (unix epoch).
+     * @param endTime - Opt. Tournament end time (unix epoch).
+     * @param maxSize - Opt. Maximum size of participants in a tournament.
+     * @param maxNumScore - Opt. Maximum submission attempts for a tournament record.
+     * @param joinRequired - Opt. Whether the tournament needs to be joint before a record write is allowed.
+     */
+    tournamentCreate(
+        tournamentID: string,
+        sortOrder?: 'desc' | 'asc',
+        operator?: 'best' | 'set' | 'incr',
+        duration?: number,
+        resetSchedule?: string,
+        metadata?: Object,
+        title?: string,
+        description?: string,
+        category?: number,
+        startTime?: number,
+        endTime?: number,
+        maxSize?: number,
+        maxNumScore?: number,
+        joinRequired?: boolean,
+    )
+
+    /**
+     * Delete a tournament.
+     *
+     * @param tournamentID - Tournament id.
+     */
+    tournamentDelete(tournamentID: string)
+
+    /**
+     * Add additional score attempts to the owner's tournament record.
+     *
+     * @param tournamentID - Tournament id.
+     * @param ownerID - Owner of the record id.
+     * @param count - Attempt count to add.
+     */
+    tournamentAddAttempt(tournamentID: string, ownerID: string, count: number)
+
+    /**
+     * Join a tournament.
+     *
+     * A tournament may need to be joined before the owner can submit scores.
+     *
+     * @param tournamentID - Tournament id.
+     * @param userID - Owner of the record id.
+     * @param username - The username of the record owner.
+     */
+    tournamentJoin(tournamentID: string, userId: string, username: string)
+
+    /**
+     * Join a tournament.
+     *
+     * A tournament may need to be joined before the owner can submit scores.
+     *
+     * @param tournamentID - Tournament id.
+     * @param userID - Owner of the record id.
+     * @param username - The username of the record owner.
+     */
+    tournamentJoin(tournamentID: string, userId: string, username: string)
+
+    /**
+     * Get a list of tournaments by id.
+     *
+     * @param tournamentIDs - Tournament ids.
+     * @returns The tournament data for the given ids.
+     */
+    tournamentsGetId(tournamentIds: string[]): Tournament[]
+
+    /**
+     * Get a list of tournaments by id.
+     *
+     * @param categoryStart - Filter tournament with categories greater or equal than this value.
+     * @param categoryEnd - Filter tournament with categories equal or less than this value.
+     * @param startTime - Filter tournament with that start after this time.
+     * @param endTime - Filter tournament with that end before this time.
+     * @param limit - Return only the required number of tournament denoted by this limit value.
+     * @param cursor - Cursor to paginate to the next result set. If this is empty/null there is no further results.
+     * @returns The tournament data for the given ids.
+     */
+    tournamentsGetId(categoryStart: number, categoryEnd: number, startTime: number, endTime: number, limit: number, cursor: string): Tournament[]
+
+    /**
+     * Submit a score and optional subscore to a tournament leaderboard.
+     *
+     * @param id - The unique identifier for the leaderboard to submit to. Mandatory field.
+     * @param ownerID - The owner of this score submission. Mandatory field.
+     * @param username - Opt. The owner username of this score submission, if it's a user.
+     * @param score - Opt. The score to submit. Optional in Lua. Default 0.
+     * @param subscore - Opt. A secondary subscore parameter for the submission. Optional in Lua. Default 0.
+     * @param metadata - Opt. The metadata you want associated to this submission.
+     * @returns The tournament data for the given ids.
+     */
+    tournamentRecordWrite(id: string, ownerID: string, username: string, score: number, subscore: number, metadata: Object)
+
+    /**
+     * Fetch the list of tournament records around the owner.
+     *
+     * @param id - The unique identifier for the leaderboard to submit to. Mandatory field.
+     * @param ownerID - The owner of this score submission. Mandatory field.
+     * @param limit - Opt. The owner username of this score submission, if it's a user.
+     * @returns The tournament data for the given ids.
+     */
+    tournamentRecordsHaystack(id: string, ownerID: string, limit: number): Tournament[]
 }
 
 /**
