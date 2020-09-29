@@ -264,13 +264,13 @@ interface User {
  * User update account object
  */
 interface UserUpdateAccount {
-    username: string;
-    display_name: string;
-    avatar_url: string;
-    lang_tag: string;
-    location: string;
-    timezone: string;
-    metadata: object;
+    username?: string;
+    display_name?: string;
+    avatar_url?: string;
+    lang_tag?: string;
+    location?: string;
+    timezone?: string;
+    metadata?: object;
 }
 
 /**
@@ -443,6 +443,23 @@ interface Tournament {
     create_time: number;
     start_time: number;
     end_time: number;
+}
+
+/**
+ * Group Entry
+ */
+interface Group {
+    id: string;
+    creator_id: string;
+    name: string;
+    description: string;
+    avatar_url: string;
+    lang_tag: string;
+    open: boolean;
+    edge_count: number;
+    max_count: number;
+    create_time: number;
+    update_time: number;
 }
 
 /**
@@ -772,12 +789,17 @@ interface Nakama {
     accountsGetId(userIds: string[]): Account[]
 
     /**
-     * Update user account
+     * Update user account.
      *
-     * @param userId - Target account.
-     * @param data - Object with the data to update.
+     * @param userId - User ID for which the information is to be updated.
+     * @param displayName - Display name to be updated. Use null to not update this field.
+     * @param timezone - Timezone to be updated. Use null to not update this field.
+     * @param location - Location to be updated. Use null to not update this field.
+     * @param language - Language to be updated. Use null to not update this field.
+     * @param avatar - User's avatar URL. Use null to not update this field.
+     * @param metadata - Metadata to update. Use null not to update this field.
      */
-    accountUpdateId(userId: string, data: UserUpdateAccount)
+    accountUpdateId(userId: string, displayName: string, timezone: string, location: string, language: string, avatar: string, metadata: Object)
 
     /**
      * Delete user account
@@ -1379,6 +1401,84 @@ interface Nakama {
      * @returns The tournament data for the given ids.
      */
     tournamentRecordsHaystack(id: string, ownerID: string, limit: number): Tournament[]
+
+    /**
+     * Fetch one or more groups by their ID.
+     *
+     * @param groupIDs - A set of strings of the ID for the groups to get.
+     * @returns An array of group objects.
+     */
+    groupsGetId(groupIDs: string[]): Group[]
+
+    /**
+     * Fetch one or more groups by their ID.
+     *
+     * @param userID - The user ID to be associcated as the group superadmin.
+     * @param name - Group name, must be set and unique.
+     * @param creatorID - The user ID to be associcated as creator. If not set, system user will be set.
+     * @param lang - Opt. Group language. Will default to 'en'.
+     * @param description - Opt. Group description, can be left empty.
+     * @param avatarURL - Opt. URL to the group avatar, can be left empty.
+     * @param open - Opt. Whether the group is for anyone to join, or members will need to send invitations to join. Defaults to false.
+     * @param metadata - Opt. Custom information to store for this group.
+     * @param limit - Opt. Maximum number of members to have in the group. Defaults to 100.
+     * @returns An array of group objects.
+     */
+    groupsCreate(userID: string, name: string, creatorID: string, lang?: string, description?: string, avatarURL?: string, open?: boolean, metadata?: Object, limit?: number): Group[]
+
+    /**
+     * Update a group with various configuration settings.
+     * The group which is updated can change some or all of its fields.
+     *
+     * @param groupID - The group ID to update.
+     * @param name - Group name, use nil to not update.
+     * @param creatorID - The user ID to be associcated as creator, use nil to not update.
+     * @param lang - Group language, use nil to not update.
+     * @param description - Group description, use nil to not update.
+     * @param avatarURL - URL to the group avatar, use nil to not update.
+     * @param open - Whether the group is for anyone to join or not. Use nil to not update.
+     * @param metadata - Custom information to store for this group. Use nil to not update.
+     * @param limit - Maximum number of members to have in the group. Use nil if field is not being updated.
+     */
+    groupUpdate(userID: string, name: string, creatorID: string, lang: string, description: string, avatarURL: string, open: boolean, metadata: Object, limit: number)
+
+    /**
+     * Delete a group.
+     *
+     * @param groupID - The group ID to update.
+     */
+    groupDelete(groupID: string)
+
+    /**
+     * Kick users from a group.
+     *
+     * @param groupID - The group ID to update.
+     * @param userIDs - Array of user IDs to be kicked from the group.
+     */
+    groupUsersKick(userID: string, userIDs: string[])
+
+    /**
+     * List all members, admins and superadmins which belong to a group.
+     * This also list incoming join requests too.
+     *
+     * @param groupID - The group ID to update.
+     * @param limit - Opt. Max number of returned results. Defaults to 100.
+     * @param state - Opt. Filter users by their group state (0: Superadmin, 1: Admin, 2: Member, 3: Requested to join). Use nil or undefined to return all states.
+     * @param cursor - Opt. A cursor used to fetch the next page when applicable.
+     * @returns A list of group members.
+     */
+    groupUsersList(userID: string, limit?: number, state?: number, cursor?: string): {group_users: [{user: User, state: number}, cursor: string | null]}
+
+    /**
+     * List all groups which a user belongs to and whether they've been accepted into the group or if it's an invite.
+     *
+     * @param userID - The Id of the user who's groups you want to list.
+     * @param limit - Opt. Max number of returned results. Defaults to 100.
+     * @param state - Opt. Filter groups by their user's relation (0: Superadmin, 1: Admin, 2: Member, 3: Requested to join). Use nil or undefined to return all states.
+     * @param cursor - Opt. A cursor used to fetch the next page when applicable.
+     * @returns A list of the groups the user is a member of.
+     */
+    userGroupsList(userID: string, limit?: number, state?: number, cursor?: string): {user_groups: [{user: User, state: number}, cursor: string | null]}
 }
 
 /**
