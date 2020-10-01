@@ -264,6 +264,7 @@ interface User {
  * User update account object
  */
 interface UserUpdateAccount {
+    user_id: string;
     username?: string;
     display_name?: string;
     avatar_url?: string;
@@ -401,9 +402,8 @@ interface StorageWriteAck {
 interface StorageDeleteRequest {
     key: string;
 	collection: string;
-    user_id: string;
-    value: Object;
-    version: string;
+    user_id?: string;
+    version?: string;
 }
 
 /**
@@ -1221,11 +1221,12 @@ interface Nakama {
      * Passing nil to any of the arguments will ignore the corresponding update.
      *
      * @param accountUpdates - Array of account updates.
-     * @param walletUpdates - Array of wallet updates.
      * @param storageObjectsUpdates - Array of storage objects updates.
+     * @param walletUpdates - Array of wallet updates.
+     * @param updateLedger - Opt. Wether if the wallet update should also update the wallet ledger. Defaults to false.
      * @returns An object with the results from wallets and storage objects updates.
      */
-    multiUpdate(accountUpdates: UserUpdateAccount[], walletUpdates: WalletUpdate[], storageObjectsUpdates: StorageWriteRequest[]): {storage_write_acks: StorageWriteAck[], wallet_update_acks: WalletUpdateResult[]}
+    multiUpdate(accountUpdates: UserUpdateAccount[], storageObjectsUpdates: StorageWriteRequest[], walletUpdates: WalletUpdate[], updateLedger?: boolean): {storage_write_acks: StorageWriteAck[], wallet_update_acks: WalletUpdateResult[]}
 
     /**
      * Create a new leaderboard.
@@ -1275,7 +1276,7 @@ interface Nakama {
      * @param metadata - Opt. metadata object.
      * @returns - The created leaderboard record.
      */
-    leaderboardRecordWrite(leaderboardID: string, ownerID: string, username: string, score: number, subscore: number, metadata: Object): LeaderBoardRecord
+    leaderboardRecordWrite(leaderboardID: string, ownerID: string, username?: string, score?: number, subscore?: number, metadata?: Object): LeaderBoardRecord
 
     /**
      * Delete a leaderboard record.
@@ -1305,9 +1306,9 @@ interface Nakama {
      */
     tournamentCreate(
         tournamentID: string,
-        sortOrder?: 'desc' | 'asc',
-        operator?: 'best' | 'set' | 'incr',
-        duration?: number,
+        sortOrder: 'desc' | 'asc',
+        operator: 'best' | 'set' | 'incr',
+        duration: number,
         resetSchedule?: string,
         metadata?: Object,
         title?: string,
@@ -1348,17 +1349,6 @@ interface Nakama {
     tournamentJoin(tournamentID: string, userId: string, username: string)
 
     /**
-     * Join a tournament.
-     *
-     * A tournament may need to be joined before the owner can submit scores.
-     *
-     * @param tournamentID - Tournament id.
-     * @param userID - Owner of the record id.
-     * @param username - The username of the record owner.
-     */
-    tournamentJoin(tournamentID: string, userId: string, username: string)
-
-    /**
      * Get a list of tournaments by id.
      *
      * @param tournamentIDs - Tournament ids.
@@ -1377,7 +1367,7 @@ interface Nakama {
      * @param cursor - Cursor to paginate to the next result set. If this is empty/null there is no further results.
      * @returns The tournament data for the given ids.
      */
-    tournamentsGetId(categoryStart: number, categoryEnd: number, startTime: number, endTime: number, limit: number, cursor: string): Tournament[]
+    tournamentList(categoryStart?: number, categoryEnd?: number, startTime?: number, endTime?: number, limit?: number, cursor?: string): Tournament[]
 
     /**
      * Submit a score and optional subscore to a tournament leaderboard.
@@ -1390,7 +1380,7 @@ interface Nakama {
      * @param metadata - Opt. The metadata you want associated to this submission.
      * @returns The tournament data for the given ids.
      */
-    tournamentRecordWrite(id: string, ownerID: string, username: string, score: number, subscore: number, metadata: Object)
+    tournamentRecordWrite(id: string, ownerID: string, username?: string, score?: number, subscore?: number, metadata?: Object)
 
     /**
      * Fetch the list of tournament records around the owner.
@@ -1398,9 +1388,10 @@ interface Nakama {
      * @param id - The unique identifier for the leaderboard to submit to. Mandatory field.
      * @param ownerID - The owner of this score submission. Mandatory field.
      * @param limit - Opt. The owner username of this score submission, if it's a user.
+     * @param expiry - Opt. Expiry Unix epoch.
      * @returns The tournament data for the given ids.
      */
-    tournamentRecordsHaystack(id: string, ownerID: string, limit: number): Tournament[]
+    tournamentRecordsHaystack(id: string, ownerID: string, limit?: number, expiry?: number): Tournament[]
 
     /**
      * Fetch one or more groups by their ID.
@@ -1468,17 +1459,6 @@ interface Nakama {
      * @returns A list of group members.
      */
     groupUsersList(userID: string, limit?: number, state?: number, cursor?: string): {group_users: [{user: User, state: number}, cursor: string | null]}
-
-    /**
-     * List all groups which a user belongs to and whether they've been accepted into the group or if it's an invite.
-     *
-     * @param userID - The Id of the user who's groups you want to list.
-     * @param limit - Opt. Max number of returned results. Defaults to 100.
-     * @param state - Opt. Filter groups by their user's relation (0: Superadmin, 1: Admin, 2: Member, 3: Requested to join). Use nil or undefined to return all states.
-     * @param cursor - Opt. A cursor used to fetch the next page when applicable.
-     * @returns A list of the groups the user is a member of.
-     */
-    userGroupsList(userID: string, limit?: number, state?: number, cursor?: string): {user_groups: [{user: User, state: number}, cursor: string | null]}
 }
 
 /**

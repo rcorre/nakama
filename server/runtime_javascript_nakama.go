@@ -188,14 +188,21 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"leaderboardRecordsList":          n.leaderboardRecordsList(r),
 		"leaderboardRecordWrite":          n.leaderboardRecordWrite(r),
 		"leaderboardRecordDelete":         n.leaderboardRecordDelete(r),
-		"tournament_create":               n.tournamentCreate(r),
-		"tournament_delete":               n.tournamentDelete(r),
-		"tournament_add_attempt":          n.tournamentAddAttempt(r),
-		"tournament_join":                 n.tournamentJoin(r),
-		"tournament_list":                 n.tournamentList(r),
-		"tournaments_get_id":              n.tournamentsGetId(r),
-		"tournament_record_write":         n.tournamentRecordWrite(r),
-		"tournament_records_haystack":     n.tournamentRecordsHaystack(r),
+		"tournamentCreate":                n.tournamentCreate(r),
+		"tournamentDelete":                n.tournamentDelete(r),
+		"tournamentAddAttempt":            n.tournamentAddAttempt(r),
+		"tournamentJoin":                  n.tournamentJoin(r),
+		"tournamentList":                  n.tournamentList(r),
+		"tournamentsGetId":                n.tournamentsGetId(r),
+		"tournamentRecordWrite":           n.tournamentRecordWrite(r),
+		"tournamentRecordsHaystack":       n.tournamentRecordsHaystack(r),
+		"groupsGetId":                     n.groupsGetId(r),
+		"groupCreate":                     n.groupCreate(r),
+		"groupUpdate":                     n.groupUpdate(r),
+		"groupDelete":                     n.groupDelete(r),
+		"groupUsersKick":                  n.groupUsersKick(r),
+		"groupUsersList":                  n.groupUsersList(r),
+		"userGroupsList":                  n.userGroupsList(r),
 	}
 }
 
@@ -3251,7 +3258,7 @@ func (n *runtimeJavascriptNakamaModule) storageWrite(r *goja.Runtime) func(goja.
 			var userID uuid.UUID
 			writeOp := &api.WriteStorageObject{}
 
-			if collectionIn, ok := dataMap["collectionIn"]; ok {
+			if collectionIn, ok := dataMap["collection"]; ok {
 				collection, ok := collectionIn.(string)
 				if !ok {
 					panic(r.NewTypeError("expects 'collection' value to be a string"))
@@ -3273,8 +3280,8 @@ func (n *runtimeJavascriptNakamaModule) storageWrite(r *goja.Runtime) func(goja.
 				writeOp.Key = key
 			}
 
-			if userID, ok := dataMap["user_id"]; ok {
-				userIDStr, ok := userID.(string)
+			if userIDIn, ok := dataMap["user_id"]; ok {
+				userIDStr, ok := userIDIn.(string)
 				if !ok {
 					panic(r.NewTypeError("expects 'user_id' value to be a string"))
 				}
@@ -3387,7 +3394,7 @@ func (n *runtimeJavascriptNakamaModule) storageDelete(r *goja.Runtime) func(goja
 			var userID uuid.UUID
 			objectID := &api.DeleteStorageObjectId{}
 
-			if collectionIn, ok := dataMap["collectionIn"]; ok {
+			if collectionIn, ok := dataMap["collection"]; ok {
 				collection, ok := collectionIn.(string)
 				if !ok {
 					panic(r.NewTypeError("expects 'collection' value to be a string"))
@@ -3566,7 +3573,7 @@ func (n *runtimeJavascriptNakamaModule) multiUpdate(r *goja.Runtime) func(goja.F
 					var userID uuid.UUID
 					writeOp := &api.WriteStorageObject{}
 
-					if collectionIn, ok := dataMap["collectionIn"]; ok {
+					if collectionIn, ok := dataMap["collection"]; ok {
 						collection, ok := collectionIn.(string)
 						if !ok {
 							panic(r.NewTypeError("expects 'collection' value to be a string"))
@@ -3683,7 +3690,7 @@ func (n *runtimeJavascriptNakamaModule) multiUpdate(r *goja.Runtime) func(goja.F
 			// Process wallet update inputs.
 			var walletUpdates []*walletUpdate
 			if f.Argument(2) != goja.Undefined() && f.Argument(2) != goja.Null() {
-				updatesIn, ok := f.Argument(0).Export().([]interface{})
+				updatesIn, ok := f.Argument(2).Export().([]interface{})
 				if !ok {
 					panic(r.ToValue("expects an array of wallet update objects"))
 				}
@@ -3748,7 +3755,7 @@ func (n *runtimeJavascriptNakamaModule) multiUpdate(r *goja.Runtime) func(goja.F
 			}
 
 			updateLedger := false
-			if f.Argument(3) == goja.Undefined() || f.Argument(3) == goja.Null() {
+			if f.Argument(3) != goja.Undefined() && f.Argument(3) != goja.Null() {
 				updateLedger = getJsBool(r, f.Argument(3))
 			}
 
@@ -3827,7 +3834,7 @@ func (n *runtimeJavascriptNakamaModule) leaderboardCreate(r *goja.Runtime) func(
 		}
 
 		metadataStr := "{}"
-		if f.Argument(5) != goja.Undefined() {
+		if f.Argument(5) != goja.Undefined() && f.Argument(5) != goja.Null() {
 			metadataMap, ok := f.Argument(5).Export().(map[string]interface{})
 			if !ok {
 				panic(r.NewTypeError("expects metadata to be an object"))
@@ -4013,24 +4020,24 @@ func (n *runtimeJavascriptNakamaModule) leaderboardRecordWrite(r *goja.Runtime) 
 		}
 
 		username := ""
-		if f.Argument(2) != goja.Undefined() {
+		if f.Argument(2) != goja.Undefined() && f.Argument(2) != goja.Null() {
 			username = getJsString(r, f.Argument(2))
 		}
 
 		var score int64
-		if f.Argument(3) != goja.Undefined() {
+		if f.Argument(3) != goja.Undefined() && f.Argument(3) != goja.Null() {
 			score = getJsInt(r, f.Argument(3))
 		}
 
 		var subscore int64
-		if f.Argument(4) != goja.Undefined() {
+		if f.Argument(4) != goja.Undefined() && f.Argument(4) != goja.Null() {
 			subscore = getJsInt(r, f.Argument(4))
 		}
 
 		metadata := f.Argument(5)
 		metadataStr := ""
 		if metadata != goja.Undefined() && metadata != goja.Null() {
-			metadataMap, ok := f.Argument(4).Export().(map[string]interface{})
+			metadataMap, ok := f.Argument(5).Export().(map[string]interface{})
 			if !ok {
 				panic(r.NewTypeError("expects metadata to be an object"))
 			}
@@ -4136,6 +4143,8 @@ func (n *runtimeJavascriptNakamaModule) tournamentCreate(r *goja.Runtime) func(g
 		var duration int
 		if f.Argument(3) != goja.Undefined() && f.Argument(3) != goja.Null() {
 			duration = int(getJsInt(r, f.Argument(3)))
+		} else {
+			panic(r.ToValue("expects a duration"))
 		}
 		if duration <= 0 {
 			panic(r.NewTypeError("duration must be > 0"))
@@ -4200,7 +4209,7 @@ func (n *runtimeJavascriptNakamaModule) tournamentCreate(r *goja.Runtime) func(g
 		}
 
 		var maxSize int
-		if f.Argument(11) != goja.Undefined() && f.Argument(10) != goja.Null() {
+		if f.Argument(11) != goja.Undefined() && f.Argument(11) != goja.Null() {
 			maxSize = int(getJsInt(r, f.Argument(11)))
 			if maxSize < 0 {
 				panic(r.NewTypeError("maxSize must be >= 0"))
@@ -4393,7 +4402,7 @@ func (n *runtimeJavascriptNakamaModule) tournamentList(r *goja.Runtime) func(goj
 
 		endTime := 0
 		if f.Argument(3) != goja.Undefined() && f.Argument(3) != goja.Null() {
-			endTime = int(getJsInt(r, f.Argument(2)))
+			endTime = int(getJsInt(r, f.Argument(3)))
 			if endTime < 0 {
 				panic(r.NewTypeError("end time must be >= 0"))
 			}
@@ -4412,9 +4421,8 @@ func (n *runtimeJavascriptNakamaModule) tournamentList(r *goja.Runtime) func(goj
 		}
 
 		var cursor *TournamentListCursor
-		cursorStr := ""
 		if f.Argument(5) != goja.Undefined() && f.Argument(5) != goja.Null() {
-			cursorStr = getJsString(r, f.Argument(5))
+			cursorStr := getJsString(r, f.Argument(5))
 			cb, err := base64.StdEncoding.DecodeString(cursorStr)
 			if err != nil {
 				panic(r.ToValue("expects cursor to be valid when provided"))
@@ -4582,15 +4590,15 @@ func (n *runtimeJavascriptNakamaModule) tournamentRecordsHaystack(r *goja.Runtim
 			}
 		}
 
-		var expiry int
+		var expiry int64
 		if f.Argument(3) != goja.Undefined() && f.Argument(3) != goja.Null() {
-			expiry = int(getJsInt(r, f.Argument(3)))
+			expiry = getJsInt(r, f.Argument(3))
 			if expiry < 0 {
 				panic(r.NewTypeError("expiry should be time since epoch in seconds and has to be a positive integer"))
 			}
 		}
 
-		records, err := TournamentRecordsHaystack(context.Background(), n.logger, n.db, n.leaderboardCache, n.rankCache, id, userID, limit, int64(expiry))
+		records, err := TournamentRecordsHaystack(context.Background(), n.logger, n.db, n.leaderboardCache, n.rankCache, id, userID, limit, expiry)
 		if err != nil {
 			panic(r.ToValue(fmt.Sprintf("error listing tournament records haystack: %v", err.Error())))
 		}
@@ -4637,7 +4645,10 @@ func (n *runtimeJavascriptNakamaModule) groupsGetId(r *goja.Runtime) func(goja.F
 		if groupIdsIn == goja.Undefined() || groupIdsIn == goja.Null() {
 			panic(r.NewTypeError("expects an array of group ids"))
 		}
-		tournamentIdsSlice := groupIdsIn.Export().([]interface{})
+		tournamentIdsSlice, ok := groupIdsIn.Export().([]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects array of group ids"))
+		}
 
 		groupIDs := make([]string, 0, len(tournamentIdsSlice))
 		for _, id := range tournamentIdsSlice {
@@ -4814,8 +4825,8 @@ func (n *runtimeJavascriptNakamaModule) groupUpdate(r *goja.Runtime) func(goja.F
 		}
 
 		var open *wrappers.BoolValue
-		if f.Argument(5) != goja.Undefined() && f.Argument(5) != goja.Null() {
-			open = &wrappers.BoolValue{Value: getJsBool(r, f.Argument(5))}
+		if f.Argument(6) != goja.Undefined() && f.Argument(6) != goja.Null() {
+			open = &wrappers.BoolValue{Value: getJsBool(r, f.Argument(6))}
 		}
 
 		var metadata *wrappers.StringValue
