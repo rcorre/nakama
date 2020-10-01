@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/heroiclabs/nakama/v2/cronexpr"
+	"github.com/heroiclabs/nakama/v2/internal/cronexpr"
 
 	"github.com/heroiclabs/nakama-common/rtapi"
 
