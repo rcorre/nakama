@@ -498,7 +498,7 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	}
 
 	// jsModules, jsRPCFunctions, jsBeforeRtFunctions, jsAfterRtFunctions, jsBeforeReqFunctions, jsAfterReqFunctions, jsMatchmakerMatchedFunction, allMatchCreateFn, jsTournamentEndFunction, jsTournamentResetFunction, jsLeaderboardResetFunction, err := NewRuntimeProviderJS(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, metrics, streamManager, router, goMatchCreateFn, allEventFunctions.eventFunction, runtimeConfig.Path, paths)
-	jsModules, jsRPCFunctions, jsBeforeRtFunctions, jsAfterRtFunctions, jsBeforeReqFunctions, jsAfterReqFunctions, _, _, _, _, _, err := NewRuntimeProviderJS(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, metrics, streamManager, router, goMatchCreateFn, allEventFunctions.eventFunction, runtimeConfig.Path, paths)
+	jsModules, jsRPCFunctions, jsBeforeRtFunctions, jsAfterRtFunctions, jsBeforeReqFunctions, jsAfterReqFunctions, jsMatchmakerMatchedFunction, allMatchCreateFn, jsTournamentEndFunction, jsTournamentResetFunction, jsLeaderboardResetFunction, err := NewRuntimeProviderJS(logger, startupLogger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, metrics, streamManager, router, goMatchCreateFn, allEventFunctions.eventFunction, runtimeConfig.Path, paths)
 	if err != nil {
 		startupLogger.Error("Error initialising Javascript runtime provider", zap.Error(err))
 		return nil, err
@@ -2038,6 +2038,9 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	case luaMatchmakerMatchedFunction != nil:
 		allMatchmakerMatchedFunction = luaMatchmakerMatchedFunction
 		startupLogger.Info("Registered Lua runtime Matchmaker Matched function invocation")
+	case jsMatchmakerMatchedFunction != nil:
+		allMatchmakerMatchedFunction = jsMatchmakerMatchedFunction
+		startupLogger.Info("Registered Javascript runtime Matchmaker Matched function invocation")
 	}
 
 	var allTournamentEndFunction RuntimeTournamentEndFunction
@@ -2048,6 +2051,9 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	case luaTournamentEndFunction != nil:
 		allTournamentEndFunction = luaTournamentEndFunction
 		startupLogger.Info("Registered Lua runtime Tournament End function invocation")
+	case jsTournamentEndFunction != nil:
+		allTournamentEndFunction = jsTournamentEndFunction
+		startupLogger.Info("Registered Javascript runtime Tournament End function invocation")
 	}
 
 	var allTournamentResetFunction RuntimeTournamentResetFunction
@@ -2058,6 +2064,9 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	case luaTournamentResetFunction != nil:
 		allTournamentResetFunction = luaTournamentResetFunction
 		startupLogger.Info("Registered Lua runtime Tournament Reset function invocation")
+	case jsTournamentResetFunction != nil:
+		allTournamentResetFunction = jsTournamentResetFunction
+		startupLogger.Info("Registered Javascript runtime Tournament Reset function invocation")
 	}
 
 	var allLeaderboardResetFunction RuntimeLeaderboardResetFunction
@@ -2068,6 +2077,9 @@ func NewRuntime(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *
 	case luaLeaderboardResetFunction != nil:
 		allLeaderboardResetFunction = luaLeaderboardResetFunction
 		startupLogger.Info("Registered Lua runtime Leaderboard Reset function invocation")
+	case jsLeaderboardResetFunction != nil:
+		allLeaderboardResetFunction = jsLeaderboardResetFunction
+		startupLogger.Info("Registered Javascript runtime Leaderboard Reset function invocation")
 	}
 
 	// Lua matches are not registered the same, list only Go ones.

@@ -19,19 +19,23 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/dop251/goja"
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
-	"github.com/heroiclabs/nakama-common/api"
-	"github.com/heroiclabs/nakama-common/rtapi"
-	"github.com/heroiclabs/nakama/v2/social"
-	"go.uber.org/atomic"
-	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/dop251/goja"
+	"github.com/gofrs/uuid"
+	"github.com/golang/protobuf/jsonpb"
+	"github.com/golang/protobuf/proto"
+	"github.com/heroiclabs/nakama-common/api"
+	"github.com/heroiclabs/nakama-common/rtapi"
+	"github.com/heroiclabs/nakama-common/runtime"
+	"github.com/heroiclabs/nakama/v2/social"
+	"go.uber.org/atomic"
+	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
 )
 
 type RuntimeJS struct {
@@ -53,13 +57,13 @@ func (r *RuntimeJS) GetCallback(e RuntimeExecutionMode, key string) goja.Callabl
 	case RuntimeExecutionModeAfter:
 		return r.callbacks.After[key]
 	case RuntimeExecutionModeMatchmaker:
-		// return r.callbacks.Matchmaker
+		return r.callbacks.Matchmaker
 	case RuntimeExecutionModeTournamentEnd:
-		// return r.callbacks.TournamentEnd
+		return r.callbacks.TournamentEnd
 	case RuntimeExecutionModeTournamentReset:
-		// return r.callbacks.TournamentReset
+		return r.callbacks.TournamentReset
 	case RuntimeExecutionModeLeaderboardReset:
-		// return r.callbacks.LeaderboardReset
+		return r.callbacks.LeaderboardReset
 	}
 
 	return nil
@@ -67,7 +71,7 @@ func (r *RuntimeJS) GetCallback(e RuntimeExecutionMode, key string) goja.Callabl
 
 type JsErrorType int
 
-func(e JsErrorType) String() string {
+func (e JsErrorType) String() string {
 	switch e {
 	case JsErrorException:
 		return "exception"
@@ -83,34 +87,28 @@ const (
 
 type jsError struct {
 	StackTrace string
-	Type string
-	Message string `json:",omitempty"`
-	error error
+	Type       string
+	Message    string `json:",omitempty"`
+	error      error
 }
 
 func (e *jsError) Error() string {
 	return e.error.Error()
 }
 
-type RuntimeJavascriptCallbacks struct {
-	Rpc    map[string]goja.Callable
-	Before map[string]goja.Callable
-	After  map[string]goja.Callable
-}
-
 func newJsExceptionError(t JsErrorType, error, st string) *jsError {
 	return &jsError{
 		StackTrace: st,
-		Type: t.String(),
-		error: errors.New(error),
+		Type:       t.String(),
+		error:      errors.New(error),
 	}
 }
 
 func newJsError(t JsErrorType, err error) *jsError {
 	return &jsError{
 		Message: err.Error(),
-		Type: t.String(),
-		error: err,
+		Type:    t.String(),
+		error:   err,
 	}
 }
 
@@ -144,14 +142,15 @@ type RuntimeProviderJS struct {
 	leaderboardRankCache LeaderboardRankCache
 	sessionRegistry      SessionRegistry
 	matchRegistry        MatchRegistry
-	tracker 						 Tracker
+	tracker              Tracker
 	streamManager        StreamManager
-	router							 MessageRouter
-	eventFn      				 RuntimeEventCustomFunction
-	poolCh       				 chan *RuntimeJS
-	maxCount     				 uint32
-	currentCount 				 *atomic.Uint32
-	newFn        				 func() *RuntimeJS
+	router               MessageRouter
+	eventFn              RuntimeEventCustomFunction
+	matchCreateFn        RuntimeMatchCreateFunction
+	poolCh               chan *RuntimeJS
+	maxCount             uint32
+	currentCount         *atomic.Uint32
+	newFn                func() *RuntimeJS
 }
 
 func (rp *RuntimeProviderJS) Rpc(ctx context.Context, id string, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
@@ -168,7 +167,7 @@ func (rp *RuntimeProviderJS) Rpc(ctx context.Context, id string, queryParams map
 	if err != nil {
 		return "", err, code
 	}
-	payload, ok := retValue.Export().(string)
+	payload, ok := retValue.(string)
 	if !ok {
 		msg := "Runtime function returned invalid data - only allowed one return value of type string."
 		rp.logger.Error(msg, zap.String("mode", RuntimeExecutionModeRPC.String()), zap.String("id", id))
@@ -260,7 +259,7 @@ func (rp *RuntimeProviderJS) AfterRt(ctx context.Context, id string, logger *zap
 		return fnErr
 	}
 
-	return  nil
+	return nil
 }
 
 func (rp *RuntimeProviderJS) BeforeReq(ctx context.Context, id string, logger *zap.Logger, userID, username string, vars map[string]string, expiry int64, clientIP, clientPort string, req interface{}) (interface{}, error, codes.Code) {
@@ -393,19 +392,28 @@ func (rp *RuntimeProviderJS) AfterReq(ctx context.Context, id string, logger *za
 	return nil
 }
 
-func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, id string, fn goja.Callable, queryParams map[string][]string, uid, username string, vars map[string]string, sessionExpiry int64, sid, clientIP, clientPort string, payloads ...interface{}) (goja.Value, error, codes.Code) {
+func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, id string, fn goja.Callable, queryParams map[string][]string, uid, username string, vars map[string]string, sessionExpiry int64, sid, clientIP, clientPort string, payloads ...interface{}) (interface{}, error, codes.Code) {
 	ctx := NewRuntimeJsContext(r.vm, r.node, r.env, execMode, queryParams, sessionExpiry, uid, username, vars, sid, clientIP, clientPort)
 	args := []goja.Value{ctx, r.jsLoggerInst, r.nkInst}
-	jv := make([]goja.Value, 0, len(args)+len(payloads))
-	jv = append(jv, args...)
+	jsArgs := make([]goja.Value, 0, len(args)+len(payloads))
+	jsArgs = append(jsArgs, args...)
 	for _, payload := range payloads {
-		jv = append(jv, r.vm.ToValue(payload))
+		jsArgs = append(jsArgs, r.vm.ToValue(payload))
 	}
 
-	retVal, err := fn(goja.Null(), jv...)
+	retVal, err, code := r.invokeFunction(execMode, id, fn, jsArgs...)
+	if err != nil {
+		return nil, err, code
+	}
+
+	return retVal.Export(), nil, codes.OK
+}
+
+func (r *RuntimeJS) invokeFunction(execMode RuntimeExecutionMode, id string, fn goja.Callable, args ...goja.Value) (goja.Value, error, codes.Code) {
+	// First argument is null because the js fn is not executed in the context of an object.
+	retVal, err := fn(goja.Null(), args...)
 	if err != nil {
 		if exErr, ok := err.(*goja.Exception); ok {
-			println(exErr)
 			r.logger.Error("javascript runtime function raised an uncaught exception", zap.String("mode", execMode.String()), zap.String("id", id), zap.Error(err))
 			return nil, newJsExceptionError(JsErrorException, exErr.Error(), exErr.String()), codes.Internal
 		}
@@ -421,10 +429,10 @@ func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, id string, fn 
 
 func (rp *RuntimeProviderJS) Get(ctx context.Context) (*RuntimeJS, error) {
 	select {
-	case <- ctx.Done():
+	case <-ctx.Done():
 		// Context cancelled
 		return nil, ctx.Err()
-	case r := <- rp.poolCh:
+	case r := <-rp.poolCh:
 		return r, nil
 	default:
 		// If there was no idle runtime, see if we can allocate a new one.
@@ -447,7 +455,7 @@ func (rp *RuntimeProviderJS) Get(ctx context.Context) (*RuntimeJS, error) {
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
-	case r := <- rp.poolCh:
+	case r := <-rp.poolCh:
 		return r, nil
 	}
 }
@@ -476,6 +484,8 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		logger:               logger,
 		db:                   db,
 		eventFn:              eventFn,
+		matchCreateFn:        goMatchCreateFn,
+		matchRegistry:        matchRegistry,
 		jsonpbMarshaler:      jsonpbMarshaler,
 		jsonpbUnmarshaler:    jsonpbUnmarshaler,
 		socialClient:         socialClient,
@@ -495,8 +505,12 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	afterRtFunctions := make(map[string]RuntimeAfterRtFunction, 0)
 	beforeReqFunctions := &RuntimeBeforeReqFunctions{}
 	afterReqFunctions := &RuntimeAfterReqFunctions{}
+	var matchmakerMatchedFunction RuntimeMatchmakerMatchedFunction
+	var tournamentEndFunction RuntimeTournamentEndFunction
+	var tournamentResetFunction RuntimeTournamentResetFunction
+	var leaderboardResetFunction RuntimeLeaderboardResetFunction
 
-	callbacks, err := evalRuntimeModules(runtimeProviderJS, modCache, config, goMatchCreateFn, leaderboardScheduler, func(mode RuntimeExecutionMode, id string) {
+	callbacks, matchCallbacks, err := evalRuntimeModules(runtimeProviderJS, modCache, config, goMatchCreateFn, leaderboardScheduler, func(mode RuntimeExecutionMode, id string) {
 		switch mode {
 		case RuntimeExecutionModeRPC:
 			rpcFunctions[id] = func(ctx context.Context, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
@@ -1302,6 +1316,22 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 					}
 				}
 			}
+		case RuntimeExecutionModeMatchmaker:
+			matchmakerMatchedFunction = func(ctx context.Context, entries []*MatchmakerEntry) (string, bool, error) {
+				return runtimeProviderJS.MatchmakerMatched(ctx, entries)
+			}
+		case RuntimeExecutionModeTournamentEnd:
+			tournamentEndFunction = func(ctx context.Context, tournament *api.Tournament, end, reset int64) error {
+				return runtimeProviderJS.TournamentEnd(ctx, tournament, end, reset)
+			}
+		case RuntimeExecutionModeTournamentReset:
+			tournamentResetFunction = func(ctx context.Context, tournament *api.Tournament, end, reset int64) error {
+				return runtimeProviderJS.TournamentReset(ctx, tournament, end, reset)
+			}
+		case RuntimeExecutionModeLeaderboardReset:
+			leaderboardResetFunction = func(ctx context.Context, leaderboard runtime.Leaderboard, reset int64) error {
+				return runtimeProviderJS.LeaderboardReset(ctx, leaderboard, reset)
+			}
 		}
 	})
 	if err != nil {
@@ -1309,7 +1339,23 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
-	runtimeProviderJS.newFn = func () *RuntimeJS {
+	allMatchCreateFn := func(ctx context.Context, logger *zap.Logger, id uuid.UUID, node string, stopped *atomic.Bool, name string) (RuntimeMatchCore, error) {
+		core, err := goMatchCreateFn(ctx, logger, id, node, stopped, name)
+		if err != nil {
+			return nil, err
+		}
+		if core != nil {
+			return core, nil
+		}
+		mc := (*matchCallbacks)[name]
+		if mc == nil {
+			return nil, fmt.Errorf("match handlers for match: '%s' not found", name)
+		}
+
+		return NewRuntimeJavascriptMatchCore(logger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, streamManager, router, goMatchCreateFn, eventFn, id, node, stopped, mc)
+	}
+
+	runtimeProviderJS.newFn = func() *RuntimeJS {
 		runtime := goja.New()
 
 		jsLogger := NewJsLogger(logger)
@@ -1326,7 +1372,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
 		}
 
-		return &RuntimeJS {
+		return &RuntimeJS{
 			logger:       logger,
 			jsLoggerInst: jsLoggerInst,
 			nkInst:       nkInst,
@@ -1350,8 +1396,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	}
 	startupLogger.Info("Allocated minimum runtime pool")
 
-	// return modulePaths, rpcFunctions, beforeRtFunctions, afterRtFunctions, beforeReqFunctions, afterReqFunctions, matchmakerMatchedFunction, allMatchCreateFn, tournamentEndFunction, tournamentResetFunction, leaderboardResetFunction, nil
-	return modCache.Names, rpcFunctions, beforeRtFunctions, afterRtFunctions, beforeReqFunctions, afterReqFunctions, nil, nil, nil, nil, nil, nil
+	return modCache.Names, rpcFunctions, beforeRtFunctions, afterRtFunctions, beforeReqFunctions, afterReqFunctions, matchmakerMatchedFunction, allMatchCreateFn, tournamentEndFunction, tournamentResetFunction, leaderboardResetFunction, nil
 }
 
 func CheckRuntimeProviderJavascript(logger *zap.Logger, config Config, paths []string) error {
@@ -1360,13 +1405,13 @@ func CheckRuntimeProviderJavascript(logger *zap.Logger, config Config, paths []s
 		return err
 	}
 	// TODO: revise these params
-	_, err = evalRuntimeModules(nil, modCache, config, nil, nil, func(RuntimeExecutionMode, string){})
+	_, _, err = evalRuntimeModules(nil, modCache, config, nil, nil, func(RuntimeExecutionMode, string) {})
 	return err
 }
 
 func cacheJavascriptModules(logger *zap.Logger, rootPath string, paths []string) (*RuntimeJSModuleCache, error) {
 	moduleCache := &RuntimeJSModuleCache{
-		Names: make([]string, 0),
+		Names:   make([]string, 0),
 		Modules: make(map[string]*RuntimeJSModule),
 	}
 
@@ -1399,7 +1444,219 @@ func cacheJavascriptModules(logger *zap.Logger, rootPath string, paths []string)
 	return moduleCache, nil
 }
 
-func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, config Config, matchCreateFn RuntimeMatchCreateFunction, leaderboardScheduler LeaderboardScheduler, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, error) {
+func (rp *RuntimeProviderJS) MatchmakerMatched(ctx context.Context, entries []*MatchmakerEntry) (string, bool, error) {
+	r, err := rp.Get(ctx)
+	if err != nil {
+		return "", false, err
+	}
+	lf := r.GetCallback(RuntimeExecutionModeMatchmaker, "")
+	if lf == nil {
+		rp.Put(r)
+		return "", false, errors.New("Runtime Matchmaker Matched function not found.")
+	}
+	jsCtx := NewRuntimeJsContext(r.vm, r.node, r.env, RuntimeExecutionModeMatchmaker, nil, 0, "", "", nil, "", "", "")
+
+	entriesSlice := make([]interface{}, 0, len(entries))
+	for _, e := range entries {
+		presenceObj := r.vm.NewObject()
+		presenceObj.Set("user_id", e.Presence.UserId)
+		presenceObj.Set("session_id", e.Presence.SessionId)
+		presenceObj.Set("username", e.Presence.Username)
+		presenceObj.Set("node", e.Presence.Node)
+
+		propertiesObj := r.vm.NewObject()
+		for k, v := range e.StringProperties {
+			propertiesObj.Set(k, v)
+		}
+		for k, v := range e.NumericProperties {
+			propertiesObj.Set(k, v)
+		}
+
+		entry := r.vm.NewObject()
+		entry.Set("presence", presenceObj)
+		entry.Set("properties", propertiesObj)
+
+		entriesSlice = append(entriesSlice, entry)
+	}
+
+	retValue, err, _ := r.invokeFunction(RuntimeExecutionModeMatchmaker, "matchmakerMatched", lf, jsCtx, r.vm.ToValue(entriesSlice))
+
+	if retValue == nil || goja.IsUndefined(retValue) || goja.IsNull(retValue) {
+		// No return value or hook decided not to return an authoritative match ID.
+		return "", false, nil
+	}
+
+	retString, ok := retValue.Export().(string)
+	if ok {
+		matchIDComponents := strings.SplitN(retString, ".", 2)
+		if len(matchIDComponents) != 2 {
+			return "", false, errors.New("Invalid return value from runtime Matchmaker Matched hook, not a valid match ID.")
+		}
+		_, err = uuid.FromString(matchIDComponents[0])
+		if err != nil {
+			return "", false, errors.New("Invalid return value from runtime Matchmaker Matched hook, not a valid match ID.")
+		}
+
+		return retString, true, nil
+	}
+
+	return "", false, errors.New("Unexpected return type from runtime Matchmaker Matched hook, must be string, null or undefined.")
+}
+
+func (rp *RuntimeProviderJS) TournamentEnd(ctx context.Context, tournament *api.Tournament, end, reset int64) error {
+	r, err := rp.Get(ctx)
+	if err != nil {
+		return err
+	}
+	lf := r.GetCallback(RuntimeExecutionModeTournamentEnd, "")
+	if lf == nil {
+		rp.Put(r)
+		return errors.New("Runtime Tournament End function not found.")
+	}
+	jsCtx := NewRuntimeJsContext(r.vm, r.node, r.env, RuntimeExecutionModeTournamentEnd, nil, 0, "", "", nil, "", "", "")
+
+	tournamentObj := r.vm.NewObject()
+	tournamentObj.Set("id", tournament.Id)
+	tournamentObj.Set("id", tournament.Id)
+	tournamentObj.Set("title", tournament.Title)
+	tournamentObj.Set("description", tournament.Description)
+	tournamentObj.Set("category", tournament.Category)
+	if tournament.SortOrder == LeaderboardSortOrderAscending {
+		tournamentObj.Set("sort_order", "asc")
+	} else {
+		tournamentObj.Set("sort_order", "desc")
+	}
+	tournamentObj.Set("size", tournament.Size)
+	tournamentObj.Set("max_size", tournament.MaxSize)
+	tournamentObj.Set("max_num_score", tournament.MaxNumScore)
+	tournamentObj.Set("duration", tournament.Duration)
+	tournamentObj.Set("start_active", tournament.StartActive)
+	tournamentObj.Set("end_active", tournament.EndActive)
+	tournamentObj.Set("can_enter", tournament.CanEnter)
+	tournamentObj.Set("next_reset", tournament.NextReset)
+	metadataMap := make(map[string]interface{})
+	err = json.Unmarshal([]byte(tournament.Metadata), &metadataMap)
+	if err != nil {
+		rp.Put(r)
+		return fmt.Errorf("failed to convert metadata to json: %s", err.Error())
+	}
+	tournamentObj.Set("metadata", metadataMap)
+	tournamentObj.Set("create_time", tournament.CreateTime.Seconds)
+	tournamentObj.Set("start_time", tournament.StartTime.Seconds)
+	if tournament.EndTime == nil {
+		tournamentObj.Set("end_time", goja.Null())
+	} else {
+		tournamentObj.Set("end_time", tournament.EndTime.Seconds)
+	}
+
+	retValue, err, _ := r.invokeFunction(RuntimeExecutionModeTournamentEnd, "tournamentEnd", lf, jsCtx, tournamentObj, r.vm.ToValue(end), r.vm.ToValue(reset))
+	rp.Put(r)
+	if err != nil {
+		return fmt.Errorf("Error running runtime Tournament End hook: %v", err.Error())
+	}
+
+	if retValue == nil || goja.IsUndefined(retValue) || goja.IsNull(retValue) {
+		return nil
+	}
+
+	return errors.New("Unexpected return type from runtime Tournament End hook, must be null or undefined.")
+}
+
+func (rp *RuntimeProviderJS) TournamentReset(ctx context.Context, tournament *api.Tournament, end, reset int64) error {
+	r, err := rp.Get(ctx)
+	if err != nil {
+		return err
+	}
+	lf := r.GetCallback(RuntimeExecutionModeTournamentReset, "")
+	if lf == nil {
+		rp.Put(r)
+		return errors.New("Runtime Tournament Reset function not found.")
+	}
+	jsCtx := NewRuntimeJsContext(r.vm, r.node, r.env, RuntimeExecutionModeTournamentReset, nil, 0, "", "", nil, "", "", "")
+
+	tournamentObj := r.vm.NewObject()
+	tournamentObj.Set("id", tournament.Id)
+	tournamentObj.Set("id", tournament.Id)
+	tournamentObj.Set("title", tournament.Title)
+	tournamentObj.Set("description", tournament.Description)
+	tournamentObj.Set("category", tournament.Category)
+	if tournament.SortOrder == LeaderboardSortOrderAscending {
+		tournamentObj.Set("sort_order", "asc")
+	} else {
+		tournamentObj.Set("sort_order", "desc")
+	}
+	tournamentObj.Set("size", tournament.Size)
+	tournamentObj.Set("max_size", tournament.MaxSize)
+	tournamentObj.Set("max_num_score", tournament.MaxNumScore)
+	tournamentObj.Set("duration", tournament.Duration)
+	tournamentObj.Set("start_active", tournament.StartActive)
+	tournamentObj.Set("end_active", tournament.EndActive)
+	tournamentObj.Set("can_enter", tournament.CanEnter)
+	tournamentObj.Set("next_reset", tournament.NextReset)
+	metadataMap := make(map[string]interface{})
+	err = json.Unmarshal([]byte(tournament.Metadata), &metadataMap)
+	if err != nil {
+		rp.Put(r)
+		return fmt.Errorf("failed to convert metadata to json: %s", err.Error())
+	}
+	tournamentObj.Set("metadata", metadataMap)
+	tournamentObj.Set("create_time", tournament.CreateTime.Seconds)
+	tournamentObj.Set("start_time", tournament.StartTime.Seconds)
+	if tournament.EndTime == nil {
+		tournamentObj.Set("end_time", goja.Null())
+	} else {
+		tournamentObj.Set("end_time", tournament.EndTime.Seconds)
+	}
+
+	retValue, err, _ := r.invokeFunction(RuntimeExecutionModeTournamentEnd, "tournamentReset", lf, jsCtx, tournamentObj, r.vm.ToValue(end), r.vm.ToValue(reset))
+
+	rp.Put(r)
+	if err != nil {
+		return fmt.Errorf("Error running runtime Tournament Reset hook: %v", err.Error())
+	}
+
+	if retValue == nil || goja.IsUndefined(retValue) || goja.IsNull(retValue) {
+		return nil
+	}
+
+	return errors.New("Unexpected return type from runtime Tournament Reset hook, must be null or undefined.")
+}
+
+func (rp *RuntimeProviderJS) LeaderboardReset(ctx context.Context, leaderboard runtime.Leaderboard, reset int64) error {
+	r, err := rp.Get(ctx)
+	if err != nil {
+		return err
+	}
+	lf := r.GetCallback(RuntimeExecutionModeLeaderboardReset, "")
+	if lf == nil {
+		rp.Put(r)
+		return errors.New("Runtime Leaderboard Reset function not found.")
+	}
+	jsCtx := NewRuntimeJsContext(r.vm, r.node, r.env, RuntimeExecutionModeLeaderboardReset, nil, 0, "", "", nil, "", "", "")
+
+	leaderboardObj := r.vm.NewObject()
+	leaderboardObj.Set("id", leaderboard.GetId())
+	leaderboardObj.Set("authoritative", leaderboard.GetAuthoritative())
+	leaderboardObj.Set("sort_order", leaderboard.GetSortOrder())
+	leaderboardObj.Set("operator", leaderboard.GetOperator())
+	leaderboardObj.Set("reset", leaderboard.GetReset())
+	leaderboardObj.Set("metadata", leaderboard.GetMetadata())
+	leaderboardObj.Set("create_time", leaderboard.GetCreateTime())
+
+	retValue, err, _ := r.invokeFunction(RuntimeExecutionModeLeaderboardReset, "leaderboardReset", lf, jsCtx, leaderboardObj, r.vm.ToValue(reset))
+	rp.Put(r)
+	if err != nil {
+		return fmt.Errorf("Error running runtime Leaderboard Reset hook: %v", err.Error())
+	}
+
+	if retValue == nil || goja.IsUndefined(retValue) || goja.IsNull(retValue) {
+		return nil
+	}
+
+	return errors.New("Unexpected return type from runtime Leaderboard Reset hook, must be nil.")
+}
+
+func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, config Config, matchCreateFn RuntimeMatchCreateFunction, leaderboardScheduler LeaderboardScheduler, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, *RuntimeJavascriptMatchCallbacks, error) {
 	r := goja.New()
 	logger := rp.logger
 
@@ -1407,45 +1664,45 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, c
 	initializerValue := r.ToValue(initializer.Constructor(r))
 	initializerInst, err := r.New(initializerValue)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	jsLogger := NewJsLogger(logger)
 	jsLoggerValue := r.ToValue(jsLogger.Constructor(r))
 	jsLoggerInst, err := r.New(jsLoggerValue)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	nakamaModule := NewRuntimeJavascriptNakamaModule(rp.logger, rp.db, rp.jsonpbMarshaler, rp.jsonpbUnmarshaler, rp.config, rp.socialClient, rp.leaderboardCache, rp.leaderboardRankCache, leaderboardScheduler, rp.sessionRegistry, rp.matchRegistry, rp.tracker, rp.streamManager, rp.router, rp.eventFn, matchCreateFn)
 	nk := r.ToValue(nakamaModule.Constructor(r))
 	nkInst, err := r.New(nk)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	for _, modName := range modCache.Names {
 		_, err = r.RunProgram(modCache.Modules[modName].Program)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		initMod := r.Get(INIT_MODULE_FN_NAME)
 		initModFn, ok := goja.AssertFunction(initMod)
 		if !ok {
 			logger.Error("InitModule function not found in module.", zap.String("module", modName))
-			return nil, errors.New(INIT_MODULE_FN_NAME + " function not found.")
+			return nil, nil, errors.New(INIT_MODULE_FN_NAME + " function not found.")
 		}
 
 		ctx := NewRuntimeJsInitContext(r, config.GetName(), config.GetRuntime().Environment)
 		_, err = initModFn(goja.Null(), ctx, jsLoggerInst, nkInst, initializerInst)
 		if err != nil {
 			if exErr, ok := err.(*goja.Exception); ok {
-				return nil, errors.New(exErr.String())
+				return nil, nil, errors.New(exErr.String())
 			}
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
-	return initializer.Callbacks, nil
+	return initializer.Callbacks, initializer.MatchCallbacks, nil
 }

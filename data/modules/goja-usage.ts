@@ -37,7 +37,7 @@ interface BeforeHookFunction {
 }
 
 /**
- * A Aftter Hook function definition.
+ * A After Hook function definition.
  */
 interface AfterHookFunction {
     /**
@@ -48,6 +48,146 @@ interface AfterHookFunction {
      * @param payload - The input data to the function call. This is usually an escaped JSON object.
      */
     (ctx: Context, logger: Logger, nk: Nakama, payload: string);
+}
+
+/**
+ * Dispatcher API definition.
+ */
+interface Dispatcher {
+    // TODO: Define dispatcher functions
+}
+
+/**
+ * Match Message definition
+ */
+interface MatchMessage {
+    user_id: string;
+    session_id: string;
+    node_id: string;
+    hidden: boolean;
+    persistence: boolean;
+    username: string;
+    status: string;
+    opcode: number;
+    data: string;
+    reliable: boolean;
+    receive_time: number;
+}
+
+/**
+ * Match handler definitions
+ */
+interface MatchHandler {
+    match_init: MatchInitFunction;
+    match_join_attempt: MatchJoinAttemptFunction;
+    match_join: MatchJoinFunction;
+    match_leave: MatchLeaveFunction;
+    match_loop: MatchLoopFunction;
+    match_terminate: MatchTerminateFunction;
+}
+
+/**
+ * Match initialization function definition.
+ */
+interface MatchInitFunction {
+    /**
+     * Match initialization function definition.
+     * @param ctx - The context for the execution.
+     * @param logger - The server logger.
+     * @param nk - The Nakama server APIs.
+     * @param params - Match create http request parameters.
+     * @returns An object with the match state, tick rate and labels.
+     */
+    (ctx: Context, logger: Logger, nk: Nakama, params: Object): {state: Object, tick_rate: number, label: string};
+}
+
+/**
+ * Match join attempt function definition.
+ */
+interface MatchJoinAttemptFunction {
+    /**
+     * User match join attempt function definition.
+     * @param ctx - The context for the execution.
+     * @param logger - The server logger.
+     * @param nk - The Nakama server APIs.
+     * @param dispatcher - Message dispatcher APIs.
+     * @param tick - Current match loop tick.
+     * @param state - Current match state.
+     * @param presence - Presence of user attempting to join.
+     * @param metadata - Metadata object.
+     * @returns object with state, acceptUser and optional rejection message if acceptUser is false.
+     */
+    (ctx: Context, logger: Logger, nk: Nakama, dispatcher: Dispatcher, tick: number, state: Object, presence: Presence, metadata: Object): {state: Object, accept: boolean, reject_msg: string};
+}
+
+/**
+ * Match join function definition.
+ */
+interface MatchJoinFunction {
+    /**
+     * User match join function definition.
+     * @param ctx - The context for the execution.
+     * @param logger - The server logger.
+     * @param nk - The Nakama server APIs.
+     * @param dispatcher - Message dispatcher APIs.
+     * @param tick - Current match loop tick.
+     * @param state - Current match state.
+     * @param presences - List of presences.
+     * @returns object with the new state of the match.
+     */
+    (ctx: Context, logger: Logger, dispatcher: Dispatcher, nk: Nakama, tick: number, state: Object, presences: Presence[]): {state: Object};
+}
+
+/**
+ * Match leave function definition.
+ */
+interface MatchLeaveFunction {
+    /**
+     * User match leave function definition.
+     * @param ctx - The context for the execution.
+     * @param logger - The server logger.
+     * @param nk - The Nakama server APIs.
+     * @param dispatcher - Message dispatcher APIs.
+     * @param tick - Current match loop tick.
+     * @param state - Current match state.
+     * @param presences - List of presences.
+     * @returns object with the new state of the match.
+     */
+    (ctx: Context, logger: Logger, dispatcher: Dispatcher, nk: Nakama, tick: number, state: Object, presences: Presence[]): {state: Object};
+}
+
+/**
+ * Match loop function definition.
+ */
+interface MatchLoopFunction {
+    /**
+     * User match leave function definition.
+     * @param ctx - The context for the execution.
+     * @param logger - The server logger.
+     * @param nk - The Nakama server APIs.
+     * @param dispatcher - Message dispatcher APIs.
+     * @param tick - Current match loop tick.
+     * @param state - Current match state.
+     * @param messages - Received messages in the buffer.
+     */
+    (ctx: Context, logger: Logger, dispatcher: Dispatcher, nk: Nakama, tick: number, state: Object, messages: MatchMessage[]): {state: Object};
+}
+
+/**
+ * Match terminate function definition.
+ */
+interface MatchTerminateFunction {
+    /**
+     * User match leave function definition.
+     * @param ctx - The context for the execution.
+     * @param logger - The server logger.
+     * @param nk - The Nakama server APIs.
+     * @param dispatcher - Message dispatcher APIs.
+     * @param tick - Current match loop tick.
+     * @param state - Current match state.
+     * @param graceSeconds - Number of seconds to gracefully terminate the match. If this time elapses before the function returns the match will be forcefully terminated.
+     */
+    (ctx: Context, logger: Logger, dispatcher: Dispatcher, nk: Nakama, tick: number, state: Object, graceSeconds: number): {state: Object};
 }
 
 /**
@@ -62,6 +202,7 @@ interface Initializer {
      * @returns An error or null if no error occured.
      */
     registerRpc(id: string, func: RpcFunction);
+
     /**
      * Register a hook function to be run before an RPC function is invoked.
      * The RPC call is identified by the id param..
@@ -70,6 +211,7 @@ interface Initializer {
      * @param func - The Hook function logic to execute before the RPC is called.
      */
     registerReqBefore(id: string, func: BeforeHookFunction): string;
+
     /**
      * Register a hook function to be run after an RPC function is invoked.
      * The RPC call is identified by the id param..
@@ -79,6 +221,7 @@ interface Initializer {
      * @returns An error or null if no error occured.
      */
     registerReqAfter(id: string, func: AfterHookFunction);
+
     /**
      * Register a hook function to be run before an RPC function is invoked.
      * The RPC call is identified by the id param..
@@ -87,6 +230,7 @@ interface Initializer {
      * @param func - The Hook function logic to execute before the RPC is called.
      */
     registerRtBefore(id: string, func: BeforeHookFunction): string;
+
     /**
      * Register a hook function to be run after an RPC function is invoked.
      * The RPC call is identified by the id param..
@@ -96,8 +240,6 @@ interface Initializer {
      * @returns An error or null if no error occured.
      */
     registerRtAfter(id: string, func: AfterHookFunction);
-
-    // TODO
 }
 
 /**
@@ -112,6 +254,7 @@ interface Logger {
      * @returns The formatted string logged to the server.
      */
     debug(format: string, ...args: any[]): string;
+
     /**
      * Log a messsage with optional formatted arguments at WARN level.
      *
@@ -120,6 +263,7 @@ interface Logger {
      * @returns The formatted string logged to the server.
      */
     warn(format: string, ...args: any[]): string;
+
      /**
      * Log a messsage with optional formatted arguments at ERROR level.
      *
@@ -128,6 +272,7 @@ interface Logger {
      * @returns The formatted string logged to the server.
      */
     error(format: string, ...args: any[]): string;
+
     /**
      * A logger with the key/value pair added as the fields logged alongside the message.
      *
@@ -136,6 +281,7 @@ interface Logger {
      * @returns The modified logger with the new structured fields.
      */
     withField(key: string, value: string): Logger;
+
     /**
      * A new logger with the key/value pairs added as fields logged alongside the message.
      *
@@ -143,6 +289,7 @@ interface Logger {
      * @returns The modified logger with the new structured fields.
      */
     withFields(pairs: {[key: string]: string}): Logger;
+
     /**
      * The fields associated with this logger.
      *
@@ -1459,6 +1606,14 @@ interface Nakama {
      * @returns A list of group members.
      */
     groupUsersList(userID: string, limit?: number, state?: number, cursor?: string): {group_users: [{user: User, state: number}, cursor: string | null]}
+
+    /**
+     * Register a match handler.
+     *
+     * @param name - Identifier of the match handler.
+     * @param functions - Object containing the match handler functions.
+     */
+    registerMatch(name: string, functions: MatchHandler);
 }
 
 /**
