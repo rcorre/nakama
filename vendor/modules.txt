@@ -57,10 +57,10 @@ github.com/couchbase/vellum/utf8
 github.com/davecgh/go-spew/spew
 # github.com/dgrijalva/jwt-go v3.2.1-0.20200107013213-dc14462fd587+incompatible
 github.com/dgrijalva/jwt-go
-# github.com/dlclark/regexp2 v1.2.1
+# github.com/dlclark/regexp2 v1.4.0
 github.com/dlclark/regexp2
 github.com/dlclark/regexp2/syntax
-# github.com/dop251/goja v0.0.0-20200929101608-beb0a9a01fbc
+# github.com/dop251/goja v0.0.0-20201008094107-f97e50db25ec
 github.com/dop251/goja
 github.com/dop251/goja/ast
 github.com/dop251/goja/file

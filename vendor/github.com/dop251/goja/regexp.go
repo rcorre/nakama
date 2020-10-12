@@ -30,8 +30,8 @@ type positionMapItem struct {
 type positionMap []positionMapItem
 
 func (m positionMap) get(src int) int {
-	if src == 0 {
-		return 0
+	if src <= 0 {
+		return src
 	}
 	res := sort.Search(len(m), func(n int) bool { return m[n].src >= src })
 	if res >= len(m) || m[res].src != src {
@@ -467,7 +467,9 @@ func (r *regexpWrapper) findSubmatchIndexUnicode(s unicodeString, fullUnicode bo
 		posMap, runes, _, _ := buildPosMap(&lenientUtf16Decoder{utf16Reader: s.utf16Reader(0)}, s.length(), 0)
 		res := wrapped.FindReaderSubmatchIndex(&arrayRuneReader{runes: runes})
 		for i, item := range res {
-			res[i] = posMap[item]
+			if item >= 0 {
+				res[i] = posMap[item]
+			}
 		}
 		return res
 	}

@@ -111,12 +111,18 @@ func NewRuntimeJavascriptMatchCore(logger *zap.Logger, db *sql.DB, jsonpbMarshal
 		// ctxCancelFn: ctxCancelFn,
 	}
 
-	dispatcher := runtime.ToValue(map[string]func(goja.FunctionCall) goja.Value{
-		"broadcastMessage":         core.broadcastMessage(runtime),
-		"broadcastMessageDeferred": core.broadcastMessageDeferred(runtime),
-		"matchKick":                core.matchKick(runtime),
-		"matchLabelUpdate":         core.matchLabelUpdate(runtime),
-	})
+	dispatcher := runtime.ToValue(
+		func(call goja.ConstructorCall) *goja.Object {
+			call.This.Set("broadcastMessage", core.broadcastMessage(runtime))
+			call.This.Set("broadcastMessageDeferred", core.broadcastMessageDeferred(runtime))
+			call.This.Set("matchKick", core.matchKick(runtime))
+			call.This.Set("matchLabelUpdate", core.matchLabelUpdate(runtime))
+
+			freeze(call.This)
+
+			return nil
+		},
+	)
 
 	dispatcherInst, err := runtime.New(dispatcher)
 	if err != nil {
@@ -143,7 +149,7 @@ func (rm *RuntimeJavascriptMatchCore) MatchInit(presenceList *MatchPresenceList,
 	if !ok {
 		return nil, 0, errors.New("match_init return value has no 'tick_rate' property")
 	}
-	rate, ok := tickRateRet.(int)
+	rate, ok := tickRateRet.(int64)
 	if !ok {
 		return nil, 0, errors.New("match_init 'tick_rate' must be a number between 1 and 30")
 	}
@@ -171,7 +177,7 @@ func (rm *RuntimeJavascriptMatchCore) MatchInit(presenceList *MatchPresenceList,
 	rm.deferMessageFn = deferMessageFn
 	rm.presenceList = presenceList
 
-	return state, rate, nil
+	return state, int(rate), nil
 }
 
 func (rm *RuntimeJavascriptMatchCore) MatchJoinAttempt(tick int64, state interface{}, userID, sessionID uuid.UUID, username string, sessionExpiry int64, vars map[string]string, clientIP, clientPort, node string, metadata map[string]string) (interface{}, bool, string, error) {

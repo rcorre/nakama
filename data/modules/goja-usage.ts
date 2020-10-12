@@ -54,7 +54,41 @@ interface AfterHookFunction {
  * Dispatcher API definition.
  */
 interface Dispatcher {
-    // TODO: Define dispatcher functions
+    /**
+     * Broadcast a message to match presences.
+     *
+     * @param opcode - Numeric message op code.
+     * @param data - Opt. Data payload string, or nil.
+     * @param presences - Opt. List of presences (a subset of match participants) to use as message targets, or nil to send to the whole match. Defaults to nil
+     * @param sender - Opt. A presence to tag on the message as the 'sender', or nil.
+     * @param reliable - Opt. Broadcast the message with delivery guarantees or not. Defaults to true.
+     */
+    broadcastMessage(opcode: number, data?: string, presences?: Presence[], sender?: Presence, reliable?: boolean);
+
+    /**
+     * Defer message broadcast to match presences.
+     *
+     * @param opcode - Numeric message op code.
+     * @param data - Opt. Data payload string, or nil.
+     * @param presences - Opt. List of presences (a subset of match participants) to use as message targets, or nil to send to the whole match. Defaults to nil
+     * @param sender - Opt. A presence to tag on the message as the 'sender', or nil.
+     * @param reliable - Opt. Broadcast the message with delivery guarantees or not. Defaults to true.
+     */
+    broadcastMessageDeferred(opcode: number, data?: string, presences?: Presence[], sender?: Presence, reliable?: boolean);
+
+    /**
+     * Kick presences from match.
+     *
+     * @param presences - List of presences to kick from the match.
+     */
+    matchKick(presences: Presence[]);
+
+    /**
+     * Update match label.
+     *
+     * @param label - New label for the match.
+     */
+    matchKick(label: string);
 }
 
 /**
