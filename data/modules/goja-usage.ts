@@ -1306,7 +1306,7 @@ interface Nakama {
      *
      * @param limit - Opt. Max number of matches to return. Defaults to 1.
      * @param authoritative - Filter authoritative or non-authoritative matches. If NULL or no value is provided, both authoritative and non-authoritative match.
-     * @param label - Filter by a label. If NULL or no value is provided, all labels are matched.
+     * @param label - Filter by a label. If null or no value is provided, all labels are matched.
      * @param minSize - Filter by min number of players in a match. If NULL or no value is provided, there is no lower player bound.
      * @param MaxSize - Filter by max number of players in a match. If NULL or no value is provided, there is no upper player bound.
      * @param query - Query by match properties (https://heroiclabs.com/docs/gameplay-matchmaker/#query). If no value is provided, all properties match.

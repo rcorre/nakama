@@ -325,7 +325,7 @@ func (rm *RuntimeJavascriptMatchCore) MatchLoop(tick int64, state interface{}, i
 		msgObj.Set("sender", presenceObj)
 		msgObj.Set("op_code", msg.OpCode)
 		if msg.Data != nil {
-			msgObj.Set("data", msg.Data)
+			msgObj.Set("data", string(msg.Data))
 		} else {
 			msgObj.Set("data", goja.Null())
 		}

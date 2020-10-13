@@ -2629,7 +2629,7 @@ func (n *runtimeJavascriptNakamaModule) matchList(r *goja.Runtime) func(goja.Fun
 			panic(r.ToValue(fmt.Sprintf("failed to list matches: %s", err.Error())))
 		}
 
-		matches := make([]map[string]interface{}, 0, len(results))
+		matches := make([]interface{}, 0, len(results))
 		for _, match := range results {
 			matchData := map[string]interface{}{
 				"match_id":      match.MatchId,
