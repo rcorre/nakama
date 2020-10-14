@@ -1069,7 +1069,7 @@ func NewRuntimeProviderLua(logger, startupLogger *zap.Logger, db *sql.DB, jsonpb
 		for i := 0; i < config.GetRuntime().MinCount; i++ {
 			runtimeProviderLua.poolCh <- runtimeProviderLua.newFn()
 		}
-		runtimeProviderLua.metrics.GaugeRuntimes(float64(config.GetRuntime().MinCount))
+		runtimeProviderLua.metrics.GaugeRuntimes("lua_runtimes", float64(config.GetRuntime().MinCount))
 	}
 	startupLogger.Info("Allocated minimum runtime pool")
 
@@ -1723,7 +1723,7 @@ func (rp *RuntimeProviderLua) Get(ctx context.Context) (*RuntimeLua, error) {
 			// This discrepancy is allowed as it avoids a full mutex locking scenario.
 			break
 		}
-		rp.metrics.GaugeRuntimes(float64(currentCount))
+		rp.metrics.GaugeRuntimes("lua_runtimes", float64(currentCount))
 		return rp.newFn(), nil
 	}
 

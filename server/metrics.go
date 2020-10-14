@@ -17,11 +17,12 @@ package server
 import (
 	"context"
 	"fmt"
-	"go.uber.org/atomic"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+
+	"go.uber.org/atomic"
 
 	"github.com/gorilla/handlers"
 	"github.com/uber-go/tally"

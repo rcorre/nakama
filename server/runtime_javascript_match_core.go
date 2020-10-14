@@ -171,6 +171,11 @@ func (rm *RuntimeJavascriptMatchCore) MatchInit(presenceList *MatchPresenceList,
 		return nil, 0, errors.New("match_init is expected to return an object with a 'state' property")
 	}
 
+	if err := rm.matchRegistry.UpdateMatchLabel(rm.id, label); err != nil {
+		return nil, 0, err
+	}
+	rm.label.Store(label)
+
 	rm.ctx.Set(__RUNTIME_JAVASCRIPT_CTX_MATCH_LABEL, label)
 	rm.ctx.Set(__RUNTIME_JAVASCRIPT_CTX_MATCH_TICK_RATE, rate)
 

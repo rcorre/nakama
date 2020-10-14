@@ -151,6 +151,7 @@ type RuntimeProviderJS struct {
 	maxCount             uint32
 	currentCount         *atomic.Uint32
 	newFn                func() *RuntimeJS
+	metrics              *Metrics
 }
 
 func (rp *RuntimeProviderJS) Rpc(ctx context.Context, id string, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
@@ -447,6 +448,7 @@ func (rp *RuntimeProviderJS) Get(ctx context.Context) (*RuntimeJS, error) {
 			// This discrepancy is allowed as it avoids a full mutex locking scenario.
 			break
 		}
+		rp.metrics.GaugeRuntimes("javascript_runtimes", float64(currentCount))
 		return rp.newFn(), nil
 	}
 
@@ -495,6 +497,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		tracker:              tracker,
 		streamManager:        streamManager,
 		router:               router,
+		metrics:              metrics,
 		poolCh:               make(chan *RuntimeJS, config.GetRuntime().MaxCount),
 		maxCount:             uint32(config.GetRuntime().MaxCount),
 		currentCount:         atomic.NewUint32(uint32(config.GetRuntime().MinCount)),
@@ -1386,15 +1389,15 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	startupLogger.Info("Javascript runtime modules loaded")
 
 	// Warm up the pool.
-	startupLogger.Info("Allocating minimum runtime pool", zap.Int("count", config.GetRuntime().MinCount))
+	startupLogger.Info("Allocating minimum javascript runtime pool", zap.Int("count", config.GetRuntime().MinCount))
 	if len(modCache.Names) > 0 {
 		// Only if there are runtime modules to load.
 		for i := 0; i < config.GetRuntime().MinCount; i++ {
 			runtimeProviderJS.poolCh <- runtimeProviderJS.newFn()
 		}
-		// TODO Gauge metrics
+		runtimeProviderJS.metrics.GaugeRuntimes("javascript_runtimes", float64(config.GetRuntime().MinCount))
 	}
-	startupLogger.Info("Allocated minimum runtime pool")
+	startupLogger.Info("Allocated minimum javascript runtime pool")
 
 	return modCache.Names, rpcFunctions, beforeRtFunctions, afterRtFunctions, beforeReqFunctions, afterReqFunctions, matchmakerMatchedFunction, allMatchCreateFn, tournamentEndFunction, tournamentResetFunction, leaderboardResetFunction, nil
 }

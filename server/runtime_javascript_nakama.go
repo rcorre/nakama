@@ -254,7 +254,6 @@ func (n *runtimeJavascriptNakamaModule) sqlExec(r *goja.Runtime) func(goja.Funct
 			}
 		}
 
-		// TODO figure out how to pass in context
 		var res sql.Result
 		var err error
 		err = ExecuteRetryable(func() error {
