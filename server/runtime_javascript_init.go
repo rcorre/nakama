@@ -7,6 +7,7 @@ import (
 )
 
 const INIT_MODULE_FN_NAME = "InitModule"
+const JS_MODULE_NAME = "NKRuntime"
 
 type RuntimeJavascriptMatchCallbacks map[string]*jsMatchHandlers
 
@@ -58,8 +59,8 @@ func (im *RuntimeJavascriptInitModule) mappings(r *goja.Runtime) map[string]func
 		"registerRpc":               im.registerRpc(r),
 		"registerReqBefore":         im.registerReqBefore(r),
 		"registerReqAfter":          im.registerReqAfter(r),
-		"registerRTBefore":          im.registerRTBefore(r),
-		"registerRTAfter":           im.registerRTAfter(r),
+		"registerRtBefore":          im.registerRtBefore(r),
+		"registerRtAfter":           im.registerRtAfter(r),
 		"registerMatchmakerMatched": im.registerMatchmakerMatched(r),
 		"registerTournamentEnd":     im.registerTournamentEnd(r),
 		"registerTournamentReset":   im.registerTournamentReset(r),
@@ -159,7 +160,7 @@ func (im *RuntimeJavascriptInitModule) registerReqAfter(r *goja.Runtime) func(go
 	}
 }
 
-func (im *RuntimeJavascriptInitModule) registerRTBefore(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+func (im *RuntimeJavascriptInitModule) registerRtBefore(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		fName := f.Argument(0)
 		if goja.IsNull(fName) || goja.IsUndefined(fName) {
@@ -186,7 +187,7 @@ func (im *RuntimeJavascriptInitModule) registerRTBefore(r *goja.Runtime) func(go
 	}
 }
 
-func (im *RuntimeJavascriptInitModule) registerRTAfter(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+func (im *RuntimeJavascriptInitModule) registerRtAfter(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		fName := f.Argument(0)
 		if goja.IsNull(fName) || goja.IsUndefined(fName) {

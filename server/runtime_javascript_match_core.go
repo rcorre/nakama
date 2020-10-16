@@ -79,6 +79,7 @@ func NewRuntimeJavascriptMatchCore(logger *zap.Logger, db *sql.DB, jsonpbMarshal
 	ctx.Set(__RUNTIME_JAVASCRIPT_CTX_MATCH_ID, fmt.Sprintf("%v.%v", id.String(), node))
 	ctx.Set(__RUNTIME_JAVASCRIPT_CTX_MATCH_NODE, node)
 
+	// TODO: goja runtime does not currently support passing a context to the vm
 	// goCtx, ctxCancelFn := context.WithCancel(context.Background())
 	// vm.SetContext(goCtx)
 

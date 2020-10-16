@@ -1706,8 +1706,19 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, c
 			return nil, nil, err
 		}
 
-		initMod := r.Get(INIT_MODULE_FN_NAME)
-		initModFn, ok := goja.AssertFunction(initMod)
+		runtimeModule := r.Get(JS_MODULE_NAME)
+		if runtimeModule == nil {
+			logger.Error(JS_MODULE_NAME + " module not found.", zap.String("module", modName))
+			return nil, nil, errors.New(JS_MODULE_NAME + " module not found.")
+		}
+
+		moduleMap, ok := runtimeModule.Export().(map[string]interface{})
+		if !ok {
+			return nil, nil, errors.New(JS_MODULE_NAME + " module is not a valid object.")
+		}
+
+		jsModule, _ := moduleMap[INIT_MODULE_FN_NAME]
+		initModFn, ok := goja.AssertFunction(r.ToValue(jsModule))
 		if !ok {
 			logger.Error("InitModule function not found in module.", zap.String("module", modName))
 			return nil, nil, errors.New(INIT_MODULE_FN_NAME + " function not found.")
