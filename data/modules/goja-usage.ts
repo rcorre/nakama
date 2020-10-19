@@ -48,7 +48,7 @@ module NKRuntime {
          * @param nk - The Nakama server APIs.
          * @param payload - The input data to the function call. This is usually an escaped JSON object.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, payload: string): undefined;
+        (ctx: Context, logger: Logger, nk: Nakama, payload: string): void;
     }
 
     /**
@@ -64,7 +64,7 @@ module NKRuntime {
          * @param sender - Opt. A presence to tag on the message as the 'sender', or nil.
          * @param reliable - Opt. Broadcast the message with delivery guarantees or not. Defaults to true.
          */
-        broadcastMessage(opcode: number, data?: string, presences?: Presence[] | null, sender?: Presence | null, reliable?: boolean): undefined;
+        broadcastMessage(opcode: number, data?: string, presences?: Presence[] | null, sender?: Presence | null, reliable?: boolean): void;
 
         /**
          * Defer message broadcast to match presences.
@@ -75,21 +75,21 @@ module NKRuntime {
          * @param sender - Opt. A presence to tag on the message as the 'sender', or nil.
          * @param reliable - Opt. Broadcast the message with delivery guarantees or not. Defaults to true.
          */
-        broadcastMessageDeferred(opcode: number, data?: string, presences?: Presence[], sender?: Presence, reliable?: boolean): undefined;
+        broadcastMessageDeferred(opcode: number, data?: string, presences?: Presence[], sender?: Presence, reliable?: boolean): void;
 
         /**
          * Kick presences from match.
          *
          * @param presences - List of presences to kick from the match.
          */
-        matchKick(presences: Presence[]): undefined;
+        matchKick(presences: Presence[]): void;
 
         /**
          * Update match label.
          *
          * @param label - New label for the match.
          */
-        matchKick(label: string): undefined;
+        matchLabelUpdate(label: string): void;
     }
 
     /**
@@ -238,9 +238,8 @@ module NKRuntime {
          *
          * @param id - The ID of the function in the server.
          * @param func - The RPC function logic to execute when the RPC is called.
-         * @returns An error or null if no error occured.
          */
-        registerRpc(id: string, func: RpcFunction): undefined;
+        registerRpc(id: string, func: RpcFunction): void;
 
         /**
          * Register a hook function to be run before an RPC function is invoked.
@@ -257,7 +256,6 @@ module NKRuntime {
          *
          * @param id - The ID of the RPC function.
          * @param func - The Hook function logic to execute after the RPC is called.
-         * @returns An error or null if no error occured.
          */
         registerReqAfter(id: string, func: AfterHookFunction): void;
 
@@ -276,9 +274,8 @@ module NKRuntime {
          *
          * @param id - The ID of the RPC function.
          * @param func - The Hook function logic to execute after the RPC is called.
-         * @returns An error or null if no error occured.
          */
-        registerRtAfter(id: string, func: AfterHookFunction): undefined;
+        registerRtAfter(id: string, func: AfterHookFunction): void;
 
         /**
          * Register a match handler.
@@ -286,7 +283,7 @@ module NKRuntime {
          * @param name - Identifier of the match handler.
          * @param functions - Object containing the match handler functions.
          */
-        registerMatch(name: string, functions: MatchHandler): undefined;
+        registerMatch(name: string, functions: MatchHandler): void;
     }
 
     /**
@@ -678,7 +675,7 @@ module NKRuntime {
          * @param timestamp - (optional) Timestamp of the event as a Unix epoch.
          * @param external - (optional) External (client side) generated event.
          */
-        event(eventName: string, properties: {[key: string]: string}, timestamp?: number, external?: boolean): undefined;
+        event(eventName: string, properties: {[key: string]: string}, timestamp?: number, external?: boolean): void;
 
         /**
          * Generate a new UUID v4.
@@ -1003,14 +1000,14 @@ module NKRuntime {
          * @param avatar - User's avatar URL. Use null to not update this field.
          * @param metadata - Metadata to update. Use null not to update this field.
          */
-        accountUpdateId(userId: string, displayName: string, timezone: string, location: string, language: string, avatar: string, metadata: {[key: string]: any}): undefined;
+        accountUpdateId(userId: string, displayName: string, timezone: string, location: string, language: string, avatar: string, metadata: {[key: string]: any}): void;
 
         /**
          * Delete user account
          *
          * @param userId - Target account.
          */
-        accountDeleteId(userId: string): undefined;
+        accountDeleteId(userId: string): void;
 
         /**
          * Export user account data to JSON encoded string
@@ -1038,14 +1035,14 @@ module NKRuntime {
          *
          * @param userIds - User IDs.
          */
-        usersBanId(userIds: string[]): undefined;
+        usersBanId(userIds: string[]): void;
 
         /**
          * Unban a group of users by id.
          *
          * @param userIds - User IDs.
          */
-        usersUnbanId(userIds: string[]): undefined;
+        usersUnbanId(userIds: string[]): void;
 
         /**
          * Link an account to Apple sign in.
@@ -1053,7 +1050,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param token - Apple sign in token.
          */
-        linkApple(userID: string, token: string): undefined;
+        linkApple(userID: string, token: string): void;
 
         /**
          * Link an account to a customID.
@@ -1061,7 +1058,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param customID - Custom ID.
          */
-        linkCustom(userID: string, customID: string): undefined;
+        linkCustom(userID: string, customID: string): void;
 
         /**
          * Link account to a custom device.
@@ -1069,7 +1066,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param deviceID - Device ID.
          */
-        linkDevice(userID: string, deviceID: string): undefined;
+        linkDevice(userID: string, deviceID: string): void;
 
         /**
          * Link account to username and password.
@@ -1078,7 +1075,7 @@ module NKRuntime {
          * @param email - Email.
          * @param password - Password.
          */
-        linkEmail(userID: string, email: string, password: string): undefined;
+        linkEmail(userID: string, email: string, password: string): void;
 
         /**
          * Link account to Facebook.
@@ -1088,7 +1085,7 @@ module NKRuntime {
          * @param token - Password.
          * @param importFriends - Import Facebook Friends. Defaults to true.
          */
-        linkFacebook(userID: string, username: string, token: string, importFriends?: boolean): undefined;
+        linkFacebook(userID: string, username: string, token: string, importFriends?: boolean): void;
 
         /**
          * Link account to Facebook Instant Games.
@@ -1096,7 +1093,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param signedPlayerInfo - Signed player info.
          */
-        linkFacebookInstantGame(userID: string, signedPlayerInfo: string): undefined;
+        linkFacebookInstantGame(userID: string, signedPlayerInfo: string): void;
 
         /**
          * Link account to Apple Game Center.
@@ -1117,7 +1114,7 @@ module NKRuntime {
             salt: string,
             signature: string,
             publicKeyURL: string,
-        ): undefined;
+        ): void;
 
         /**
          * Unlink Apple sign in from an account.
@@ -1125,7 +1122,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param token - Apple sign in token.
          */
-        unlinkApple(userID: string, token: string): undefined;
+        unlinkApple(userID: string, token: string): void;
 
         /**
          * Unlink a customID from an account.
@@ -1133,7 +1130,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param customID - Custom ID.
          */
-        unlinkCustom(userID: string, customID: string): undefined;
+        unlinkCustom(userID: string, customID: string): void;
 
         /**
          * Unlink a custom device from an account.
@@ -1141,7 +1138,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param deviceID - Device ID.
          */
-        unlinkDevice(userID: string, deviceID: string): undefined;
+        unlinkDevice(userID: string, deviceID: string): void;
 
         /**
          * Unlink username and password from an account.
@@ -1149,7 +1146,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param email - Email.
          */
-        unlinkEmail(userID: string, email: string): undefined;
+        unlinkEmail(userID: string, email: string): void;
 
         /**
          * Unlink Facebook from an account.
@@ -1157,7 +1154,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param token - Password.
          */
-        unlinkFacebook(userID: string, token: string): undefined;
+        unlinkFacebook(userID: string, token: string): void;
 
         /**
          * Unlink Facebook Instant Games from an account.
@@ -1165,7 +1162,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param signedPlayerInfo - Signed player info.
          */
-        unlinkFacebookInstantGame(userID: string, signedPlayerInfo: string): undefined;
+        unlinkFacebookInstantGame(userID: string, signedPlayerInfo: string): void;
 
         /**
          * Unlink Apple Game Center from an account.
@@ -1186,7 +1183,7 @@ module NKRuntime {
             salt: string,
             signature: string,
             publicKeyURL: string,
-        ): undefined;
+        ): void;
 
         /**
          * Unlink Google from account.
@@ -1194,7 +1191,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param token - Google token.
          */
-        unlinkGoogle(userID: string, token: string): undefined;
+        unlinkGoogle(userID: string, token: string): void;
 
         /**
          * Unlink Steam from an account.
@@ -1202,7 +1199,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param token - Steam token.
          */
-        unlinkSteam(userID: string, token: string): undefined;
+        unlinkSteam(userID: string, token: string): void;
 
         /**
          * List stream presences.
@@ -1234,7 +1231,7 @@ module NKRuntime {
          * @param persistence - Opt. By default persistence is enabled, if the stream supports it.
          * @param status - Opt. By default no status is set for the user.
          */
-        streamUserJoin(userID: string, sessionID: string, stream: Stream, hidden?: boolean, persistence?: boolean, status?: string): undefined;
+        streamUserJoin(userID: string, sessionID: string, stream: Stream, hidden?: boolean, persistence?: boolean, status?: string): void;
 
         /**
          * Update user status in a stream.
@@ -1246,7 +1243,7 @@ module NKRuntime {
          * @param persistence - Opt. By default persistence is enabled, if the stream supports it.
          * @param status - Opt. By default no status is set for the user.
          */
-        streamUserUpdate(userID: string, sessionID: string, stream: Stream, hidden?: boolean, persistence?: boolean, status?: string): undefined;
+        streamUserUpdate(userID: string, sessionID: string, stream: Stream, hidden?: boolean, persistence?: boolean, status?: string): void;
 
         /**
          * Have a user leave a stream.
@@ -1255,7 +1252,7 @@ module NKRuntime {
          * @param sessionID - Session ID.
          * @param stream - Stream data.
          */
-        streamUserLeave(userID: string, sessionID: string, stream: Stream): undefined;
+        streamUserLeave(userID: string, sessionID: string, stream: Stream): void;
 
         /**
          * Kick user from a stream.
@@ -1263,7 +1260,7 @@ module NKRuntime {
          * @param presence - User presence data.
          * @param stream - Stream data.
          */
-        streamUserKick(presence: Presence, stream: Stream): undefined;
+        streamUserKick(presence: Presence, stream: Stream): void;
 
         /**
          * Count the users in a stream.
@@ -1279,7 +1276,7 @@ module NKRuntime {
          * @param stream - Stream data.
          * @returns the number of users in the stream.
          */
-        streamClose(stream: Stream): undefined;
+        streamClose(stream: Stream): void;
 
         /**
          * Send data to users in a stream.
@@ -1289,7 +1286,7 @@ module NKRuntime {
          * @param presences - Opt. List of presences in the stream to send the data to. If nil or empty, data is sent to all the users.
          * @param reliable - Opt. If data is sent with delivery guarantees. Defaults to true
          */
-        streamSend(stream: Stream, data: string, presences?: Presence[], reliable?: boolean): undefined;
+        streamSend(stream: Stream, data: string, presences?: Presence[], reliable?: boolean): void;
 
         /**
          * Send envelope data to users in a stream.
@@ -1299,14 +1296,14 @@ module NKRuntime {
          * @param presences - Opt. List of presences in the stream to send the data to. If nil or empty, data is sent to all the users.
          * @param reliable - Opt. If data is sent with delivery guarantees. Defaults to true
          */
-        streamSendRaw(stream: Stream, data: string, presences?: Presence[], reliable?: boolean): undefined;
+        streamSendRaw(stream: Stream, data: string, presences?: Presence[], reliable?: boolean): void;
 
         /**
          * Disconnect session.
          *
          * @param sessionID - Session ID.
          */
-        sessionDisconnect(sessionID: string): undefined;
+        sessionDisconnect(sessionID: string): void;
 
         /**
          * Create a new match.
@@ -1314,7 +1311,7 @@ module NKRuntime {
          * @param module - Name of the module the match will run.
          * @param params - Opt. Object with the initial state of the match. // TODO define params export interface
          */
-        matchCreate(module: string, params?: Object): undefined;
+        matchCreate(module: string, params?: Object): void;
 
         /**
          * Get a running match info.
@@ -1347,7 +1344,7 @@ module NKRuntime {
          * @param senderID - Sender ID.
          * @param persistent - A non-persistent message will only be received by a client which is currently connected to the server.
          */
-        notificationSend(userID: string, subject: string, content: {[key: string]: any}, code: number, senderID: string, persistent: boolean): undefined;
+        notificationSend(userID: string, subject: string, content: {[key: string]: any}, code: number, senderID: string, persistent: boolean): void;
 
         /**
          * Update user wallet.
@@ -1419,7 +1416,7 @@ module NKRuntime {
          * @param keys - Array of storage objects to write.
          * @returns List of written objects acks.
          */
-        storageDelete(keys: StorageDeleteRequest[]): undefined;
+        storageDelete(keys: StorageDeleteRequest[]): void;
 
         /**
          * Update multiple entities.
@@ -1450,14 +1447,14 @@ module NKRuntime {
             operator?: Operator,
             resetSchedule?: null | string,
             metadata?: {[key: string]: any},
-        ): undefined;
+        ): void;
 
         /**
          * Delete a leaderboard.
          *
          * @param leaderboardID - Leaderboard id.
          */
-        leaderboardDelete(leaderboardID: string): undefined;
+        leaderboardDelete(leaderboardID: string): void;
 
         /**
          * List records of a leaderboard.
@@ -1489,7 +1486,7 @@ module NKRuntime {
          * @param leaderboardID - Leaderboard id.
          * @param ownerID - Array of leaderboard owners.
          */
-        leaderboardRecordDelete(leaderboardID: string, ownerID: string): undefined;
+        leaderboardRecordDelete(leaderboardID: string, ownerID: string): void;
 
         /**
          * Create a new tournament.
@@ -1524,14 +1521,14 @@ module NKRuntime {
             maxSize?: number | null,
             maxNumScore?: number | null,
             joinRequired?: boolean,
-        ): undefined;
+        ): void;
 
         /**
          * Delete a tournament.
          *
          * @param tournamentID - Tournament id.
          */
-        tournamentDelete(tournamentID: string): undefined;
+        tournamentDelete(tournamentID: string): void;
 
         /**
          * Add additional score attempts to the owner's tournament record.
@@ -1540,7 +1537,7 @@ module NKRuntime {
          * @param ownerID - Owner of the record id.
          * @param count - Attempt count to add.
          */
-        tournamentAddAttempt(tournamentID: string, ownerID: string, count: number): undefined;
+        tournamentAddAttempt(tournamentID: string, ownerID: string, count: number): void;
 
         /**
          * Join a tournament.
@@ -1551,7 +1548,7 @@ module NKRuntime {
          * @param userID - Owner of the record id.
          * @param username - The username of the record owner.
          */
-        tournamentJoin(tournamentID: string, userId: string, username: string): undefined;
+        tournamentJoin(tournamentID: string, userId: string, username: string): void;
 
         /**
          * Get a list of tournaments by id.
@@ -1585,7 +1582,7 @@ module NKRuntime {
          * @param metadata - Opt. The metadata you want associated to this submission.
          * @returns The tournament data for the given ids.
          */
-        tournamentRecordWrite(id: string, ownerID: string, username?: string, score?: number, subscore?: number, metadata?: {[key: string]: any}): undefined;
+        tournamentRecordWrite(id: string, ownerID: string, username?: string, score?: number, subscore?: number, metadata?: {[key: string]: any}): void;
 
         /**
          * Fetch the list of tournament records around the owner.
@@ -1636,14 +1633,14 @@ module NKRuntime {
          * @param metadata - Custom information to store for this group. Use nil to not update.
          * @param limit - Maximum number of members to have in the group. Use nil if field is not being updated.
          */
-        groupUpdate(userID: string, name: string, creatorID: string, lang: string, description: string, avatarURL: string, open: boolean, metadata: {[key: string]: any}, limit: number): undefined;
+        groupUpdate(userID: string, name: string, creatorID: string, lang: string, description: string, avatarURL: string, open: boolean, metadata: {[key: string]: any}, limit: number): void;
 
         /**
          * Delete a group.
          *
          * @param groupID - The group ID to update.
          */
-        groupDelete(groupID: string): undefined;
+        groupDelete(groupID: string): void;
 
         /**
          * Kick users from a group.
@@ -1651,7 +1648,7 @@ module NKRuntime {
          * @param groupID - The group ID to update.
          * @param userIDs - Array of user IDs to be kicked from the group.
          */
-        groupUsersKick(userID: string, userIDs: string[]): undefined;
+        groupUsersKick(userID: string, userIDs: string[]): void;
 
         /**
          * List all members, admins and superadmins which belong to a group.
@@ -1682,6 +1679,6 @@ module NKRuntime {
          * @param nk - The Nakama server APIs.
          * @param initializer - The injector to initialize features in the game server.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, initializer: Initializer): undefined;
+        (ctx: Context, logger: Logger, nk: Nakama, initializer: Initializer): void;
     }
 }
