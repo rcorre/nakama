@@ -513,7 +513,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	var tournamentResetFunction RuntimeTournamentResetFunction
 	var leaderboardResetFunction RuntimeLeaderboardResetFunction
 
-	callbacks, matchCallbacks, err := evalRuntimeModules(runtimeProviderJS, modCache, config, goMatchCreateFn, leaderboardScheduler, func(mode RuntimeExecutionMode, id string) {
+	callbacks, matchCallbacks, err := evalRuntimeModules(runtimeProviderJS, modCache, goMatchCreateFn, leaderboardScheduler, func(mode RuntimeExecutionMode, id string) {
 		switch mode {
 		case RuntimeExecutionModeRPC:
 			rpcFunctions[id] = func(ctx context.Context, queryParams map[string][]string, userID, username string, vars map[string]string, expiry int64, sessionID, clientIP, clientPort, payload string) (string, error, codes.Code) {
@@ -1336,7 +1336,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 				return runtimeProviderJS.LeaderboardReset(ctx, leaderboard, reset)
 			}
 		}
-	})
+	}, false)
 	if err != nil {
 		logger.Error("Failed to eval Javascript modules.", zap.Error(err))
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
@@ -1407,8 +1407,14 @@ func CheckRuntimeProviderJavascript(logger *zap.Logger, config Config, paths []s
 	if err != nil {
 		return err
 	}
-	// TODO: revise these params
-	_, _, err = evalRuntimeModules(nil, modCache, config, nil, nil, func(RuntimeExecutionMode, string) {})
+	rp := &RuntimeProviderJS{
+		logger: logger,
+		config: config,
+	}
+	_, _, err = evalRuntimeModules(rp, modCache, nil, nil, func(RuntimeExecutionMode, string) {}, true)
+	if err != nil {
+		logger.Error("Failed to load javascript module.", zap.Error(err))
+	}
 	return err
 }
 
@@ -1659,9 +1665,10 @@ func (rp *RuntimeProviderJS) LeaderboardReset(ctx context.Context, leaderboard r
 	return errors.New("Unexpected return type from runtime Leaderboard Reset hook, must be nil.")
 }
 
-func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, config Config, matchCreateFn RuntimeMatchCreateFunction, leaderboardScheduler LeaderboardScheduler, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeJavascriptCallbacks, *RuntimeJavascriptMatchCallbacks, error) {
-	r := goja.New()
+func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, matchCreateFn RuntimeMatchCreateFunction, leaderboardScheduler LeaderboardScheduler, announceCallbackFn func(RuntimeExecutionMode, string), dryRun bool) (*RuntimeJavascriptCallbacks, *RuntimeJavascriptMatchCallbacks, error) {
 	logger := rp.logger
+
+	r := goja.New()
 
 	initializer := NewRuntimeJavascriptInitModule(logger, announceCallbackFn)
 	initializerValue := r.ToValue(initializer.Constructor(r))
@@ -1690,7 +1697,7 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, c
 			return nil, fmt.Errorf("match handlers for match: '%s' not found", name)
 		}
 
-		return NewRuntimeJavascriptMatchCore(logger, rp.db, rp.jsonpbMarshaler, rp.jsonpbUnmarshaler, config, rp.socialClient, rp.leaderboardCache, rp.leaderboardRankCache, leaderboardScheduler, rp.sessionRegistry, rp.matchRegistry, rp.tracker, rp.streamManager, rp.router, matchCreateFn, rp.eventFn, id, node, stopped, mc)
+		return NewRuntimeJavascriptMatchCore(logger, rp.db, rp.jsonpbMarshaler, rp.jsonpbUnmarshaler, rp.config, rp.socialClient, rp.leaderboardCache, rp.leaderboardRankCache, leaderboardScheduler, rp.sessionRegistry, rp.matchRegistry, rp.tracker, rp.streamManager, rp.router, matchCreateFn, rp.eventFn, id, node, stopped, mc)
 	}
 
 	nakamaModule := NewRuntimeJavascriptNakamaModule(rp.logger, rp.db, rp.jsonpbMarshaler, rp.jsonpbUnmarshaler, rp.config, rp.socialClient, rp.leaderboardCache, rp.leaderboardRankCache, leaderboardScheduler, rp.sessionRegistry, rp.matchRegistry, rp.tracker, rp.streamManager, rp.router, rp.eventFn, allMatchCreateFn)
@@ -1724,7 +1731,13 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, c
 			return nil, nil, errors.New(INIT_MODULE_FN_NAME + " function not found.")
 		}
 
-		ctx := NewRuntimeJsInitContext(r, config.GetName(), config.GetRuntime().Environment)
+		// Running a dry run, parse javascript but do not execute the init module function
+		if dryRun {
+			return nil, nil, nil
+		}
+
+		// Execute the init module function
+		ctx := NewRuntimeJsInitContext(r, rp.config.GetName(), rp.config.GetRuntime().Environment)
 		_, err = initModFn(goja.Null(), ctx, jsLoggerInst, nkInst, initializerInst)
 		if err != nil {
 			if exErr, ok := err.(*goja.Exception); ok {
