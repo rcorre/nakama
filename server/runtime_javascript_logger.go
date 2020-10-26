@@ -101,7 +101,7 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 			c := r.ToValue(call.This.Get("constructor"))
 			objInst, err := r.New(c, r.ToValue(fields))
 			if err != nil {
-				panic(r.ToValue(err.Error()))
+				panic(r.NewGoError(err))
 			}
 
 			return objInst
@@ -121,7 +121,7 @@ func (l *jsLogger) Constructor(r *goja.Runtime) func(goja.ConstructorCall) *goja
 			c := r.ToValue(call.This.Get("constructor"))
 			objInst, err := r.New(c, r.ToValue(fields))
 			if err != nil {
-				panic(err)
+				panic(r.NewGoError(err))
 			}
 
 			return objInst

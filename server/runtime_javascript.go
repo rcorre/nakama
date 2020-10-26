@@ -474,11 +474,11 @@ func (rp *RuntimeProviderJS) Put(r *RuntimeJS) {
 }
 
 func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, leaderboardCache LeaderboardCache, leaderboardRankCache LeaderboardRankCache, leaderboardScheduler LeaderboardScheduler, sessionRegistry SessionRegistry, matchRegistry MatchRegistry, tracker Tracker, metrics *Metrics, streamManager StreamManager, router MessageRouter, goMatchCreateFn RuntimeMatchCreateFunction, eventFn RuntimeEventCustomFunction, rootPath string, paths []string) ([]string, map[string]RuntimeRpcFunction, map[string]RuntimeBeforeRtFunction, map[string]RuntimeAfterRtFunction, *RuntimeBeforeReqFunctions, *RuntimeAfterReqFunctions, RuntimeMatchmakerMatchedFunction, RuntimeMatchCreateFunction, RuntimeTournamentEndFunction, RuntimeTournamentResetFunction, RuntimeLeaderboardResetFunction, error) {
-	startupLogger.Info("Initialising Javascript runtime provider", zap.String("path", rootPath))
+	startupLogger.Info("Initialising JavaScript runtime provider", zap.String("path", rootPath))
 
 	modCache, err := cacheJavascriptModules(startupLogger, rootPath, paths)
 	if err != nil {
-		panic(err)
+		startupLogger.Fatal("Failed to load JavaScript files", zap.Error(err))
 	}
 
 	runtimeProviderJS := &RuntimeProviderJS{
@@ -1338,7 +1338,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		}
 	}, false)
 	if err != nil {
-		logger.Error("Failed to eval Javascript modules.", zap.Error(err))
+		logger.Error("Failed to eval JavaScript modules.", zap.Error(err))
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
@@ -1365,14 +1365,14 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		jsLoggerValue := runtime.ToValue(jsLogger.Constructor(runtime))
 		jsLoggerInst, err := runtime.New(jsLoggerValue)
 		if err != nil {
-			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
+			logger.Fatal("Failed to initialize JavaScript runtime", zap.Error(err))
 		}
 
 		nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, leaderboardRankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, streamManager, router, eventFn, goMatchCreateFn)
 		nk := runtime.ToValue(nakamaModule.Constructor(runtime))
 		nkInst, err := runtime.New(nk)
 		if err != nil {
-			logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
+			logger.Fatal("Failed to initialize JavaScript runtime", zap.Error(err))
 		}
 
 		return &RuntimeJS{
@@ -1386,10 +1386,10 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		}
 	}
 
-	startupLogger.Info("Javascript runtime modules loaded")
+	startupLogger.Info("JavaScript runtime modules loaded")
 
 	// Warm up the pool.
-	startupLogger.Info("Allocating minimum javascript runtime pool", zap.Int("count", config.GetRuntime().MinCount))
+	startupLogger.Info("Allocating minimum JavaScript runtime pool", zap.Int("count", config.GetRuntime().MinCount))
 	if len(modCache.Names) > 0 {
 		// Only if there are runtime modules to load.
 		for i := 0; i < config.GetRuntime().MinCount; i++ {
@@ -1397,7 +1397,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		}
 		runtimeProviderJS.metrics.GaugeRuntimes("javascript_runtimes", float64(config.GetRuntime().MinCount))
 	}
-	startupLogger.Info("Allocated minimum javascript runtime pool")
+	startupLogger.Info("Allocated minimum JavaScript runtime pool")
 
 	return modCache.Names, rpcFunctions, beforeRtFunctions, afterRtFunctions, beforeReqFunctions, afterReqFunctions, matchmakerMatchedFunction, allMatchCreateFn, tournamentEndFunction, tournamentResetFunction, leaderboardResetFunction, nil
 }
@@ -1413,7 +1413,7 @@ func CheckRuntimeProviderJavascript(logger *zap.Logger, config Config, paths []s
 	}
 	_, _, err = evalRuntimeModules(rp, modCache, nil, nil, func(RuntimeExecutionMode, string) {}, true)
 	if err != nil {
-		logger.Error("Failed to load javascript module.", zap.Error(err))
+		logger.Error("Failed to load JavaScript module.", zap.Error(err))
 	}
 	return err
 }
@@ -1432,14 +1432,14 @@ func cacheJavascriptModules(logger *zap.Logger, rootPath string, paths []string)
 		var content []byte
 		var err error
 		if content, err = ioutil.ReadFile(path); err != nil {
-			logger.Error("Could not read Javascript module", zap.String("path", path), zap.Error(err))
+			logger.Error("Could not read JavaScript module", zap.String("path", path), zap.Error(err))
 			return nil, err
 		}
 
 		modName := filepath.Base(path)
 		prg, err := goja.Compile(modName, string(content), true)
 		if err != nil {
-			logger.Error("Could not compile Javascript module", zap.String("module", modName), zap.Error(err))
+			logger.Error("Could not compile JavaScript module", zap.String("module", modName), zap.Error(err))
 			return nil, err
 		}
 

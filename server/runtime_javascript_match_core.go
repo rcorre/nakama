@@ -27,6 +27,8 @@ import (
 	"go.uber.org/zap"
 )
 
+var jsMatchStoppedErr = map[string]interface{}{"name": "MatchStoppedError", "message": "match stopped"}
+
 type RuntimeJavascriptMatchCore struct {
 	logger        *zap.Logger
 	matchRegistry MatchRegistry
@@ -64,14 +66,14 @@ func NewRuntimeJavascriptMatchCore(logger *zap.Logger, db *sql.DB, jsonpbMarshal
 	jsLoggerValue := runtime.ToValue(jsLogger.Constructor(runtime))
 	jsLoggerInst, err := runtime.New(jsLoggerValue)
 	if err != nil {
-		logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
+		logger.Fatal("Failed to initialize JavaScript runtime", zap.Error(err))
 	}
 
 	nakamaModule := NewRuntimeJavascriptNakamaModule(logger, db, jsonpbMarshaler, jsonpbUnmarshaler, config, socialClient, leaderboardCache, rankCache, leaderboardScheduler, sessionRegistry, matchRegistry, tracker, streamManager, router, eventFn, goMatchCreateFn)
 	nk := runtime.ToValue(nakamaModule.Constructor(runtime))
 	nkInst, err := runtime.New(nk)
 	if err != nil {
-		logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
+		logger.Fatal("Failed to initialize JavaScript runtime", zap.Error(err))
 	}
 
 	ctx := NewRuntimeJsInitContext(runtime, node, config.GetRuntime().Environment)
@@ -127,7 +129,7 @@ func NewRuntimeJavascriptMatchCore(logger *zap.Logger, db *sql.DB, jsonpbMarshal
 
 	dispatcherInst, err := runtime.New(dispatcher)
 	if err != nil {
-		logger.Fatal("Failed to initialize Javascript runtime", zap.Error(err))
+		logger.Fatal("Failed to initialize JavaScript runtime", zap.Error(err))
 	}
 	core.dispatcher = dispatcherInst
 
@@ -395,7 +397,7 @@ func (rm *RuntimeJavascriptMatchCore) Cancel() {
 func (rm *RuntimeJavascriptMatchCore) broadcastMessage(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		if rm.stopped.Load() {
-			panic(r.ToValue("match stopped"))
+			panic(r.ToValue(jsMatchStoppedErr))
 		}
 
 		presenceIDs, msg, reliable := rm.validateBroadcast(r, f)
@@ -410,7 +412,7 @@ func (rm *RuntimeJavascriptMatchCore) broadcastMessage(r *goja.Runtime) func(goj
 func (rm *RuntimeJavascriptMatchCore) broadcastMessageDeferred(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		if rm.stopped.Load() {
-			panic(r.ToValue("match stopped"))
+			panic(r.ToValue(jsMatchStoppedErr))
 		}
 
 		presenceIDs, msg, reliable := rm.validateBroadcast(r, f)
@@ -420,7 +422,7 @@ func (rm *RuntimeJavascriptMatchCore) broadcastMessageDeferred(r *goja.Runtime) 
 				Envelope:    msg,
 				Reliable:    reliable,
 			}); err != nil {
-				panic(r.ToValue(fmt.Sprintf("error deferring message broadcast: %v", err)))
+				panic(r.NewGoError(fmt.Errorf("error deferring message broadcast: %v", err)))
 			}
 		}
 
@@ -599,7 +601,7 @@ func(rm *RuntimeJavascriptMatchCore) validateBroadcast(r *goja.Runtime, f goja.F
 func (rm *RuntimeJavascriptMatchCore) matchKick(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		if rm.stopped.Load() {
-			panic(r.ToValue("match stopped"))
+			panic(r.ToValue(jsMatchStoppedErr))
 		}
 
 		input := f.Argument(0)
@@ -609,7 +611,7 @@ func (rm *RuntimeJavascriptMatchCore) matchKick(r *goja.Runtime) func(goja.Funct
 
 		presencesSlice, ok := input.Export().([]interface{})
 		if !ok {
-			panic(r.ToValue("expects an array of presence objects"))
+			panic(r.NewTypeError("expects an array of presence objects"))
 		}
 
 		presences := make([]*MatchPresence, 0, len(presencesSlice))
@@ -670,13 +672,13 @@ func (rm *RuntimeJavascriptMatchCore) matchKick(r *goja.Runtime) func(goja.Funct
 func (rm *RuntimeJavascriptMatchCore) matchLabelUpdate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		if rm.stopped.Load() {
-			panic(r.ToValue("match stopped"))
+			panic(r.ToValue(jsMatchStoppedErr))
 		}
 
 		input := getJsString(r, f.Argument(0))
 
 		if err := rm.matchRegistry.UpdateMatchLabel(rm.id, input); err != nil {
-			panic(r.ToValue(fmt.Sprintf("error updating match label: %v", err.Error())))
+			panic(r.ToValue(r.NewGoError(fmt.Errorf("error updating match label: %v", err.Error()))))
 		}
 		rm.label.Store(input)
 
