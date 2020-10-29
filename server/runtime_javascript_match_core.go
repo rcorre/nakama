@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/dop251/goja"
 	"github.com/gofrs/uuid"
 	"github.com/golang/protobuf/jsonpb"
@@ -86,28 +87,28 @@ func NewRuntimeJavascriptMatchCore(logger *zap.Logger, db *sql.DB, jsonpbMarshal
 	// vm.SetContext(goCtx)
 
 	core := &RuntimeJavascriptMatchCore{
-		logger:         logger,
-		matchRegistry:  matchRegistry,
-		router:         router,
+		logger:        logger,
+		matchRegistry: matchRegistry,
+		router:        router,
 
-		id:             id,
-		node:           node,
-		stopped:        stopped,
-		idStr:          fmt.Sprintf("%v.%v", id.String(), node),
-		stream:         PresenceStream{
+		id:      id,
+		node:    node,
+		stopped: stopped,
+		idStr:   fmt.Sprintf("%v.%v", id.String(), node),
+		stream: PresenceStream{
 			Mode:    StreamModeMatchAuthoritative,
 			Subject: id,
 			Label:   node,
 		},
-		label:          atomic.NewString(""),
-		vm:             runtime,
-		initFn:         matchHandlers.initFn,
-		joinAttemptFn:  matchHandlers.joinAttemptFn,
-		joinFn:         matchHandlers.joinFn,
-		leaveFn:        matchHandlers.leaveFn,
-		loopFn:         matchHandlers.loopFn,
-		terminateFn:    matchHandlers.terminateFn,
-		ctx:            ctx,
+		label:         atomic.NewString(""),
+		vm:            runtime,
+		initFn:        matchHandlers.initFn,
+		joinAttemptFn: matchHandlers.joinAttemptFn,
+		joinFn:        matchHandlers.joinFn,
+		leaveFn:       matchHandlers.leaveFn,
+		loopFn:        matchHandlers.loopFn,
+		terminateFn:   matchHandlers.terminateFn,
+		ctx:           ctx,
 
 		loggerModule: jsLoggerInst,
 		nakamaModule: nkInst,
@@ -146,18 +147,18 @@ func (rm *RuntimeJavascriptMatchCore) MatchInit(presenceList *MatchPresenceList,
 
 	retMap, ok := retVal.Export().(map[string]interface{})
 	if !ok {
-		return nil, 0, errors.New("match_init is expected to return an object with 'state', 'tick_rate' and 'label' properties")
+		return nil, 0, errors.New("matchInit is expected to return an object with 'state', 'tickRate' and 'label' properties")
 	}
-	tickRateRet, ok := retMap["tick_rate"]
+	tickRateRet, ok := retMap["tickRate"]
 	if !ok {
-		return nil, 0, errors.New("match_init return value has no 'tick_rate' property")
+		return nil, 0, errors.New("matchInit return value has no 'tickRate' property")
 	}
 	rate, ok := tickRateRet.(int64)
 	if !ok {
-		return nil, 0, errors.New("match_init 'tick_rate' must be a number between 1 and 30")
+		return nil, 0, errors.New("matchInit 'tickRate' must be a number between 1 and 30")
 	}
 	if rate < 1 || rate > 30 {
-		return nil, 0, errors.New("match_init 'tick_rate' must be a number between 1 and 30")
+		return nil, 0, errors.New("matchInit 'tickRate' must be a number between 1 and 30")
 	}
 
 	var label string
@@ -165,13 +166,13 @@ func (rm *RuntimeJavascriptMatchCore) MatchInit(presenceList *MatchPresenceList,
 	if ok {
 		label, ok = labelRet.(string)
 		if !ok {
-			return nil, 0, errors.New("match_init 'label' value must be a string")
+			return nil, 0, errors.New("matchInit 'label' value must be a string")
 		}
 	}
 
 	state, ok := retMap["state"]
 	if !ok {
-		return nil, 0, errors.New("match_init is expected to return an object with a 'state' property")
+		return nil, 0, errors.New("matchInit is expected to return an object with a 'state' property")
 	}
 
 	if err := rm.matchRegistry.UpdateMatchLabel(rm.id, label); err != nil {
@@ -191,8 +192,8 @@ func (rm *RuntimeJavascriptMatchCore) MatchInit(presenceList *MatchPresenceList,
 func (rm *RuntimeJavascriptMatchCore) MatchJoinAttempt(tick int64, state interface{}, userID, sessionID uuid.UUID, username string, sessionExpiry int64, vars map[string]string, clientIP, clientPort, node string, metadata map[string]string) (interface{}, bool, string, error) {
 	// Setup presence
 	presenceObj := rm.vm.NewObject()
-	presenceObj.Set("user_id", userID.String())
-	presenceObj.Set("session_id", sessionID.String())
+	presenceObj.Set("userId", userID.String())
+	presenceObj.Set("sessionId", sessionID.String())
 	presenceObj.Set("username", username)
 	presenceObj.Set("node", node)
 
@@ -223,32 +224,32 @@ func (rm *RuntimeJavascriptMatchCore) MatchJoinAttempt(tick int64, state interfa
 
 	retMap, ok := retVal.Export().(map[string]interface{})
 	if !ok {
-		return nil, false, "", errors.New("match_join_attempt is expected to return an object with 'state' and 'accept' properties")
+		return nil, false, "", errors.New("matchJoinAttempt is expected to return an object with 'state' and 'accept' properties")
 	}
 
 	allowRet, ok := retMap["accept"]
-  if !ok {
-		return nil, false, "", errors.New("match_join_attempt return value has an 'accept' property")
+	if !ok {
+		return nil, false, "", errors.New("matchJoinAttempt return value has an 'accept' property")
 	}
 	allow, ok := allowRet.(bool)
 	if !ok {
-		return nil, false, "", errors.New("match_join_attempt 'accept' property must be a boolean")
+		return nil, false, "", errors.New("matchJoinAttempt 'accept' property must be a boolean")
 	}
 
 	var rejectMsg string
 	if allow == false {
-		rejectMsgRet, ok := retMap["reject_msg"]
+		rejectMsgRet, ok := retMap["rejectMessage"]
 		if ok {
 			rejectMsg, ok = rejectMsgRet.(string)
 			if !ok {
-				return nil, false, "", errors.New("match_join_attempt 'reject_msg' property must be a string")
+				return nil, false, "", errors.New("matchJoinAttempt 'rejectMessage' property must be a string")
 			}
 		}
 	}
 
 	newState, ok := retMap["state"]
 	if !ok {
-		return nil, false, "", errors.New("match_join_attempt is expected to return an object with 'state' property")
+		return nil, false, "", errors.New("matchJoinAttempt is expected to return an object with 'state' property")
 	}
 
 	return newState, allow, rejectMsg, nil
@@ -258,8 +259,8 @@ func (rm *RuntimeJavascriptMatchCore) MatchJoin(tick int64, state interface{}, j
 	presences := make([]interface{}, 0, len(joins))
 	for _, p := range joins {
 		presenceObj := rm.vm.NewObject()
-		presenceObj.Set("user_id", p.UserID.String())
-		presenceObj.Set("session_id", p.SessionID.String())
+		presenceObj.Set("userId", p.UserID.String())
+		presenceObj.Set("sessionId", p.SessionID.String())
 		presenceObj.Set("username", p.Username)
 		presenceObj.Set("node", p.Node)
 
@@ -274,12 +275,12 @@ func (rm *RuntimeJavascriptMatchCore) MatchJoin(tick int64, state interface{}, j
 
 	retMap, ok := retVal.Export().(map[string]interface{})
 	if !ok {
-		return nil, errors.New("match_join is expected to return an object with 'state' property")
+		return nil, errors.New("matchJoin is expected to return an object with 'state' property")
 	}
 
 	newState, ok := retMap["state"]
 	if !ok {
-		return nil, errors.New("match_join is expected to return an object with 'state' property")
+		return nil, errors.New("matchJoin is expected to return an object with 'state' property")
 	}
 
 	return newState, nil
@@ -289,8 +290,8 @@ func (rm *RuntimeJavascriptMatchCore) MatchLeave(tick int64, state interface{}, 
 	presences := make([]interface{}, 0, len(leaves))
 	for _, p := range leaves {
 		presenceObj := rm.vm.NewObject()
-		presenceObj.Set("user_id", p.UserID.String())
-		presenceObj.Set("session_id", p.SessionID.String())
+		presenceObj.Set("userId", p.UserID.String())
+		presenceObj.Set("sessionId", p.SessionID.String())
 		presenceObj.Set("username", p.Username)
 		presenceObj.Set("node", p.Node)
 
@@ -305,12 +306,12 @@ func (rm *RuntimeJavascriptMatchCore) MatchLeave(tick int64, state interface{}, 
 
 	retMap, ok := retVal.Export().(map[string]interface{})
 	if !ok {
-		return nil, errors.New("match_leave is expected to return an object with 'state' property")
+		return nil, errors.New("matchLeave is expected to return an object with 'state' property")
 	}
 
 	newState, ok := retMap["state"]
 	if !ok {
-		return nil, errors.New("match_leave is expected to return an object with 'state' property")
+		return nil, errors.New("matchLeave is expected to return an object with 'state' property")
 	}
 
 	return newState, nil
@@ -321,24 +322,24 @@ func (rm *RuntimeJavascriptMatchCore) MatchLoop(tick int64, state interface{}, i
 	size := len(inputCh)
 	inputs := make([]interface{}, 0, size)
 	for i := 1; i <= size; i++ {
-		msg := <- inputCh
+		msg := <-inputCh
 
 		presenceObj := rm.vm.NewObject()
-		presenceObj.Set("user_id", msg.UserID.String())
-		presenceObj.Set("session_id", msg.SessionID.String())
+		presenceObj.Set("userId", msg.UserID.String())
+		presenceObj.Set("sessionId", msg.SessionID.String())
 		presenceObj.Set("username", msg.Username)
 		presenceObj.Set("node", msg.Node)
 
 		msgObj := rm.vm.NewObject()
 		msgObj.Set("sender", presenceObj)
-		msgObj.Set("op_code", msg.OpCode)
+		msgObj.Set("opCode", msg.OpCode)
 		if msg.Data != nil {
 			msgObj.Set("data", string(msg.Data))
 		} else {
 			msgObj.Set("data", goja.Null())
 		}
 		msgObj.Set("reliable", msg.Reliable)
-		msgObj.Set("receive_time_ms", msg.ReceiveTime)
+		msgObj.Set("receiveTimeMs", msg.ReceiveTime)
 
 		inputs = append(inputs, msgObj)
 	}
@@ -355,12 +356,12 @@ func (rm *RuntimeJavascriptMatchCore) MatchLoop(tick int64, state interface{}, i
 
 	retMap, ok := retVal.Export().(map[string]interface{})
 	if !ok {
-		return nil, errors.New("match_loop is expected to return an object with 'state' property")
+		return nil, errors.New("matchLoop is expected to return an object with 'state' property")
 	}
 
 	newState, ok := retMap["state"]
 	if !ok {
-		return nil, errors.New("match_loop is expected to return an object with 'state' property")
+		return nil, errors.New("matchLoop is expected to return an object with 'state' property")
 	}
 
 	return newState, nil
@@ -375,12 +376,12 @@ func (rm *RuntimeJavascriptMatchCore) MatchTerminate(tick int64, state interface
 
 	retMap, ok := retVal.Export().(map[string]interface{})
 	if !ok {
-		return nil, errors.New("match_terminate is expected to return an object with 'state' property")
+		return nil, errors.New("matchTerminate is expected to return an object with 'state' property")
 	}
 
 	newState, ok := retMap["state"]
 	if !ok {
-		return nil, errors.New("match_terminate is expected to return an object with 'state' property")
+		return nil, errors.New("matchTerminate is expected to return an object with 'state' property")
 	}
 
 	return newState, nil
@@ -391,7 +392,7 @@ func (rm *RuntimeJavascriptMatchCore) Label() string {
 }
 
 func (rm *RuntimeJavascriptMatchCore) Cancel() {
-  // TODO: implement cancel
+	// TODO: implement cancel
 }
 
 func (rm *RuntimeJavascriptMatchCore) broadcastMessage(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
@@ -430,7 +431,7 @@ func (rm *RuntimeJavascriptMatchCore) broadcastMessageDeferred(r *goja.Runtime) 
 	}
 }
 
-func(rm *RuntimeJavascriptMatchCore) validateBroadcast(r *goja.Runtime, f goja.FunctionCall) ([]*PresenceID, *rtapi.Envelope, bool) {
+func (rm *RuntimeJavascriptMatchCore) validateBroadcast(r *goja.Runtime, f goja.FunctionCall) ([]*PresenceID, *rtapi.Envelope, bool) {
 	opCode := getJsInt(r, f.Argument(0))
 
 	var dataBytes []byte
@@ -460,26 +461,26 @@ func(rm *RuntimeJavascriptMatchCore) validateBroadcast(r *goja.Runtime, f goja.F
 
 			presenceID := &PresenceID{}
 
-			sidVal, _ := pMap["session_id"]
+			sidVal, _ := pMap["sessionId"]
 			if sidVal == nil {
-				panic(r.NewTypeError("presence is expected to contain a 'session_id'"))
+				panic(r.NewTypeError("presence is expected to contain a 'sessionId'"))
 			}
 			sidStr, ok := sidVal.(string)
 			if !ok {
-				panic(r.NewTypeError("expects a 'session_id' string"))
+				panic(r.NewTypeError("expects a 'sessionId' string"))
 			}
 			sid, err := uuid.FromString(sidStr)
 			if err != nil {
-				panic(r.NewTypeError("expects a valid 'session_id'"))
+				panic(r.NewTypeError("expects a valid 'sessionId'"))
 			}
 
-			nodeVal, _ := pMap["node_id"]
+			nodeVal, _ := pMap["nodeId"]
 			if nodeVal == nil {
-				panic(r.NewTypeError("expects presence to contain a 'node_id'"))
+				panic(r.NewTypeError("expects presence to contain a 'nodeId'"))
 			}
 			node, ok := nodeVal.(string)
 			if !ok {
-				panic(r.NewTypeError("expects a 'node_id' string"))
+				panic(r.NewTypeError("expects a 'nodeId' string"))
 			}
 
 			presenceID.SessionID = sid
@@ -504,31 +505,31 @@ func(rm *RuntimeJavascriptMatchCore) validateBroadcast(r *goja.Runtime, f goja.F
 		if !ok {
 			panic(r.NewTypeError("expects sender to be an object"))
 		}
-		userIdVal, _ := senderMap["user_id"]
+		userIdVal, _ := senderMap["userId"]
 		if userIdVal == nil {
-			panic(r.NewTypeError("expects presence to contain 'user_id'"))
+			panic(r.NewTypeError("expects presence to contain 'userId'"))
 		}
 		userIDStr, ok := userIdVal.(string)
 		if !ok {
-			panic(r.NewTypeError("expects presence to contain 'user_id' string"))
+			panic(r.NewTypeError("expects presence to contain 'userId' string"))
 		}
 		_, err := uuid.FromString(userIDStr)
 		if err != nil {
-			panic(r.NewTypeError("expects presence to contain valid user_id"))
+			panic(r.NewTypeError("expects presence to contain valid userId"))
 		}
 		presence.UserId = userIDStr
 
-		sidVal, _ := senderMap["session_id"]
+		sidVal, _ := senderMap["sessionId"]
 		if sidVal == nil {
-			panic(r.NewTypeError("presence is expected to contain a 'session_id'"))
+			panic(r.NewTypeError("presence is expected to contain a 'sessionId'"))
 		}
 		sidStr, ok := sidVal.(string)
 		if !ok {
-			panic(r.NewTypeError("expects a 'session_id' string"))
+			panic(r.NewTypeError("expects a 'sessionId' string"))
 		}
 		_, err = uuid.FromString(sidStr)
 		if err != nil {
-			panic(r.NewTypeError("expects a valid 'session_id'"))
+			panic(r.NewTypeError("expects a valid 'sessionId'"))
 		}
 		presence.SessionId = sidStr
 
@@ -622,41 +623,41 @@ func (rm *RuntimeJavascriptMatchCore) matchKick(r *goja.Runtime) func(goja.Funct
 			}
 
 			presence := &MatchPresence{}
-			userIdVal, _ := pMap["user_id"]
+			userIdVal, _ := pMap["userId"]
 			if userIdVal == nil {
-				panic(r.NewTypeError("expects presence to contain 'user_id'"))
+				panic(r.NewTypeError("expects presence to contain 'userId'"))
 			}
 			userIDStr, ok := userIdVal.(string)
 			if !ok {
-				panic(r.NewTypeError("expects presence to contain 'user_id' string"))
+				panic(r.NewTypeError("expects presence to contain 'userId' string"))
 			}
 			uid, err := uuid.FromString(userIDStr)
 			if err != nil {
-				panic(r.NewTypeError("expects presence to contain valid user_id"))
+				panic(r.NewTypeError("expects presence to contain valid userId"))
 			}
 			presence.UserID = uid
 
-			sidVal, _ := pMap["session_id"]
+			sidVal, _ := pMap["sessionId"]
 			if sidVal == nil {
-				panic(r.NewTypeError("presence is expected to contain a 'session_id'"))
+				panic(r.NewTypeError("presence is expected to contain a 'sessionId'"))
 			}
 			sidStr, ok := sidVal.(string)
 			if !ok {
-				panic(r.NewTypeError("expects a 'session_id' string"))
+				panic(r.NewTypeError("expects a 'sessionId' string"))
 			}
 			sid, err := uuid.FromString(sidStr)
 			if err != nil {
-				panic(r.NewTypeError("expects a valid 'session_id'"))
+				panic(r.NewTypeError("expects a valid 'sessionId'"))
 			}
 			presence.SessionID = sid
 
-			nodeVal, _ := pMap["node_id"]
+			nodeVal, _ := pMap["nodeId"]
 			if nodeVal == nil {
-				panic(r.NewTypeError("expects presence to contain a 'node_id'"))
+				panic(r.NewTypeError("expects presence to contain a 'nodeId'"))
 			}
 			node, ok := nodeVal.(string)
 			if !ok {
-				panic(r.NewTypeError("expects a 'node_id' string"))
+				panic(r.NewTypeError("expects a 'nodeId' string"))
 			}
 			presence.Node = node
 

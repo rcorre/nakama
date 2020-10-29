@@ -16,8 +16,10 @@ module NKRuntime {
     /**
      * The context of the current execution; used to observe and pass on cancellation signals.
      */
-    export type ContextKey = "env" | "execution_mode" | "node" | "query_params" | "user_id" | "username" | "vars" | "user_session_exp" | "session_id" | "client_ip" | "client_port" | "match_id" | "match_node" | "match_label" | "match_tick_rate"
+    export type ContextKey = "env" | "executionMode" | "node" | "queryParams" | "userId" | "username" | "vars" | "userSessionExp" | "sessionId" | "clientIp" | "clientPort" | "matchId" | "matchNode" | "matchLabel" | "matchTickRate"
     export type Context = { [K in ContextKey]: string };
+
+    type PermissionValues = 0|1;
 
     /**
      * An RPC function definition.
@@ -30,6 +32,7 @@ module NKRuntime {
          * @param logger - The server logger.
          * @param nk - The Nakama server APIs.
          * @param payload - The input data to the function call. This is usually an escaped JSON object.
+         * @throws {TypeError}
          * @returns A response payload or error if one occurred.
          */
         (ctx: Context, logger: Logger, nk: Nakama, payload: string): string;
@@ -65,9 +68,9 @@ module NKRuntime {
     }
 
     /**
-     * Dispatcher API definition.
+     * Match Dispatcher API definition.
      */
-    export interface Dispatcher {
+    export interface MatchDispatcher {
         /**
          * Broadcast a message to match presences.
          *
@@ -109,9 +112,9 @@ module NKRuntime {
      * Match Message definition
      */
     export interface MatchMessage {
-        user_id: string;
-        session_id: string;
-        node_id: string;
+        userId: string;
+        sessionId: string;
+        nodeId: string;
         hidden: boolean;
         persistence: boolean;
         username: string;
@@ -119,7 +122,7 @@ module NKRuntime {
         opcode: number;
         data: string;
         reliable: boolean;
-        receive_time: number;
+        receiveTime: number;
     }
 
     export interface MatchState {
@@ -130,12 +133,12 @@ module NKRuntime {
      * Match handler definitions
      */
     export interface MatchHandler {
-        match_init: MatchInitFunction;
-        match_join_attempt: MatchJoinAttemptFunction;
-        match_join: MatchJoinFunction;
-        match_leave: MatchLeaveFunction;
-        match_loop: MatchLoopFunction;
-        match_terminate: MatchTerminateFunction;
+        matchInit: MatchInitFunction;
+        matchJoinAttempt: MatchJoinAttemptFunction;
+        matchJoin: MatchJoinFunction;
+        matchLeave: MatchLeaveFunction;
+        matchLoop: MatchLoopFunction;
+        matchTerminate: MatchTerminateFunction;
     }
 
     /**
@@ -150,7 +153,7 @@ module NKRuntime {
          * @param params - Match create http request parameters.
          * @returns An object with the match state, tick rate and labels.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, params: {[key: string]: string}): {state: MatchState, tick_rate: number, label: string};
+        (ctx: Context, logger: Logger, nk: Nakama, params: {[key: string]: string}): {state: MatchState, tickRate: number, label: string};
     }
 
     /**
@@ -169,7 +172,7 @@ module NKRuntime {
          * @param metadata - Metadata object.
          * @returns object with state, acceptUser and optional rejection message if acceptUser is false.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: Dispatcher, tick: number, state: MatchState, presence: Presence, metadata: {[key: string]: any}): {state: MatchState, accept: boolean, reject_msg?: string};
+        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: MatchState, presence: Presence, metadata: {[key: string]: string}): {state: MatchState, accept: boolean, rejectMessage?: string};
     }
 
     /**
@@ -187,7 +190,7 @@ module NKRuntime {
          * @param presences - List of presences.
          * @returns object with the new state of the match.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: Dispatcher, tick: number, state: MatchState, presences: Presence[]): {state: MatchState | null};
+        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: MatchState, presences: Presence[]): {state: MatchState | null};
     }
 
     /**
@@ -205,7 +208,7 @@ module NKRuntime {
          * @param presences - List of presences.
          * @returns object with the new state of the match.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: Dispatcher, tick: number, state: MatchState, presences: Presence[]): {state: MatchState | null};
+        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: MatchState, presences: Presence[]): {state: MatchState | null};
     }
 
     /**
@@ -222,7 +225,7 @@ module NKRuntime {
          * @param state - Current match state.
          * @param messages - Received messages in the buffer.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: Dispatcher, tick: number, state: MatchState, messages: MatchMessage[]): {state: MatchState | null};
+        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: MatchState, messages: MatchMessage[]): {state: MatchState | null};
     }
 
     /**
@@ -239,7 +242,7 @@ module NKRuntime {
          * @param state - Current match state.
          * @param graceSeconds - Number of seconds to gracefully terminate the match. If this time elapses before the function returns the match will be forcefully terminated.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: Dispatcher, tick: number, state: MatchState, graceSeconds: number): {state: MatchState | null};
+        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: MatchState, graceSeconds: number): {state: MatchState | null};
     }
 
     /**
@@ -256,16 +259,16 @@ module NKRuntime {
 
         /**
          * Register a hook function to be run before an RPC function is invoked.
-         * The RPC call is identified by the id param..
+         * The RPC call is identified by the id param.
          *
          * @param id - The ID of the RPC function.
          * @param func - The Hook function logic to execute before the RPC is called.
          */
-        registerReqBefore(id: string, func: BeforeHookFunction): string;
+        registerReqBefore(id: string, func: BeforeHookFunction): string | null;
 
         /**
          * Register a hook function to be run after an RPC function is invoked.
-         * The RPC call is identified by the id param..
+         * The RPC call is identified by the id param.
          *
          * @param id - The ID of the RPC function.
          * @param func - The Hook function logic to execute after the RPC is called.
@@ -274,16 +277,16 @@ module NKRuntime {
 
         /**
          * Register a hook function to be run before an RPC function is invoked.
-         * The RPC call is identified by the id param..
+         * The RPC call is identified by the id param.
          *
          * @param id - The ID of the RPC function.
          * @param func - The Hook function logic to execute before the RPC is called.
          */
-        registerRtBefore(id: string, func: BeforeHookFunction): string;
+        registerRtBefore(id: string, func: BeforeHookFunction): string | null;
 
         /**
          * Register a hook function to be run after an RPC function is invoked.
-         * The RPC call is identified by the id param..
+         * The RPC call is identified by the id param.
          *
          * @param id - The ID of the RPC function.
          * @param func - The Hook function logic to execute after the RPC is called.
@@ -385,7 +388,7 @@ module NKRuntime {
         /**
          * Authenticated User ID.
          */
-        user_id: string;
+        userId: string;
         /**
          * Authenticated Username.
          */
@@ -414,53 +417,53 @@ module NKRuntime {
      * Account object
      */
     export interface Account {
-        user_id: string;
+        userId: string;
         username: string;
-        display_name: string;
-        avatar_url: string;
-        lang_tag: string;
+        displayName: string;
+        avatarUrl: string;
+        langTag: string;
         location: string;
         timezone: string;
-        apple_id: string;
-        facebook_id: string;
-        facebook_instant_game_id: string;
-        google_id: string;
-        gamecenter_id: string;
-        steam_id: string;
+        appleId: string;
+        facebookId: string;
+        facebookInstantGameId: string;
+        googleId: string;
+        gamecenterId: string;
+        steamId: string;
         online: boolean;
-        edge_count: string;
-        create_time: number;
-        update_time: number;
+        edgeCount: string;
+        createTime: number;
+        updateTime: number;
         metadata: {[key: string]: any};
         wallet: {[key: string]: number},
         email: string;
         devices: {[key: string]: string};
-        custom_id: string;
-        verify_time: number;
-        disable_time: number;
+        customId: string;
+        verifyTime: number;
+        disableTime: number;
     }
 
     /**
      * User object
      */
     export interface User {
-        user_id: string;
+        userId: string;
         username: string;
-        display_name: string;
-        avatar_url: string;
-        lang_tag: string;
+        displayName: string;
+        avatarUrl: string;
+        langTag: string;
         location: string;
         timezone: string;
-        apple_id: string;
-        facebook_id: string;
-        facebook_instant_game_id: string;
-        google_id: string;
-        gamecenter_id: string;
-        steam_id: string;
+        appleId: string;
+        facebookId: string;
+        facebookInstantGameId: string;
+        googleId: string;
+        gamecenterId: string;
+        steamId: string;
         online: boolean;
-        edge_count: string;
-        create_time: number;
-        update_time: number;
+        edgeCount: string;
+        createTime: number;
+        updateTime: number;
         metadata: {[key: string]: any};
     }
 
@@ -468,11 +471,11 @@ module NKRuntime {
      * User update account object
      */
     export interface UserUpdateAccount {
-        user_id: string;
+        userId: string;
         username?: string;
-        display_name?: string;
-        avatar_url?: string;
-        lang_tag?: string;
+        displayName?: string;
+        avatarUrl?: string;
+        langTag?: string;
         location?: string;
         timezone?: string;
         metadata?: {[key: string]: any};
@@ -482,19 +485,19 @@ module NKRuntime {
      * Stream object
      */
     export interface Stream {
-        mode: string;
-        subject: string;
-        subcontext: string;
-        label: string;
+        mode?: number;
+        subject?: string;
+        subcontext?: string;
+        label?: string;
     }
 
     /**
      * Presence object
      */
     export interface Presence {
-        user_id: string;
-        session_id: string;
-        node_id: string;
+        userId: string;
+        sessionId: string;
+        nodeId: string;
         hidden: boolean;
         persistence: boolean;
         username: string;
@@ -505,7 +508,7 @@ module NKRuntime {
      * Match Object
      */
     export interface Match {
-        match_id: string;
+        matchId: string;
         authoritative: boolean;
         size: number;
     }
@@ -526,7 +529,7 @@ module NKRuntime {
      * Wallet Update
      */
     export interface WalletUpdate {
-        user_id: string;
+        userId: string;
         changeset: {[key: string]: number};
         metadata: {[key: string]: any};
     }
@@ -535,10 +538,10 @@ module NKRuntime {
      * Wallet Update Result
      */
     export interface WalletUpdateResult {
-        // Wether the value has changed from the update.
-        updated: boolean;
+        // The wallet values after the update.
+        updated: {[key: string]: number};
         // The wallet value prior to the update.
-        previous: number;
+        previous: {[key: string]: number};
     }
 
     /**
@@ -546,9 +549,9 @@ module NKRuntime {
      */
     export interface WalletLedgerResult {
         id: string;
-        user_ud: string;
-        create_time: number;
-        update_time: number;
+        userId: string;
+        createTime: number;
+        updateTime: number;
         changeset: {[key: string]: number};
         metadata: {[key: string]: any};
     }
@@ -559,12 +562,12 @@ module NKRuntime {
     export interface StorageObject {
         key: string;
         collection: string;
-        user_id: string;
+        userId: string;
         version: string;
-        permission_read: number;
-        permission_write: number;
-        create_time: number;
-        update_time: number;
+        permissionRead: PermissionValues;
+        permissionWrite: PermissionValues;
+        createTime: number;
+        updateTime: number;
         value: {[key: string]: any};
     }
 
@@ -574,7 +577,7 @@ module NKRuntime {
     export interface StorageReadRequest {
         key: string;
         collection: string;
-        user_id: string;
+        userId: string;
     }
 
     /**
@@ -583,11 +586,11 @@ module NKRuntime {
     export interface StorageWriteRequest {
         key: string;
         collection: string;
-        user_id: string;
+        userId: string;
         value: {[key: string]: any};
         version?: string;
-        permission_read?: number;
-        permission_write?: number;
+        permissionRead?: PermissionValues;
+        permissionWrite?: PermissionValues;
     }
 
     /**
@@ -596,7 +599,7 @@ module NKRuntime {
     export interface StorageWriteAck {
         key: string;
         collection: string;
-        user_id: string;
+        userId: string;
         version: string;
     }
 
@@ -606,24 +609,24 @@ module NKRuntime {
     export interface StorageDeleteRequest {
         key: string;
         collection: string;
-        user_id?: string;
+        userId?: string;
         version?: string;
     }
 
     /**
      * Leaderboard Record Entry
      */
-    export interface LeaderBoardRecord {
-        leaderboard_id: string;
-        owner_id: string;
+    export interface LeaderboardRecord {
+        leaderboardId: string;
+        ownerId: string;
         username: string;
         score: number;
         subscore: number;
-        num_score: number;
+        numScore: number;
         metadata: {[key: string]: any};
-        create_time: number;
-        update_time: number;
-        expiry_time: number;
+        createTime: number;
+        updateTime: number;
+        expiryTime: number;
     }
 
     /**
@@ -634,19 +637,19 @@ module NKRuntime {
         title: string;
         description: string;
         category: number;
-        sort_order: Ordering;
+        sortOrder: SortOrder;
         size: number;
-        max_size: number;
-        max_num_score: number;
+        maxSize: number;
+        maxNumScore: number;
         duration: number;
-        start_active: number;
-        end_active: number;
-        can_enter: boolean;
-        next_reset: string;
+        startActive: number;
+        endActive: number;
+        canEnter: boolean;
+        nextReset: string;
         metadata: {[key: string]: any};
-        create_time: number;
-        start_time: number;
-        end_time: number;
+        createTime: number;
+        startTime: number;
+        endTime: number;
     }
 
     /**
@@ -654,22 +657,23 @@ module NKRuntime {
      */
     export interface Group {
         id: string;
-        creator_id: string;
+        creatorId: string;
         name: string;
         description: string;
-        avatar_url: string;
-        lang_tag: string;
+        avatarUrl: string;
+        langTag: string;
         open: boolean;
-        edge_count: number;
-        max_count: number;
-        create_time: number;
-        update_time: number;
+        edgeCount: number;
+        maxCount: number;
+        createTime: number;
+        updateTime: number;
     }
 
-    export enum Ordering {
+    export enum SortOrder {
         ASCENDING = 'asc',
         DESCENDING = 'desc',
     }
+
     export enum Operator {
         BEST = 'best',
         SET = 'set',
@@ -687,6 +691,7 @@ module NKRuntime {
          * @param properties - A map of properties to send in the event.
          * @param timestamp - (optional) Timestamp of the event as a Unix epoch.
          * @param external - (optional) External (client side) generated event.
+         * @throws {TypeError}
          */
         event(eventName: string, properties: {[key: string]: string}, timestamp?: number, external?: boolean): void;
 
@@ -694,6 +699,7 @@ module NKRuntime {
          * Generate a new UUID v4.
          *
          * @returns UUID v4
+         *
          */
         uuidV4(): string
 
@@ -702,16 +708,20 @@ module NKRuntime {
          *
          * @param sqlQuery - SQL Query string.
          * @param arguments - Opt. List of arguments to map to the query placeholders.
+         * @returns the number of affected rows.
+         * @throws {TypeError, GoError}
          */
-        sqlExec(sqlQuery: string, args?: any[]): any; // TODO: define return type
+        sqlExec(sqlQuery: string, args?: any[]): {rowsAffected: number};
 
         /**
          * Get the results of an SQL query to the Nakama database.
          *
          * @param sqlQuery - SQL Query string.
          * @param arguments - List of arguments to map to the query placeholders.
+         * @returns an array of the returned query rows, each one containing an object whose keys map a column to the row value.
+         * @throws {TypeError, GoError}
          */
-        sqlQuery(sqlQuery: string, args?: any[]): any; // TODO: define return type
+        sqlQuery(sqlQuery: string, args?: any[]): {[column: string]: any}[];
 
         /**
          * Http Request
@@ -722,6 +732,7 @@ module NKRuntime {
          * @param body - Http request body.
          * @param timeout - Http Request timeout in ms.
          * @returns Http response
+         * @throws {TypeError, GoError}
          */
         httpRequest(url: string, method: RequestMethod, headers: {[header: string]: string}, body: string, timeout?: number): HttpResponse
 
@@ -730,6 +741,8 @@ module NKRuntime {
          *
          * @param string - Input to encode.
          * @returns Base 64 encoded string.
+         *
+         * @throws {TypeError}
          */
         base64Encode(s: string, padding?: boolean): string;
 
@@ -738,6 +751,7 @@ module NKRuntime {
          *
          * @param string - Input to decode.
          * @returns Decoded string.
+         * @throws {TypeError, GoError}
          */
         base64Decode(s: string, padding?: boolean): string;
 
@@ -746,6 +760,7 @@ module NKRuntime {
          *
          * @param string - Input to encode.
          * @returns URL safe base 64 encoded string.
+         * @throws {TypeError}
          */
         base64UrlEncode(s: string, padding?: boolean): string;
 
@@ -754,6 +769,7 @@ module NKRuntime {
          *
          * @param string - Input to decode.
          * @returns Decoded string.
+         * @throws {TypeError, GoError}
          */
         base64UrlDecode(s: string, padding?: boolean): string;
 
@@ -762,16 +778,18 @@ module NKRuntime {
          *
          * @param string - Input to encode.
          * @returns URL safe base 64 encoded string.
+         * @throws {TypeError}
          */
-        base64UrlEncode(s: string, padding?: boolean): string;
+        base16Encode(s: string, padding?: boolean): string;
 
         /**
          * Base 16 Decode
          *
          * @param string - Input to decode.
          * @returns Decoded string.
+         * @throws {TypeError, GoError}
          */
-        base64UrlDecode(s: string, padding?: boolean): string;
+        base16Decode(s: string, padding?: boolean): string;
 
         /**
          * Generate a JWT token
@@ -780,6 +798,7 @@ module NKRuntime {
          * @param signingKey - Signing key.
          * @param claims - JWT claims.
          * @returns signed JWT token.
+         * @throws {TypeError, GoError}
          */
         jwtGenerate(s: 'HS256' | 'RS256', signingKey: string, claims: {[key: string]: string | number | boolean}): string;
 
@@ -789,6 +808,7 @@ module NKRuntime {
          * @param input - String to encrypt.
          * @param key - Encryption key.
          * @returns cipher text base64 encoded.
+         * @throws {TypeError, GoError}
          */
         aes128Encrypt(input: string, key: string): string;
 
@@ -798,6 +818,7 @@ module NKRuntime {
          * @param input - String to decrypt.
          * @param key - Encryption key.
          * @returns clear text.
+         * @throws {TypeError, GoError}
          */
         aes128Decrypt(input: string, key: string): string;
 
@@ -807,6 +828,7 @@ module NKRuntime {
          * @param input - String to encrypt.
          * @param key - Encryption key.
          * @returns cipher text base64 encoded.
+         * @throws {TypeError, GoError}
          */
         aes256Encrypt(input: string, key: string): string;
 
@@ -816,6 +838,7 @@ module NKRuntime {
          * @param input - String to decrypt.
          * @param key - Encryption key.
          * @returns clear text.
+         * @throws {TypeError, GoError}
          */
         aes256Decrypt(input: string, key: string): string;
 
@@ -824,6 +847,7 @@ module NKRuntime {
          *
          * @param input - String to hash.
          * @returns md5 Hash.
+         * @throws {TypeError}
          */
         md5Hash(input: string): string;
 
@@ -832,6 +856,7 @@ module NKRuntime {
          *
          * @param input - String to hash.
          * @returns sha256 Hash.
+         * @throws {TypeError}
          */
         sha256Hash(input: string): string;
 
@@ -841,6 +866,7 @@ module NKRuntime {
          * @param input - String to hash.
          * @param key - RSA private key.
          * @returns sha256 Hash.
+         * @throws {TypeError, GoError}
          */
         rsaSha256Hash(input: string, key: string): string;
 
@@ -850,6 +876,7 @@ module NKRuntime {
          * @param input - String to hash.
          * @param key - secret key.
          * @returns HMAC SHA256.
+         * @throws {TypeError, GoError}
          */
         hmacSha256Hash(input: string, key: string): string;
 
@@ -858,6 +885,7 @@ module NKRuntime {
          *
          * @param password - password to hash.
          * @returns password bcrypt hash.
+         * @throws {TypeError, GoError}
          */
         bcryptHash(password: string): string;
 
@@ -867,6 +895,7 @@ module NKRuntime {
          * @param password - plaintext password.
          * @param hash - hashed password.
          * @returns true if hashed password and plaintext password match, false otherwise.
+         * @throws {TypeError, GoError}
          */
         bcryptCompare(hash: string, password: string): boolean;
 
@@ -877,6 +906,7 @@ module NKRuntime {
          * @param username - username. If not provided a random username will be generated.
          * @param create - create user if not exists, defaults to true
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateApple(token: string, username?: string, create?: boolean): AuthResult;
 
@@ -887,6 +917,7 @@ module NKRuntime {
          * @param username - username. If not provided a random username will be generated.
          * @param create - create user if not exists, defaults to true
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateCustom(id: string, username?: string, create?: boolean): AuthResult;
 
@@ -897,6 +928,7 @@ module NKRuntime {
          * @param username - username. If not provided a random username will be generated.
          * @param create - create user if not exists, defaults to true
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateDevice(id: string, username?: string, create?: boolean): AuthResult;
 
@@ -908,6 +940,7 @@ module NKRuntime {
          * @param username - username. If not provided a random username will be generated.
          * @param create - create user if not exists, defaults to true
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateEmail(email: string, password: string, username?: string, create?: boolean): AuthResult;
 
@@ -919,6 +952,7 @@ module NKRuntime {
          * @param username - username. If not provided a random username will be generated.
          * @param create - create user if not exists, defaults to true
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateFacebook(token: string, importFriends?: boolean, username?: string, create?: boolean): AuthResult;
 
@@ -929,6 +963,7 @@ module NKRuntime {
          * @param username - username. If not provided a random username will be generated.
          * @param create - create user if not exists, defaults to true
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateFacebookInstantGame(signedPlayerInfo: string, username?: string, create?: boolean): AuthResult;
 
@@ -944,6 +979,7 @@ module NKRuntime {
          * @param username - username. If not provided a random username will be generated.
          * @param create - create user if not exists, defaults to true
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateGamecenter(
             playerId: string,
@@ -963,6 +999,7 @@ module NKRuntime {
          * @param username - username. If not provided a random username will be generated.
          * @param create - create user if not exists, defaults to true
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateGoogle(token: string, username?: string, create?: boolean): AuthResult;
 
@@ -973,6 +1010,7 @@ module NKRuntime {
          * @param username - username. If not provided a random username will be generated.
          * @param create - create user if not exists, defaults to true
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateSteam(token: string, username?: string, create?: boolean): AuthResult;
 
@@ -983,6 +1021,7 @@ module NKRuntime {
          * @param exp - Token expiration, Unix epoch.
          * @param vars - Arbitrary metadata.
          * @returns Object with authenticated user data.
+         * @throws {TypeError, GoError}
          */
         authenticateTokenGenerate(userId: string, exp: number, vars: {[key: string]: string}): TokenGenerateResult;
 
@@ -991,6 +1030,7 @@ module NKRuntime {
          *
          * @param userId - User ID.
          * @returns Object with account data.
+         * @throws {TypeError, GoError}
          */
         accountGetId(userId: string): Account
 
@@ -999,6 +1039,7 @@ module NKRuntime {
          *
          * @param userIds - User IDs.
          * @returns Array containing accounts data.
+         * @throws {TypeError, GoError}
          */
         accountsGetId(userIds: string[]): Account[]
 
@@ -1012,6 +1053,7 @@ module NKRuntime {
          * @param language - Language to be updated. Use null to not update this field.
          * @param avatar - User's avatar URL. Use null to not update this field.
          * @param metadata - Metadata to update. Use null not to update this field.
+         * @throws {TypeError, GoError}
          */
         accountUpdateId(userId: string, displayName: string, timezone: string, location: string, language: string, avatar: string, metadata: {[key: string]: any}): void;
 
@@ -1019,6 +1061,7 @@ module NKRuntime {
          * Delete user account
          *
          * @param userId - Target account.
+         * @throws {TypeError, GoError}
          */
         accountDeleteId(userId: string): void;
 
@@ -1026,6 +1069,7 @@ module NKRuntime {
          * Export user account data to JSON encoded string
          *
          * @param userId - Target account.
+         * @throws {TypeError, GoError}
          */
         accountExportId(userId: string): string;
 
@@ -1033,6 +1077,7 @@ module NKRuntime {
          * Get user data by ids.
          *
          * @param userIds - User IDs.
+         * @throws {TypeError, GoError}
          */
         usersGetId(userIds: string[]): User[]
 
@@ -1040,6 +1085,7 @@ module NKRuntime {
          * Get user data by usernames.
          *
          * @param usernames - Usernames.
+         * @throws {TypeError, GoError}
          */
         usersGetUsername(usernames: string[]): User[]
 
@@ -1047,6 +1093,7 @@ module NKRuntime {
          * Ban a group of users by id.
          *
          * @param userIds - User IDs.
+         * @throws {TypeError, GoError}
          */
         usersBanId(userIds: string[]): void;
 
@@ -1054,6 +1101,7 @@ module NKRuntime {
          * Unban a group of users by id.
          *
          * @param userIds - User IDs.
+         * @throws {TypeError, GoError}
          */
         usersUnbanId(userIds: string[]): void;
 
@@ -1062,6 +1110,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param token - Apple sign in token.
+         * @throws {TypeError, GoError}
          */
         linkApple(userID: string, token: string): void;
 
@@ -1070,6 +1119,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param customID - Custom ID.
+         * @throws {TypeError, GoError}
          */
         linkCustom(userID: string, customID: string): void;
 
@@ -1078,6 +1128,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param deviceID - Device ID.
+         * @throws {TypeError, GoError}
          */
         linkDevice(userID: string, deviceID: string): void;
 
@@ -1087,6 +1138,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param email - Email.
          * @param password - Password.
+         * @throws {TypeError, GoError}
          */
         linkEmail(userID: string, email: string, password: string): void;
 
@@ -1095,8 +1147,9 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param username - Facebook username.
-         * @param token - Password.
+         * @param token - Facebook Token.
          * @param importFriends - Import Facebook Friends. Defaults to true.
+         * @throws {TypeError, GoError}
          */
         linkFacebook(userID: string, username: string, token: string, importFriends?: boolean): void;
 
@@ -1105,6 +1158,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param signedPlayerInfo - Signed player info.
+         * @throws {TypeError, GoError}
          */
         linkFacebookInstantGame(userID: string, signedPlayerInfo: string): void;
 
@@ -1118,6 +1172,7 @@ module NKRuntime {
          * @param salt - Salt.
          * @param signature - Signature.
          * @param publicKeyURL - Public Key URL.
+         * @throws {TypeError, GoError}
          */
         linkGameCenter(
             userID: string,
@@ -1130,10 +1185,29 @@ module NKRuntime {
         ): void;
 
         /**
+         * Link account to Google.
+         *
+         * @param userID - User ID.
+         * @param token - Google Token.
+         * @throws {TypeError, GoError}
+         */
+        linkGoogle(userID: string, token: string): void;
+
+        /**
+         * Link account to Steam.
+         *
+         * @param userID - User ID.
+         * @param token - Steam Token.
+         * @throws {TypeError, GoError}
+         */
+        linkSteam(userID: string, token: string): void;
+
+        /**
          * Unlink Apple sign in from an account.
          *
          * @param userID - User ID.
          * @param token - Apple sign in token.
+         * @throws {TypeError, GoError}
          */
         unlinkApple(userID: string, token: string): void;
 
@@ -1142,6 +1216,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param customID - Custom ID.
+         * @throws {TypeError, GoError}
          */
         unlinkCustom(userID: string, customID: string): void;
 
@@ -1150,6 +1225,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param deviceID - Device ID.
+         * @throws {TypeError, GoError}
          */
         unlinkDevice(userID: string, deviceID: string): void;
 
@@ -1158,6 +1234,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param email - Email.
+         * @throws {TypeError, GoError}
          */
         unlinkEmail(userID: string, email: string): void;
 
@@ -1166,6 +1243,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param token - Password.
+         * @throws {TypeError, GoError}
          */
         unlinkFacebook(userID: string, token: string): void;
 
@@ -1174,6 +1252,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param signedPlayerInfo - Signed player info.
+         * @throws {TypeError, GoError}
          */
         unlinkFacebookInstantGame(userID: string, signedPlayerInfo: string): void;
 
@@ -1187,6 +1266,7 @@ module NKRuntime {
          * @param salt - Salt.
          * @param signature - Signature.
          * @param publicKeyURL - Public Key URL.
+         * @throws {TypeError, GoError}
          */
         unlinkGameCenter(
             userID: string,
@@ -1203,6 +1283,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param token - Google token.
+         * @throws {TypeError, GoError}
          */
         unlinkGoogle(userID: string, token: string): void;
 
@@ -1211,6 +1292,7 @@ module NKRuntime {
          *
          * @param userID - User ID.
          * @param token - Steam token.
+         * @throws {TypeError, GoError}
          */
         unlinkSteam(userID: string, token: string): void;
 
@@ -1221,6 +1303,7 @@ module NKRuntime {
          * @param includeHidden - Optional argument to include hidden presences in the list or not, default true.
          * @param includeNotHidden - Optional argument to include not hidden presences in the list or not, default true.
          * @returns List of presence objects.
+         * @throws {TypeError}
          */
         streamUserList(stream: Stream, includeHidden?: boolean, includeNotHidden?: boolean): Presence[];
 
@@ -1230,6 +1313,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param sessionID - Session ID.
          * @param stream - Stream data.
+         * @throws {TypeError}
          * @returns Presence object.
          */
         streamUserGet(userID: string, sessionID: string, stream: Stream): Presence;
@@ -1243,6 +1327,7 @@ module NKRuntime {
          * @param hidden - Opt. If hidden no presence events are generated for the user.
          * @param persistence - Opt. By default persistence is enabled, if the stream supports it.
          * @param status - Opt. By default no status is set for the user.
+         * @throws {TypeError, GoError}
          */
         streamUserJoin(userID: string, sessionID: string, stream: Stream, hidden?: boolean, persistence?: boolean, status?: string): void;
 
@@ -1255,6 +1340,7 @@ module NKRuntime {
          * @param hidden - Opt. If hidden no presence events are generated for the user.
          * @param persistence - Opt. By default persistence is enabled, if the stream supports it.
          * @param status - Opt. By default no status is set for the user.
+         * @throws {TypeError, GoError}
          */
         streamUserUpdate(userID: string, sessionID: string, stream: Stream, hidden?: boolean, persistence?: boolean, status?: string): void;
 
@@ -1264,6 +1350,7 @@ module NKRuntime {
          * @param userID - User ID.
          * @param sessionID - Session ID.
          * @param stream - Stream data.
+         * @throws {TypeError, GoError}
          */
         streamUserLeave(userID: string, sessionID: string, stream: Stream): void;
 
@@ -1272,6 +1359,7 @@ module NKRuntime {
          *
          * @param presence - User presence data.
          * @param stream - Stream data.
+         * @throws {TypeError, GoError}
          */
         streamUserKick(presence: Presence, stream: Stream): void;
 
@@ -1280,14 +1368,18 @@ module NKRuntime {
          *
          * @param stream - Stream data.
          * @returns the number of users in the stream.
+         * @throws {TypeError}
          */
         streamCount(stream: Stream): number
 
         /**
          * Close a stream.
          *
+         * Closing a stream removes all presences currently on it. It can be useful to explicitly close a stream and enable the server to reclaim resources more quickly.
+         *
          * @param stream - Stream data.
          * @returns the number of users in the stream.
+         * @throws {TypeError}
          */
         streamClose(stream: Stream): void;
 
@@ -1297,7 +1389,8 @@ module NKRuntime {
          * @param stream - Stream data.
          * @param data - Data string to send.
          * @param presences - Opt. List of presences in the stream to send the data to. If nil or empty, data is sent to all the users.
-         * @param reliable - Opt. If data is sent with delivery guarantees. Defaults to true
+         * @param reliable - Opt. If data is sent with delivery guarantees. Defaults to true.
+         * @throws {TypeError}
          */
         streamSend(stream: Stream, data: string, presences?: Presence[], reliable?: boolean): void;
 
@@ -1307,14 +1400,16 @@ module NKRuntime {
          * @param stream - Stream data.
          * @param envelope - Envelope object. // TODO define envelope export interface
          * @param presences - Opt. List of presences in the stream to send the data to. If nil or empty, data is sent to all the users.
-         * @param reliable - Opt. If data is sent with delivery guarantees. Defaults to true
+         * @param reliable - Opt. If data is sent with delivery guarantees. Defaults to true.
+         * @throws {TypeError, GoError}
          */
-        streamSendRaw(stream: Stream, data: string, presences?: Presence[], reliable?: boolean): void;
+        streamSendRaw(stream: Stream, envelope: {}, presences?: Presence[], reliable?: boolean): void;
 
         /**
          * Disconnect session.
          *
          * @param sessionID - Session ID.
+         * @throws {TypeError, GoError}
          */
         sessionDisconnect(sessionID: string): void;
 
@@ -1322,15 +1417,17 @@ module NKRuntime {
          * Create a new match.
          *
          * @param module - Name of the module the match will run.
-         * @param params - Opt. Object with the initial state of the match. // TODO define params export interface
+         * @param params - Opt. Object with the initial state of the match.
+         * @throws {TypeError, GoError}
          */
-        matchCreate(module: string, params?: Object): void;
+        matchCreate(module: string, params?: {[key: string]: any}): void;
 
         /**
          * Get a running match info.
          *
          * @param matchID - Match ID.
          * @returns match data.
+         * @throws {TypeError, GoError}
          */
         matchGet(id: string): Match
 
@@ -1344,6 +1441,7 @@ module NKRuntime {
          * @param maxSize - Filter by max number of players in a match. If NULL or no value is provided, there is no upper player bound.
          * @param query - Query by match properties (https://heroiclabs.com/docs/gameplay-matchmaker/#query). If no value is provided, all properties match.
          * @returns list of running game matches that match the specified filters.
+         * @throws {TypeError, GoError}
          */
         matchList(limit: number, authoritative?: boolean | null, label?: string | null, minSize?: number | null, maxSize?: number | null, query?: string | null): Match[]
 
@@ -1356,8 +1454,22 @@ module NKRuntime {
          * @param code - Custom code for the notification. Must be a positive integer.
          * @param senderID - Sender ID.
          * @param persistent - A non-persistent message will only be received by a client which is currently connected to the server.
+         * @throws {TypeError, GoError}
          */
         notificationSend(userID: string, subject: string, content: {[key: string]: any}, code: number, senderID: string, persistent: boolean): void;
+
+        /**
+         * Send multiple notifications.
+         *
+         * @param notifications - Array of notifications.
+         * @param subject - Subject of the notification.
+         * @param content - Key value object to send as the notification content.
+         * @param code - Custom code for the notification. Must be a positive integer.
+         * @param senderID - Sender ID.
+         * @param persistent - A non-persistent message will only be received by a client which is currently connected to the server.
+         * @throws {TypeError, GoError}
+         */
+        notificationsSend(notifications: Notification[]): void;
 
         /**
          * Update user wallet.
@@ -1366,6 +1478,7 @@ module NKRuntime {
          * @param changeset - Object with the wallet changeset data.
          * @param metadata - Opt. Additional metadata to tag the wallet update with.
          * @param updateLedger - Opt. Whether to record this update in the ledger. Default true.
+         * @throws {TypeError, GoError}
          */
         walletUpdate(userID: string, changeset: {[key: string]: number}, metadata?: {[key: string]: string}, updateLedger?: boolean): WalletUpdateResult;
 
@@ -1374,6 +1487,7 @@ module NKRuntime {
          *
          * @param updates - The set of user wallet update operations to apply.
          * @param updateLedger - Opt. Whether to record this update in the ledger. Default true.
+         * @throws {TypeError, GoError}
          */
         walletsUpdate(updates: WalletUpdate[], updateLedger?: boolean): WalletUpdateResult[];
 
@@ -1383,6 +1497,7 @@ module NKRuntime {
          * @param ledgerID - The ledger id.
          * @param metadata - Additional metadata to tag the wallet update with.
          * @returns updated ledger data.
+         * @throws {TypeError, GoError}
          */
         walletLedgerUpdate(ledgerID: string, metadata: {[key: string]: any}): WalletLedgerResult;
 
@@ -1393,8 +1508,9 @@ module NKRuntime {
          * @param limit - Opt. Maximum number of items to list. Defaults to 100.
          * @param cursor - Opt. Pagination cursor.
          * @returns Object containing an array of wallet ledger results and a cursor for the next page of results, if there is one.
+         * @throws {TypeError, GoError}
          */
-        walletLedgerList(user_id: string, limit?: number, cursor?: string): {items: WalletLedgerResult, cursor: string};
+        walletLedgerList(userID: string, limit?: number, cursor?: string): {items: WalletLedgerResult, cursor: string};
 
         /**
          * List user's storage objects from a collection.
@@ -1404,6 +1520,7 @@ module NKRuntime {
          * @param limit - Opt. Maximum number of items to list. Defaults to 100.
          * @param cursor - Opt. Pagination cursor.
          * @returns Object containing an array of storage objects and a cursor for the next page of results, if there is one.
+         * @throws {TypeError, GoError}
          */
         storageList(userID: string, collection: string, limit?: number, cursor?: string): {items: StorageObject, cursor: string};
 
@@ -1412,6 +1529,7 @@ module NKRuntime {
          *
          * @param keys - Array of storage read objects.
          * @returns Object containing an array of storage objects and a cursor for the next page of results, if there is one.
+         * @throws {TypeError, GoError}
          */
         storageRead(keys: StorageReadRequest[]): StorageObject[];
 
@@ -1420,6 +1538,7 @@ module NKRuntime {
          *
          * @param keys - Array of storage objects to write.
          * @returns List of written objects acks.
+         * @throws {TypeError, GoError}
          */
         storageWrite(keys: StorageWriteRequest[]): StorageWriteAck[];
 
@@ -1428,6 +1547,7 @@ module NKRuntime {
          *
          * @param keys - Array of storage objects to write.
          * @returns List of written objects acks.
+         * @throws {TypeError, GoError}
          */
         storageDelete(keys: StorageDeleteRequest[]): void;
 
@@ -1440,8 +1560,9 @@ module NKRuntime {
          * @param walletUpdates - Array of wallet updates.
          * @param updateLedger - Opt. Wether if the wallet update should also update the wallet ledger. Defaults to false.
          * @returns An object with the results from wallets and storage objects updates.
+         * @throws {TypeError, GoError}
          */
-        multiUpdate(accountUpdates: UserUpdateAccount[] | null, storageObjectsUpdates: StorageWriteRequest[] | null, walletUpdates: WalletUpdate[] | null, updateLedger?: boolean): {storage_write_acks: StorageWriteAck[], wallet_update_acks: WalletUpdateResult[]};
+        multiUpdate(accountUpdates: UserUpdateAccount[] | null, storageObjectsUpdates: StorageWriteRequest[] | null, walletUpdates: WalletUpdate[] | null, updateLedger?: boolean): {storageWriteAcks: StorageWriteAck[], walletUpdateAcks: WalletUpdateResult[]};
 
         /**
          * Create a new leaderboard.
@@ -1452,11 +1573,12 @@ module NKRuntime {
          * @param operator - Opt. Score operator "best", "set" or "incr" (refer to the docs for more info). Defaults to "best".
          * @param resetSchedule - Cron string to set the periodicity of the leaderboard reset. Set as null to never reset.
          * @param metadata - Opt. metadata object.
+         * @throws {TypeError, GoError}
          */
         leaderboardCreate(
             leaderboardID: string,
             authoritative: boolean,
-            sortOrder?: Ordering,
+            sortOrder?: SortOrder,
             operator?: Operator,
             resetSchedule?: null | string,
             metadata?: {[key: string]: any},
@@ -1466,6 +1588,7 @@ module NKRuntime {
          * Delete a leaderboard.
          *
          * @param leaderboardID - Leaderboard id.
+         * @throws {TypeError, GoError}
          */
         leaderboardDelete(leaderboardID: string): void;
 
@@ -1476,9 +1599,10 @@ module NKRuntime {
          * @param leaderboardOwners - Array of leaderboard owners.
          * @param limit - Max number of records to return.
          * @param cursor - Page cursor.
-         * @param overrideExpiry - Override the time expiry of the leaderboard. (Unix epoch)
+         * @param overrideExpiry - Override the time expiry of the leaderboard. (Unix epoch).
+         * @throws {TypeError, GoError}
          */
-        leaderboardRecordsList(leaderboardID: string, leaderboardOwners?: string[], limit?: number, cursor?: string, overrideExpiry?: number): LeaderBoardRecord[]
+        leaderboardRecordsList(leaderboardID: string, leaderboardOwners?: string[], limit?: number, cursor?: string, overrideExpiry?: number): LeaderboardRecord[]
 
         /**
          * Write a new leaderboard record.
@@ -1490,14 +1614,16 @@ module NKRuntime {
          * @param subscore - Subscore.
          * @param metadata - Opt. metadata object.
          * @returns - The created leaderboard record.
+         * @throws {TypeError, GoError}
          */
-        leaderboardRecordWrite(leaderboardID: string, ownerID: string, username?: string, score?: number, subscore?: number, metadata?: {[key: string]: any}): LeaderBoardRecord
+        leaderboardRecordWrite(leaderboardID: string, ownerID: string, username?: string, score?: number, subscore?: number, metadata?: {[key: string]: any}): LeaderboardRecord
 
         /**
          * Delete a leaderboard record.
          *
          * @param leaderboardID - Leaderboard id.
          * @param ownerID - Array of leaderboard owners.
+         * @throws {TypeError, GoError}
          */
         leaderboardRecordDelete(leaderboardID: string, ownerID: string): void;
 
@@ -1518,10 +1644,11 @@ module NKRuntime {
          * @param maxSize - Opt. Maximum size of participants in a tournament.
          * @param maxNumScore - Opt. Maximum submission attempts for a tournament record.
          * @param joinRequired - Opt. Whether the tournament needs to be joint before a record write is allowed.
+         * @throws {TypeError, GoError}
          */
         tournamentCreate(
             tournamentID: string,
-            sortOrder: Ordering,
+            sortOrder: SortOrder,
             operator: Operator,
             duration: number,
             resetSchedule?: string | null,
@@ -1540,6 +1667,7 @@ module NKRuntime {
          * Delete a tournament.
          *
          * @param tournamentID - Tournament id.
+         * @throws {TypeError, GoError}
          */
         tournamentDelete(tournamentID: string): void;
 
@@ -1549,6 +1677,7 @@ module NKRuntime {
          * @param tournamentID - Tournament id.
          * @param ownerID - Owner of the record id.
          * @param count - Attempt count to add.
+         * @throws {TypeError, GoError}
          */
         tournamentAddAttempt(tournamentID: string, ownerID: string, count: number): void;
 
@@ -1560,6 +1689,7 @@ module NKRuntime {
          * @param tournamentID - Tournament id.
          * @param userID - Owner of the record id.
          * @param username - The username of the record owner.
+         * @throws {TypeError, GoError}
          */
         tournamentJoin(tournamentID: string, userId: string, username: string): void;
 
@@ -1568,6 +1698,7 @@ module NKRuntime {
          *
          * @param tournamentIDs - Tournament ids.
          * @returns The tournament data for the given ids.
+         * @throws {TypeError, GoError}
          */
         tournamentsGetId(tournamentIds: string[]): Tournament[];
 
@@ -1594,6 +1725,7 @@ module NKRuntime {
          * @param subscore - Opt. A secondary subscore parameter for the submission. Optional in Lua. Default 0.
          * @param metadata - Opt. The metadata you want associated to this submission.
          * @returns The tournament data for the given ids.
+         * @throws {TypeError, GoError}
          */
         tournamentRecordWrite(id: string, ownerID: string, username?: string, score?: number, subscore?: number, metadata?: {[key: string]: any}): void;
 
@@ -1605,6 +1737,7 @@ module NKRuntime {
          * @param limit - Opt. The owner username of this score submission, if it's a user.
          * @param expiry - Opt. Expiry Unix epoch.
          * @returns The tournament data for the given ids.
+         * @throws {TypeError, GoError}
          */
         tournamentRecordsHaystack(id: string, ownerID: string, limit?: number, expiry?: number): Tournament[];
 
@@ -1629,6 +1762,7 @@ module NKRuntime {
          * @param metadata - Opt. Custom information to store for this group.
          * @param limit - Opt. Maximum number of members to have in the group. Defaults to 100.
          * @returns An array of group objects.
+         * @throws {TypeError, GoError}
          */
         groupsCreate(userID: string, name: string, creatorID: string, lang?: string, description?: string, avatarURL?: string, open?: boolean, metadata?: {[key: string]: any}, limit?: number): Group[];
 
@@ -1645,6 +1779,7 @@ module NKRuntime {
          * @param open - Whether the group is for anyone to join or not. Use nil to not update.
          * @param metadata - Custom information to store for this group. Use nil to not update.
          * @param limit - Maximum number of members to have in the group. Use nil if field is not being updated.
+         * @throws {TypeError, GoError}
          */
         groupUpdate(userID: string, name: string, creatorID: string, lang: string, description: string, avatarURL: string, open: boolean, metadata: {[key: string]: any}, limit: number): void;
 
@@ -1652,6 +1787,7 @@ module NKRuntime {
          * Delete a group.
          *
          * @param groupID - The group ID to update.
+         * @throws {TypeError, GoError}
          */
         groupDelete(groupID: string): void;
 
@@ -1660,6 +1796,7 @@ module NKRuntime {
          *
          * @param groupID - The group ID to update.
          * @param userIDs - Array of user IDs to be kicked from the group.
+         * @throws {TypeError, GoError}
          */
         groupUsersKick(userID: string, userIDs: string[]): void;
 
@@ -1672,8 +1809,21 @@ module NKRuntime {
          * @param state - Opt. Filter users by their group state (0: Superadmin, 1: Admin, 2: Member, 3: Requested to join). Use nil or undefined to return all states.
          * @param cursor - Opt. A cursor used to fetch the next page when applicable.
          * @returns A list of group members.
+         * @throws {TypeError, GoError}
          */
-        groupUsersList(userID: string, limit?: number, state?: number, cursor?: string): {group_users: {user: User, state: number}, cursor: string | null}
+        groupUsersList(userID: string, limit?: number, state?: number, cursor?: string): {groupUsers: {user: User, state: number}, cursor: string | null}
+
+        /**
+         * List all groups the user belongs to.
+         *
+         * @param userID - User ID.
+         * @param limit - Opt. Max number of returned results. Defaults to 100.
+         * @param state - Opt. Filter users by their group state (0: Superadmin, 1: Admin, 2: Member, 3: Requested to join). Use nil or undefined to return all states.
+         * @param cursor - Opt. A cursor used to fetch the next page when applicable.
+         * @returns A list of group members.
+         * @throws {TypeError, GoError}
+         */
+        userGroupsList(userID: string, limit?: number, state?: number, cursor?: string): {userGroups: {group: Group, state: number}, cursor: string | null}
     }
 
     /**

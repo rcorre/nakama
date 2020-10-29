@@ -20,20 +20,20 @@ import (
 
 const (
 	__RUNTIME_JAVASCRIPT_CTX_ENV              = "env"
-	__RUNTIME_JAVASCRIPT_CTX_MODE             = "execution_mode"
+	__RUNTIME_JAVASCRIPT_CTX_MODE             = "executionMode"
 	__RUNTIME_JAVASCRIPT_CTX_NODE             = "node"
-	__RUNTIME_JAVASCRIPT_CTX_QUERY_PARAMS     = "query_params"
-	__RUNTIME_JAVASCRIPT_CTX_USER_ID          = "user_id"
+	__RUNTIME_JAVASCRIPT_CTX_QUERY_PARAMS     = "queryParams"
+	__RUNTIME_JAVASCRIPT_CTX_USER_ID          = "userId"
 	__RUNTIME_JAVASCRIPT_CTX_USERNAME         = "username"
 	__RUNTIME_JAVASCRIPT_CTX_VARS             = "vars"
-	__RUNTIME_JAVASCRIPT_CTX_USER_SESSION_EXP = "user_session_exp"
-	__RUNTIME_JAVASCRIPT_CTX_SESSION_ID       = "session_id"
-	__RUNTIME_JAVASCRIPT_CTX_CLIENT_IP        = "client_ip"
-	__RUNTIME_JAVASCRIPT_CTX_CLIENT_PORT      = "client_port"
-	__RUNTIME_JAVASCRIPT_CTX_MATCH_ID         = "match_id"
-	__RUNTIME_JAVASCRIPT_CTX_MATCH_NODE       = "match_node"
-	__RUNTIME_JAVASCRIPT_CTX_MATCH_LABEL      = "match_label"
-	__RUNTIME_JAVASCRIPT_CTX_MATCH_TICK_RATE  = "match_tick_rate"
+	__RUNTIME_JAVASCRIPT_CTX_USER_SESSION_EXP = "userSessionExp"
+	__RUNTIME_JAVASCRIPT_CTX_SESSION_ID       = "sessionId"
+	__RUNTIME_JAVASCRIPT_CTX_CLIENT_IP        = "clientIp"
+	__RUNTIME_JAVASCRIPT_CTX_CLIENT_PORT      = "clientPort"
+	__RUNTIME_JAVASCRIPT_CTX_MATCH_ID         = "matchId"
+	__RUNTIME_JAVASCRIPT_CTX_MATCH_NODE       = "matchNode"
+	__RUNTIME_JAVASCRIPT_CTX_MATCH_LABEL      = "matchLabel"
+	__RUNTIME_JAVASCRIPT_CTX_MATCH_TICK_RATE  = "matchTickRate"
 )
 
 func NewRuntimeJsContext(r *goja.Runtime, node string, env goja.Value, mode RuntimeExecutionMode, queryParams map[string][]string, sessionExpiry int64, userID, username string, vars map[string]string, sessionID, clientIP, clientPort string) *goja.Object {

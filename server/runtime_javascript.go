@@ -448,7 +448,7 @@ func (rp *RuntimeProviderJS) Get(ctx context.Context) (*RuntimeJS, error) {
 			// This discrepancy is allowed as it avoids a full mutex locking scenario.
 			break
 		}
-		rp.metrics.GaugeRuntimes("javascript_runtimes", float64(currentCount))
+		rp.metrics.GaugeJsRuntimes(float64(currentCount))
 		return rp.newFn(), nil
 	}
 
@@ -1395,7 +1395,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		for i := 0; i < config.GetRuntime().MinCount; i++ {
 			runtimeProviderJS.poolCh <- runtimeProviderJS.newFn()
 		}
-		runtimeProviderJS.metrics.GaugeRuntimes("javascript_runtimes", float64(config.GetRuntime().MinCount))
+		runtimeProviderJS.metrics.GaugeJsRuntimes(float64(config.GetRuntime().MinCount))
 	}
 	startupLogger.Info("Allocated minimum JavaScript runtime pool")
 

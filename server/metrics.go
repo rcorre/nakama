@@ -266,6 +266,14 @@ func (m *Metrics) MessageBytesSent(sentBytes int64) {
 // Set the absolute value of currently allocated Lua runtime VMs.
 func (m *Metrics) GaugeRuntimes(value float64) {
 	m.prometheusScope.Gauge("lua_runtimes").Update(value)
+// Set the absolute value of currently allocated Lua runtime VMs.
+func (m *Metrics) GaugeLuaRuntimes(value float64) {
+	m.prometheusScope.Gauge("lua_runtimes").Update(value)
+}
+
+// Set the absolute value of currently allocated JavaScript runtime VMs.
+func (m *Metrics) GaugeJsRuntimes(value float64) {
+	m.prometheusScope.Gauge("javascript_runtimes").Update(value)
 }
 
 // Set the absolute value of currently running authoritative matches.

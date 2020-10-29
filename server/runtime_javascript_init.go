@@ -1,9 +1,10 @@
 package server
 
 import (
+	"strings"
+
 	"github.com/dop251/goja"
 	"go.uber.org/zap"
-	"strings"
 )
 
 const INIT_MODULE_FN_NAME = "InitModule"
@@ -21,9 +22,9 @@ type jsMatchHandlers struct {
 }
 
 type RuntimeJavascriptCallbacks struct {
-	Rpc    map[string]goja.Callable
-	Before map[string]goja.Callable
-	After  map[string]goja.Callable
+	Rpc              map[string]goja.Callable
+	Before           map[string]goja.Callable
+	After            map[string]goja.Callable
 	Matchmaker       goja.Callable
 	TournamentEnd    goja.Callable
 	TournamentReset  goja.Callable
@@ -286,63 +287,63 @@ func (im *RuntimeJavascriptInitModule) registerMatch(r *goja.Runtime) func(goja.
 
 		functions := &jsMatchHandlers{}
 
-		fnValue, ok := funcMap["match_init"]
+		fnValue, ok := funcMap["matchInit"]
 		if !ok {
-			panic(r.NewTypeError("match_init not found"))
+			panic(r.NewTypeError("matchInit not found"))
 		}
 		fn, ok := goja.AssertFunction(r.ToValue(fnValue))
 		if !ok {
-			panic(r.NewTypeError("match_init value not a valid function"))
+			panic(r.NewTypeError("matchInit value not a valid function"))
 		}
 		functions.initFn = fn
 
-		fnValue, ok = funcMap["match_join_attempt"]
+		fnValue, ok = funcMap["matchJoinAttempt"]
 		if !ok {
-			panic(r.NewTypeError("match_join_attempt not found"))
+			panic(r.NewTypeError("matchJoinAttempt not found"))
 		}
 		fn, ok = goja.AssertFunction(r.ToValue(fnValue))
 		if !ok {
-			panic(r.NewTypeError("match_join_attempt value not a valid function"))
+			panic(r.NewTypeError("matchJoinAttempt value not a valid function"))
 		}
 		functions.joinAttemptFn = fn
 
-		fnValue, ok = funcMap["match_join"]
+		fnValue, ok = funcMap["matchJoin"]
 		if !ok {
-			panic(r.NewTypeError("match_join not found"))
+			panic(r.NewTypeError("matchJoin not found"))
 		}
 		fn, ok = goja.AssertFunction(r.ToValue(fnValue))
 		if !ok {
-			panic(r.NewTypeError("match_join value not a valid function"))
+			panic(r.NewTypeError("matchJoin value not a valid function"))
 		}
 		functions.joinFn = fn
 
-		fnValue, ok = funcMap["match_leave"]
+		fnValue, ok = funcMap["matchLeave"]
 		if !ok {
-			panic(r.NewTypeError("match_leave not found"))
+			panic(r.NewTypeError("matchLeave not found"))
 		}
 		fn, ok = goja.AssertFunction(r.ToValue(fnValue))
 		if !ok {
-			panic(r.NewTypeError("match_leave value not a valid function"))
+			panic(r.NewTypeError("matchLeave value not a valid function"))
 		}
 		functions.leaveFn = fn
 
-		fnValue, ok = funcMap["match_loop"]
+		fnValue, ok = funcMap["matchLoop"]
 		if !ok {
-			panic(r.NewTypeError("match_loop not found"))
+			panic(r.NewTypeError("matchLoop not found"))
 		}
 		fn, ok = goja.AssertFunction(r.ToValue(fnValue))
 		if !ok {
-			panic(r.NewTypeError("match_loop value not a valid function"))
+			panic(r.NewTypeError("matchLoop value not a valid function"))
 		}
 		functions.loopFn = fn
 
-		fnValue, ok = funcMap["match_terminate"]
+		fnValue, ok = funcMap["matchTerminate"]
 		if !ok {
-			panic(r.NewTypeError("match_terminate not found"))
+			panic(r.NewTypeError("matchTerminate not found"))
 		}
 		fn, ok = goja.AssertFunction(r.ToValue(fnValue))
 		if !ok {
-			panic(r.NewTypeError("match_terminate value not a valid function"))
+			panic(r.NewTypeError("matchTerminate value not a valid function"))
 		}
 		functions.terminateFn = fn
 
@@ -370,5 +371,3 @@ func (im *RuntimeJavascriptInitModule) registerCallbackFn(mode RuntimeExecutionM
 		im.Callbacks.LeaderboardReset = fn
 	}
 }
-
-

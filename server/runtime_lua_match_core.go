@@ -19,14 +19,15 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sync"
+
 	"github.com/gofrs/uuid"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/heroiclabs/nakama-common/rtapi"
-	"github.com/heroiclabs/nakama/v2/internal/gopher-lua"
+	lua "github.com/heroiclabs/nakama/v2/internal/gopher-lua"
 	"github.com/heroiclabs/nakama/v2/social"
 	"go.uber.org/atomic"
 	"go.uber.org/zap"
-	"sync"
 )
 
 type RuntimeLuaMatchCore struct {
