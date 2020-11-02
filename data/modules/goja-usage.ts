@@ -19,7 +19,7 @@ module NKRuntime {
     export type ContextKey = "env" | "executionMode" | "node" | "queryParams" | "userId" | "username" | "vars" | "userSessionExp" | "sessionId" | "clientIp" | "clientPort" | "matchId" | "matchNode" | "matchLabel" | "matchTickRate"
     export type Context = { [K in ContextKey]: string };
 
-    type PermissionValues = 0|1;
+    type PermissionValues = 0 | 1;
 
     /**
      * An RPC function definition.
@@ -41,31 +41,66 @@ module NKRuntime {
     /**
      * A Before Hook function definition.
      */
-    export interface BeforeHookFunction {
+    export interface BeforeHookFunction<T> {
         /**
          * A Register Hook function definition.
+         *
+         * @remarks
+         * The function must return the T payload as this is what will be passed on to the hooked function.
+         * Return null to bail out of executing the function instead.
+         *
          * @param ctx - The context for the execution.
          * @param logger - The server logger.
          * @param nk - The Nakama server APIs.
-         * @param payload - The input data to the function call. This is usually an escaped JSON object.
-         * @returns A escaped JSON payload
+         * @param data - The input data to the function call.
+         * @returns The escaped JSON payload.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, payload: string): string;
+        (ctx: Context, logger: Logger, nk: Nakama, data?: T): T | null;
     }
 
     /**
      * A After Hook function definition.
      */
-    export interface AfterHookFunction {
+    export interface AfterHookFunction<T> {
         /**
          * A Register Hook function definition.
          * @param ctx - The context for the execution.
          * @param logger - The server logger.
          * @param nk - The Nakama server APIs.
-         * @param payload - The input data to the function call. This is usually an escaped JSON object.
+         * @param data - The input data to the function call.
+         * @param request - The request payload.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, payload: string): void;
+        (ctx: Context, logger: Logger, nk: Nakama, data: T, request?: any): void;
     }
+
+    /**
+     * A realtime before hook function definition.
+     */
+    export interface RtBeforeHookFunction {
+        /**
+         * A Register Hook function definition.
+         * @param ctx - The context for the execution.
+         * @param logger - The server logger.
+         * @param nk - The Nakama server APIs.
+         * @param envelope - The Envelope message received by the function.
+         */
+        (ctx: Context, logger: Logger, nk: Nakama, envelope: Envelope): Envelope;
+    }
+
+    /**
+     * A realtime after hook function definition.
+     */
+    export interface RtAfterHookFunction {
+        /**
+         * A Register Hook function definition.
+         * @param ctx - The context for the execution.
+         * @param logger - The server logger.
+         * @param nk - The Nakama server APIs.
+         * @param envelope - The Envelope message received by the function.
+         */
+        (ctx: Context, logger: Logger, nk: Nakama, envelope: Envelope): void;
+    }
+
 
     /**
      * Match Dispatcher API definition.
@@ -125,9 +160,434 @@ module NKRuntime {
         receiveTime: number;
     }
 
+    /**
+     * Match state definition
+     */
     export interface MatchState {
         [key: string]: any;
     }
+
+    /**
+     * Hooks payloads definitions
+     */
+    export interface AccountAppleVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface AccountApple {
+        token?: string
+        vars?: AccountAppleVarsEntry[]
+    }
+
+    export interface AuthenticateAppleRequest {
+        account?: AccountApple
+        create?: boolean
+        username?: string
+    }
+
+    export interface AccountCustomVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface AccountCustom {
+        id?: string
+        vars?: AccountCustomVarsEntry[]
+    }
+
+    export interface AuthenticateCustomRequest {
+        account?: AccountCustom
+        create?: boolean
+        username?: string
+    }
+
+    export interface AuthenticateDeviceRequest {
+        account?: AccountDevice
+        create?: boolean
+        username?: string
+    }
+
+    export interface AccountEmailVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface AccountEmail {
+        email?: string
+        password?: string
+        vars?: Array<AccountEmailVarsEntry>
+    }
+
+    export interface AuthenticateEmailRequest {
+        account?: AccountEmail
+        create?: boolean
+        username?: string
+    }
+
+    export interface AuthenticateFacebookRequest {
+        account?: AccountFacebook
+        create?: boolean
+        username?: string
+        sync?: boolean
+    }
+
+    export interface AccountFacebookVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface AccountFacebook {
+        token?: string
+        vars?: Array<AccountFacebookVarsEntry>
+    }
+
+    export interface AccountFacebookInstantGameVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface AccountFacebookInstantGame {
+        signedPlayerInfo?: string
+        vars?: Array<AccountFacebookInstantGameVarsEntry>
+    }
+
+    export interface AuthenticateFacebookInstantGameRequest {
+        account?: AccountFacebookInstantGame
+        create?: boolean
+        username?: string
+    }
+
+    export interface AccountGameCenterVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface AccountGameCenter {
+        playerId?: string
+        bundleId?: string
+        timestampSeconds?: string
+        salt?: string
+        signature?: string
+        publicKeyUrl?: string
+        vars?: Array<AccountGameCenterVarsEntry>
+      }
+
+    export interface AuthenticateGameCenterRequest {
+        account?: AccountGameCenter
+        create?: boolean
+        username?: string
+    }
+
+    export interface AccountGoogleVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface AccountGoogle {
+        token?: string
+        vars?: Array<AccountGoogleVarsEntry>
+    }
+
+    export interface AuthenticateGoogleRequest {
+        account?: AccountGoogle
+        create?: boolean
+        username?: string
+    }
+
+    export interface AccountSteamVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface AccountSteam {
+        token?: string
+        vars?: Array<AccountSteamVarsEntry>
+    }
+
+    export interface AuthenticateSteamRequest {
+        account?: AccountSteam
+        create?: boolean
+        username?: string
+    }
+
+    export interface ListChannelMessagesRequest {
+        channelId?: string
+        limit?: number
+        forward?: boolean
+        cursor?: string
+    }
+
+    export interface ListFriendsRequest {
+        limit?: number
+        state?: number
+        cursor?: string
+    }
+
+    export interface AddFriendsRequest {
+        ids?: Array<string>
+        usernames?: Array<string>
+    }
+
+    export interface DeleteFriendsRequest {
+        ids?: Array<string>
+        usernames?: Array<string>
+    }
+
+    export interface BlockFriendsRequest {
+        ids?: Array<string>
+        usernames?: Array<string>
+    }
+
+    export interface ImportFacebookFriendsRequest {
+        account?: AccountFacebook
+        reset?: boolean
+    }
+
+    export interface CreateGroupRequest {
+        name?: string
+        description?: string
+        langTag?: string
+        avatarUrl?: string
+        open?: boolean
+        maxCount?: number
+    }
+
+    export interface UpdateGroupRequest {
+        name?: string
+        description?: string
+        langTag?: string
+        avatarUrl?: string
+        open?: boolean
+    }
+
+    export interface DeleteGroupRequest {
+        groupId?: string
+    }
+
+    export interface JoinGroupRequest {
+        groupId?: string
+    }
+
+    export interface LeaveGroupRequest {
+        groupId?: string
+    }
+
+    export interface AddGroupUsersRequest {
+        groupId?: string
+        userIds?: Array<string>
+    }
+
+    export interface BanGroupUsersRequest {
+        groupId?: string
+        userIds?: Array<string>
+    }
+
+    export interface KickGroupUsersRequest {
+        groupId?: string
+        userIds?: Array<string>
+    }
+
+    export interface PromoteGroupUsersRequest {
+        groupId?: string
+        userIds?: Array<string>
+    }
+
+    export interface DemoteGroupUsersRequest {
+        groupId?: string
+        userIds?: Array<string>
+    }
+
+    export interface ListGroupUsersRequest {
+        groupId?: string
+        limit?: number
+        state?: number
+        cursor?: string
+    }
+
+    export interface ListUserGroupsRequest {
+        userId?: string
+        limit?: number
+        state?: number
+        cursor?: string
+    }
+
+    export interface ListGroupsRequest {
+        name?: string
+        cursor?: string
+        limit?: number
+    }
+
+    export interface DeleteLeaderboardRecordRequest {
+        leaderboardId?: string
+    }
+
+    export interface ListLeaderboardRecordsRequest {
+        leaderboardId?: string
+        ownerIds?: Array<string>
+        limit?: number
+        cursor?: string
+        expiry?: string
+    }
+
+    export interface WriteLeaderboardRecordRequestLeaderboardRecordWrite {
+        score?: string
+        subscore?: string
+        metadata?: string
+    }
+
+    export interface WriteLeaderboardRecordRequest {
+        leaderboardId?: string
+        record?: WriteLeaderboardRecordRequestLeaderboardRecordWrite
+    }
+
+    export interface ListLeaderboardRecordsAroundOwnerRequest {
+        leaderboardId?: string
+        limit?: number
+        ownerId?: string
+        expiry?: string
+    }
+
+    export interface AccountApple {
+        token?: string
+        vars?: Array<AccountAppleVarsEntry>
+    }
+
+    export interface AccountAppleVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface AccountCustom {
+        id?: string
+        vars?: Array<AccountCustomVarsEntry>
+    }
+
+    export interface AccountCustomVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    export interface LinkFacebookRequest {
+        account?: AccountFacebook
+        sync?: boolean
+    }
+
+    export interface ListMatchesRequest {
+        limit?: number
+        authoritative?: boolean
+        label?: string
+        minSize?: number
+        maxSize?: number
+        query?: string
+    }
+
+    export interface ListNotificationsRequest {
+        limit?: number
+        cacheableCursor?: string
+    }
+
+    export interface ListStorageObjectsRequest {
+        collection: string
+        userId: string
+        limit: number
+        cursor: string
+    }
+
+    export interface ReadStorageObjectId {
+        collection?: string
+        key?: string
+        userId?: string
+    }
+
+    export interface ReadStorageObjectsRequest {
+        objectIds?: Array<ReadStorageObjectId>
+    }
+
+    export interface WriteStorageObject {
+        collection?: string
+        key?: string
+        value?: string
+        version?: string
+        permissionRead?: number
+        permissionWrite?: number
+    }
+
+    export interface WriteStorageObjectsRequest {
+        objects?: Array<WriteStorageObject>
+    }
+
+    export interface DeleteStorageObjectId {
+        collection?: string
+        key?: string
+        version?: string
+      }
+
+    export interface DeleteStorageObjectsRequest {
+        objectIds?: Array<DeleteStorageObjectId>
+    }
+
+    export interface JoinTournamentRequest {
+        tournamentId?: string
+    }
+
+    export interface ListTournamentRecordsRequest {
+        tournamentId?: string
+        ownerIds?: Array<string>
+        limit?: number
+        cursor?: string
+        expiry?: string
+    }
+
+    export interface ListTournamentsRequest {
+        categoryStart?: number
+        categoryEnd?: number
+        startTime?: number
+        endTime?: number
+        limit?: number
+        cursor?: string
+    }
+
+    export interface WriteTournamentRecordRequest {
+        tournamentId?: string
+        record?: WriteTournamentRecordRequestTournamentRecordWrite
+    }
+
+    export interface WriteTournamentRecordRequestTournamentRecordWrite {
+        score?: string
+        subscore?: string
+        metadata?: string
+    }
+
+    export interface ListTournamentRecordsAroundOwnerRequest {
+        tournamentId?: string
+        limit?: number
+        ownerId?: string
+        expiry?: string
+    }
+
+    export interface GetUsersRequest {
+        ids?: Array<string>
+        usernames?: Array<string>
+        facebookIds?: Array<string>
+    }
+
+    export interface Event {
+        name?: string
+        properties?: Array<EventPropertiesEntry>
+        timestamp?: string
+        external?: boolean
+    }
+
+    export interface EventPropertiesEntry {
+        key?: string
+        value?: string
+    }
+
+    /**
+     * Realtime hook messages
+     */
+    export type RtHookMessage = 'ChannelJoin' | 'ChannelLeave' | 'ChannelMessageSend' | 'ChannelMessageUpdate' | 'ChannelMessageRemove' | 'MatchCreate' | 'MatchDataSend' | 'MatchJoin' | 'MatchLeave' | 'MatchmakerAdd' | 'MatchmakerRemove' | 'StatusFollow' | 'StatusUnfollow' | 'StatusUpdate' | 'Ping' | 'Pong'
 
     /**
      * Match handler definitions
@@ -264,7 +724,7 @@ module NKRuntime {
          * @param id - The ID of the RPC function.
          * @param func - The Hook function logic to execute before the RPC is called.
          */
-        registerReqBefore(id: string, func: BeforeHookFunction): string | null;
+        registerRtBefore(id: RtHookMessage, func: RtBeforeHookFunction): void;
 
         /**
          * Register a hook function to be run after an RPC function is invoked.
@@ -273,25 +733,1063 @@ module NKRuntime {
          * @param id - The ID of the RPC function.
          * @param func - The Hook function logic to execute after the RPC is called.
          */
-        registerReqAfter(id: string, func: AfterHookFunction): void;
+        registerRtAfter(id: RtHookMessage, func: RtAfterHookFunction): void;
 
         /**
-         * Register a hook function to be run before an RPC function is invoked.
-         * The RPC call is identified by the id param.
+         * Register Before Hook for RPC getAccount function.
          *
-         * @param id - The ID of the RPC function.
-         * @param func - The Hook function logic to execute before the RPC is called.
+         * @param fn - The function to execute before getAccount.
+         * @throws {TypeError}
          */
-        registerRtBefore(id: string, func: BeforeHookFunction): string | null;
+        registerBeforeGetAccount(fn: BeforeHookFunction<Account>): void;
 
         /**
-         * Register a hook function to be run after an RPC function is invoked.
-         * The RPC call is identified by the id param.
+         * Register After Hook for RPC getAccount function.
          *
-         * @param id - The ID of the RPC function.
-         * @param func - The Hook function logic to execute after the RPC is called.
+         * @param fn - The function to execute after getAccount.
+         * @throws {TypeError}
          */
-        registerRtAfter(id: string, func: AfterHookFunction): void;
+        registerAfterGetAccount(fn: AfterHookFunction<Account>): void;
+
+        /**
+         * Register before Hook for RPC updateAccount function.
+         *
+         * @param fn - The function to execute before updateAccount.
+         * @throws {TypeError}
+         */
+        registerBeforeUpdateAccount(fn: BeforeHookFunction<UserUpdateAccount>): void;
+
+        /**
+         * Register after Hook for RPC updateAccount function.
+         *
+         * @param fn - The function to execute after updateAccount.
+         * @throws {TypeError}
+         */
+        registerAfterUpdateAccount(fn: AfterHookFunction<UserUpdateAccount>): void;
+
+        /**
+         * Register before Hook for RPC authenticateApple function.
+         *
+         * @param fn - The function to execute before authenticateApple.
+         * @throws {TypeError}
+         */
+        registerBeforeAuthenticateApple(fn: BeforeHookFunction<AuthenticateAppleRequest>): void;
+
+        /**
+         * Register After Hook for RPC authenticateApple function.
+         *
+         * @param fn - The function to execute after authenticateApple.
+         * @throws {TypeError}
+         */
+        registerAfterAuthenticateApple(fn: AfterHookFunction<AuthenticateAppleRequest>): void;
+
+        /**
+         * Register before Hook for RPC AuthenticateCustom function.
+         *
+         * @param fn - The function to execute before AuthenticateCustom.
+         * @throws {TypeError}
+         */
+        registerBeforeAuthenticateCustom(fn: BeforeHookFunction<AuthenticateCustomRequest>): void;
+
+        /**
+         * Register after Hook for RPC AuthenticateCustom function.
+         *
+         * @param fn - The function to execute after AuthenticateCustom.
+         * @throws {TypeError}
+         */
+        registerAfterAuthenticateCustom(fn: AfterHookFunction<AuthenticateCustomRequest>): void;
+
+        /**
+         * Register before Hook for RPC AuthenticateDevice function.
+         *
+         * @param fn - The function to execute before AuthenticateDevice.
+         * @throws {TypeError}
+         */
+        registerBeforeAuthenticateDevice(fn: AfterHookFunction<AuthenticateDeviceRequest>): void;
+
+        /**
+         * Register before Hook for RPC AuthenticateDevice function.
+         *
+         * @param fn - The function to execute before AuthenticateDevice.
+         * @throws {TypeError}
+         */
+        registerAfterAuthenticateDevice(fn: BeforeHookFunction<AuthenticateDeviceRequest>): void;
+
+        /**
+         * Register before Hook for RPC AuthenticateEmail function.
+         *
+         * @param fn - The function to execute before AuthenticateEmail.
+         * @throws {TypeError}
+         */
+        registerBeforeAuthenticateEmail(fn: BeforeHookFunction<AuthenticateEmailRequest>): void;
+
+        /**
+         * Register after Hook for RPC uthenticateEmail function.
+         *
+         * @param fn - The function to execute after uthenticateEmail.
+         * @throws {TypeError}
+         */
+        registerAfterAuthenticateEmail(fn: AfterHookFunction<AuthenticateEmailRequest>): void;
+
+        /**
+         * Register before Hook for RPC AuthenticateFacebook function.
+         *
+         * @param fn - The function to execute before AuthenticateFacebook.
+         * @throws {TypeError}
+         */
+        registerBeforeAuthenticateFacebook(fn: BeforeHookFunction<AuthenticateFacebookRequest>): void;
+
+        /**
+         * Register after Hook for RPC AuthenticateFacebook function.
+         *
+         * @param fn - The function to execute after AuthenticateFacebook.
+         * @throws {TypeError}
+         */
+        registerAfterAuthenticateFacebook(fn: AfterHookFunction<AuthenticateFacebookRequest>): void;
+
+        /**
+         * Register before Hook for RPC AuthenticateFacebookInstantGame function.
+         *
+         * @param fn - The function to execute before AuthenticateFacebookInstantGame.
+         * @throws {TypeError}
+         */
+        registerBeforeAuthenticateFacebookInstantGame(fn: BeforeHookFunction<AuthenticateFacebookInstantGameRequest>): void;
+
+        /**
+         * Register after Hook for RPC AuthenticateFacebookInstantGame function.
+         *
+         * @param fn - The function to execute after AuthenticateFacebookInstantGame.
+         * @throws {TypeError}
+         */
+        registerAfterAuthenticateFacebookInstantGame(fn: AfterHookFunction<AuthenticateFacebookInstantGameRequest>): void;
+
+        /**
+         * Register before Hook for RPC AuthenticateGameCenter function.
+         *
+         * @param fn - The function to execute before AuthenticateGameCenter.
+         * @throws {TypeError}
+         */
+        registerBeforeAuthenticateGameCenter(fn: BeforeHookFunction<AuthenticateGameCenterRequest>): void;
+
+        /**
+         * Register after Hook for RPC AuthenticateGameCenter function.
+         *
+         * @param fn - The function to execute after AuthenticateGameCenter.
+         * @throws {TypeError}
+         */
+        registerAfterAuthenticateGameCenter(fn: AfterHookFunction<AuthenticateGameCenterRequest>): void;
+
+        /**
+         * Register before Hook for RPC AuthenticateGoogle function.
+         *
+         * @param fn - The function to execute before AuthenticateGoogle.
+         * @throws {TypeError}
+         */
+        registerBeforeAuthenticateGoogle(fn: BeforeHookFunction<AuthenticateGoogleRequest>): void;
+
+        /**
+         * Register after Hook for RPC AuthenticateGoogle function.
+         *
+         * @param fn - The function to execute after AuthenticateGoogle.
+         * @throws {TypeError}
+         */
+        registerAfterAuthenticateGoogle(fn: AfterHookFunction<AuthenticateGoogleRequest>): void;
+
+        /**
+         * Register before Hook for RPC AuthenticateSteam function.
+         *
+         * @param fn - The function to execute before AuthenticateSteam.
+         * @throws {TypeError}
+         */
+        registerBeforeAuthenticateSteam(fn: BeforeHookFunction<AuthenticateSteamRequest>): void;
+
+        /**
+         * Register after Hook for RPC AuthenticateSteam function.
+         *
+         * @param fn - The function to execute after AuthenticateSteam.
+         * @throws {TypeError}
+         */
+        registerAfterAuthenticateSteam(fn: AfterHookFunction<AuthenticateSteamRequest>): void;
+
+        /**
+         * Register before Hook for RPC ChannelMessages function.
+         *
+         * @param fn - The function to execute before ChannelMessages.
+         * @throws {TypeError}
+         */
+        registerBeforeListChannelMessages(fn: BeforeHookFunction<ListChannelMessagesRequest>): void;
+
+        /**
+         * Register after Hook for RPC ChannelMessages function.
+         *
+         * @param fn - The function to execute after ChannelMessages.
+         * @throws {TypeError}
+         */
+        registerAfterListChannelMessages(fn: AfterHookFunction<ListChannelMessagesRequest>): void;
+
+        /**
+         * Register before Hook for RPC BeforeListFriends function.
+         *
+         * @param fn - The function to execute before BeforeListFriends.
+         * @throws {TypeError}
+         */
+        registerBeforeListFriends(fn: BeforeHookFunction<ListFriendsRequest>): void;
+
+        /**
+         * Register after Hook for RPC BeforeListFriends function.
+         *
+         * @param fn - The function to execute after BeforeListFriends.
+         * @throws {TypeError}
+         */
+        registerAfterListFriends(fn: AfterHookFunction<ListFriendsRequest>): void;
+
+        /**
+         * Register before Hook for RPC AddFriends function.
+         *
+         * @param fn - The function to execute before AddFriends.
+         * @throws {TypeError}
+         */
+        registerBeforeAddFriends(fn: BeforeHookFunction<AddFriendsRequest>): void;
+
+        /**
+         * Register after Hook for RPC AddFriends function.
+         *
+         * @param fn - The function to execute after AddFriends.
+         * @throws {TypeError}
+         */
+        registerAfterAddFriends(fn: AfterHookFunction<AddFriendsRequest>): void;
+
+        /**
+         * Register before Hook for RPC DeleteFriends function.
+         *
+         * @param fn - The function to execute before DeleteFriends.
+         * @throws {TypeError}
+         */
+        registerBeforeDeleteFriends(fn: BeforeHookFunction<DeleteFriendsRequest>): void;
+
+        /**
+         * Register after Hook for RPC DeleteFriends function.
+         *
+         * @param fn - The function to execute after DeleteFriends.
+         * @throws {TypeError}
+         */
+        registerAfterDeleteFriends(fn: AfterHookFunction<DeleteFriendsRequest>): void;
+
+        /**
+         * Register before Hook for RPC BlockFriends function.
+         *
+         * @param fn - The function to execute before BlockFriends.
+         * @throws {TypeError}
+         */
+        registerBeforeBlockFriends(fn: BeforeHookFunction<BlockFriendsRequest>): void;
+
+        /**
+         * Register after Hook for RPC BlockFriends function.
+         *
+         * @param fn - The function to execute after BlockFriends.
+         * @throws {TypeError}
+         */
+        registerAfterBlockFriends(fn: AfterHookFunction<BlockFriendsRequest>): void;
+
+        /**
+         * Register before Hook for RPC ImportFacebookFriends function.
+         *
+         * @param fn - The function to execute before ImportFacebookFriends.
+         * @throws {TypeError}
+         */
+        registerBeforeImportFacebookFriends(fn: BeforeHookFunction<ImportFacebookFriendsRequest>): void;
+
+        /**
+         * Register after Hook for RPC ImportFacebookFriends function.
+         *
+         * @param fn - The function to execute after ImportFacebookFriends.
+         * @throws {TypeError}
+         */
+        registerAfterImportFacebookFriends(fn: AfterHookFunction<ImportFacebookFriendsRequest>): void;
+
+        /**
+         * Register before Hook for RPC CreateGroup function.
+         *
+         * @param fn - The function to execute before CreateGroup.
+         * @throws {TypeError}
+         */
+        registerBeforeCreateGroup(fn: BeforeHookFunction<CreateGroupRequest>): void;
+
+        /**
+         * Register after Hook for RPC CreateGroup function.
+         *
+         * @param fn - The function to execute after CreateGroup.
+         * @throws {TypeError}
+         */
+        registerAfterCreateGroup(fn: AfterHookFunction<CreateGroupRequest>): void;
+
+        /**
+         * Register before Hook for RPC UpdateGroup function.
+         *
+         * @param fn - The function to execute before UpdateGroup.
+         * @throws {TypeError}
+         */
+        registerBeforeUpdateGroup(fn: BeforeHookFunction<UpdateGroupRequest>): void;
+
+        /**
+         * Register after Hook for RPC UpdateGroup function.
+         *
+         * @param fn - The function to execute after UpdateGroup.
+         * @throws {TypeError}
+         */
+        registerAfterUpdateGroup(fn: AfterHookFunction<UpdateGroupRequest>): void;
+
+        /**
+         * Register before Hook for RPC DeleteGroup function.
+         *
+         * @param fn - The function to execute before DeleteGroup.
+         * @throws {TypeError}
+         */
+        registerBeforeDeleteGroup(fn: BeforeHookFunction<DeleteGroupRequest>): void;
+
+        /**
+         * Register after Hook for RPC DeleteGroup function.
+         *
+         * @param fn - The function to execute after DeleteGroup.
+         * @throws {TypeError}
+         */
+        registerAfterDeleteGroup(fn: AfterHookFunction<DeleteGroupRequest>): void;
+
+        /**
+         * Register before Hook for RPC JoinGroup function.
+         *
+         * @param fn - The function to execute before JoinGroup.
+         * @throws {TypeError}
+         */
+        registerBeforeJoinGroup(fn: BeforeHookFunction<JoinGroupRequest>): void;
+
+        /**
+         * Register after Hook for RPC JoinGroup function.
+         *
+         * @param fn - The function to execute after JoinGroup.
+         * @throws {TypeError}
+         */
+        registerAfterJoinGroup(fn: AfterHookFunction<JoinGroupRequest>): void;
+
+        /**
+         * Register before Hook for RPC LeaveGroup function.
+         *
+         * @param fn - The function to execute before LeaveGroup.
+         * @throws {TypeError}
+         */
+        registerBeforeLeaveGroup(fn: BeforeHookFunction<LeaveGroupRequest>): void;
+
+        /**
+         * Register after Hook for RPC LeaveGroup function.
+         *
+         * @param fn - The function to execute after LeaveGroup.
+         * @throws {TypeError}
+         */
+        registerAfterLeaveGroup(fn: AfterHookFunction<LeaveGroupRequest>): void;
+
+        /**
+         * Register before Hook for RPC AddGroupUsers function.
+         *
+         * @param fn - The function to execute before AddGroupUsers.
+         * @throws {TypeError}
+         */
+        registerBeforeAddGroupUsers(fn: BeforeHookFunction<AddGroupUsersRequest>): void;
+
+        /**
+         * Register after Hook for RPC AddGroupUsers function.
+         *
+         * @param fn - The function to execute after AddGroupUsers.
+         * @throws {TypeError}
+         */
+        registerAfterAddGroupUsers(fn: AfterHookFunction<AddGroupUsersRequest>): void;
+
+        /**
+         * Register before Hook for RPC BanGroupUsers function.
+         *
+         * @param fn - The function to execute before BanGroupUsers.
+         * @throws {TypeError}
+         */
+        registerBeforeBanGroupUsers(fn: BeforeHookFunction<BanGroupUsersRequest>): void;
+
+        /**
+         * Register after Hook for RPC BanGroupUsers function.
+         *
+         * @param fn - The function to execute after BanGroupUsers.
+         * @throws {TypeError}
+         */
+        registerAfterBanGroupUsers(fn: AfterHookFunction<BanGroupUsersRequest>): void;
+
+        /**
+         * Register before Hook for RPC KickGroupUsers function.
+         *
+         * @param fn - The function to execute before KickGroupUsers.
+         * @throws {TypeError}
+         */
+        registerBeforeKickGroupUsers(fn: BeforeHookFunction<KickGroupUsersRequest>): void;
+
+        /**
+         * Register after Hook for RPC KickGroupUsers function.
+         *
+         * @param fn - The function to execute after KickGroupUsers.
+         * @throws {TypeError}
+         */
+        registerAfterKickGroupUsers(fn: AfterHookFunction<KickGroupUsersRequest>): void;
+
+        /**
+         * Register before Hook for RPC PromoteGroupUsers function.
+         *
+         * @param fn - The function to execute before PromoteGroupUsers.
+         * @throws {TypeError}
+         */
+        registerBeforePromoteGroupUsers(fn: BeforeHookFunction<PromoteGroupUsersRequest>): void;
+
+        /**
+         * Register after Hook for RPC PromoteGroupUsers function.
+         *
+         * @param fn - The function to execute after PromoteGroupUsers.
+         * @throws {TypeError}
+         */
+        registerAfterPromoteGroupUsers(fn: AfterHookFunction<PromoteGroupUsersRequest>): void;
+
+        /**
+         * Register before Hook for RPC DemoteGroupUsers function.
+         *
+         * @param fn - The function to execute before DemoteGroupUsers.
+         * @throws {TypeError}
+         */
+        registerBeforeDemoteGroupUsers(fn: BeforeHookFunction<DemoteGroupUsersRequest>): void;
+
+        /**
+         * Register after Hook for RPC DemoteGroupUsers function.
+         *
+         * @param fn - The function to execute after DemoteGroupUsers.
+         * @throws {TypeError}
+         */
+        registerAfterDemoteGroupUsers(fn: AfterHookFunction<DemoteGroupUsersRequest>): void;
+
+        /**
+         * Register before Hook for RPC ListGroupUsers function.
+         *
+         * @param fn - The function to execute before ListGroupUsers.
+         * @throws {TypeError}
+         */
+        registerBeforeListGroupUsers(fn: BeforeHookFunction<ListGroupUsersRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListGroupUsers function.
+         *
+         * @param fn - The function to execute after ListGroupUsers.
+         * @throws {TypeError}
+         */
+        registerAfterListGroupUsers(fn: AfterHookFunction<ListGroupUsersRequest>): void;
+
+        /**
+         * Register before Hook for RPC ListUserGroups function.
+         *
+         * @param fn - The function to execute before ListUserGroups.
+         * @throws {TypeError}
+         */
+        registerBeforeListUserGroups(fn: BeforeHookFunction<ListUserGroupsRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListUserGroups function.
+         *
+         * @param fn - The function to execute after ListUserGroups.
+         * @throws {TypeError}
+         */
+        registerAfterListUserGroups(fn: AfterHookFunction<ListUserGroupsRequest>): void;
+
+        /**
+         * Register before Hook for RPC ListGroups function.
+         *
+         * @param fn - The function to execute before ListGroups.
+         * @throws {TypeError}
+         */
+        registerBeforeListGroups(fn: BeforeHookFunction<ListGroupsRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListGroups function.
+         *
+         * @param fn - The function to execute after ListGroups.
+         * @throws {TypeError}
+         */
+        registerAfterListGroups(fn: AfterHookFunction<ListGroupsRequest>): void;
+
+        /**
+         * Register before Hook for RPC DeleteLeaderboardRecord function.
+         *
+         * @param fn - The function to execute before DeleteLeaderboardRecord.
+         * @throws {TypeError}
+         */
+        registerBeforeDeleteLeaderboardRecord(fn: BeforeHookFunction<DeleteLeaderboardRecordRequest>): void;
+
+        /**
+         * Register after Hook for RPC DeleteLeaderboardRecord function.
+         *
+         * @param fn - The function to execute after DeleteLeaderboardRecord.
+         * @throws {TypeError}
+         */
+        registerAfterDeleteLeaderboardRecord(fn: AfterHookFunction<DeleteLeaderboardRecordRequest>): void;
+
+        /**
+         * Register before Hook for RPC ListLeaderboardRecords function.
+         *
+         * @param fn - The function to execute before ListLeaderboardRecords.
+         * @throws {TypeError}
+         */
+        registerBeforeListLeaderboardRecords(fn: BeforeHookFunction<ListLeaderboardRecordsRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListLeaderboardRecords function.
+         *
+         * @param fn - The function to execute after ListLeaderboardRecords.
+         * @throws {TypeError}
+         */
+        registerAfterListLeaderboardRecords(fn: AfterHookFunction<ListLeaderboardRecordsRequest>): void;
+
+        /**
+         * Register before Hook for RPC WriteLeaderboardRecord function.
+         *
+         * @param fn - The function to execute before WriteLeaderboardRecord.
+         * @throws {TypeError}
+         */
+        registerBeforeWriteLeaderboardRecord(fn: BeforeHookFunction<WriteLeaderboardRecordRequest>): void;
+
+        /**
+         * Register after Hook for RPC WriteLeaderboardRecord function.
+         *
+         * @param fn - The function to execute after WriteLeaderboardRecord.
+         * @throws {TypeError}
+         */
+        registerAfterWriteLeaderboardRecord(fn: AfterHookFunction<WriteLeaderboardRecordRequest>): void;
+
+        /**
+         * Register before Hook for RPC ListLeaderboardRecordsAroundOwner function.
+         *
+         * @param fn - The function to execute before ListLeaderboardRecordsAroundOwner.
+         * @throws {TypeError}
+         */
+        registerBeforeListLeaderboardRecordsAroundOwner(fn: BeforeHookFunction<ListLeaderboardRecordsAroundOwnerRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListLeaderboardRecordsAroundOwner function.
+         *
+         * @param fn - The function to execute after ListLeaderboardRecordsAroundOwner.
+         * @throws {TypeError}
+         */
+        registerAfterListLeaderboardRecordsAroundOwner(fn: AfterHookFunction<ListLeaderboardRecordsAroundOwnerRequest>): void;
+
+        /**
+         * Register before Hook for RPC LinkApple function.
+         *
+         * @param fn - The function to execute before LinkApple.
+         * @throws {TypeError}
+         */
+        registerBeforeLinkApple(fn: BeforeHookFunction<AccountApple>): void;
+
+        /**
+         * Register after Hook for RPC LinkApple function.
+         *
+         * @param fn - The function to execute after LinkApple.
+         * @throws {TypeError}
+         */
+        registerAfterLinkApple(fn: AfterHookFunction<AccountApple>): void;
+
+        /**
+         * Register before Hook for RPC LinkCustom function.
+         *
+         * @param fn - The function to execute before LinkCustom.
+         * @throws {TypeError}
+         */
+        registerBeforeLinkCustom(fn: BeforeHookFunction<AccountCustom>): void;
+
+        /**
+         * Register after Hook for RPC LinkCustom function.
+         *
+         * @param fn - The function to execute after LinkCustom.
+         * @throws {TypeError}
+         */
+        registerAfterLinkCustom(fn: AfterHookFunction<AccountCustom>): void;
+
+        /**
+         * Register before Hook for RPC LinkDevice function.
+         *
+         * @param fn - The function to execute before LinkDevice.
+         * @throws {TypeError}
+         */
+        registerBeforeLinkDevice(fn: BeforeHookFunction<AccountDevice>): void;
+
+        /**
+         * Register after Hook for RPC LinkDevice function.
+         *
+         * @param fn - The function to execute after LinkDevice.
+         * @throws {TypeError}
+         */
+        registerAfterLinkDevice(fn: AfterHookFunction<AccountDevice>): void;
+
+        /**
+         * Register before Hook for RPC LinkEmail function.
+         *
+         * @param fn - The function to execute before LinkEmail.
+         * @throws {TypeError}
+         */
+        registerBeforeLinkEmail(fn: BeforeHookFunction<AccountEmail>): void;
+
+        /**
+         * Register after Hook for RPC LinkEmail function.
+         *
+         * @param fn - The function to execute after LinkEmail.
+         * @throws {TypeError}
+         */
+        registerAfterLinkEmail(fn: AfterHookFunction<AccountEmail>): void;
+
+        /**
+         * Register before Hook for RPC LinkFacebook function.
+         *
+         * @param fn - The function to execute before LinkFacebook.
+         * @throws {TypeError}
+         */
+        registerBeforeLinkFacebook(fn: BeforeHookFunction<LinkFacebookRequest>): void;
+
+        /**
+         * Register after Hook for RPC LinkFacebook function.
+         *
+         * @param fn - The function to execute after LinkFacebook.
+         * @throws {TypeError}
+         */
+        registerAfterLinkFacebook(fn: AfterHookFunction<LinkFacebookRequest>): void;
+
+        /**
+         * Register before Hook for RPC LinkFacebookInstantGame function.
+         *
+         * @param fn - The function to execute before LinkFacebookInstantGame.
+         * @throws {TypeError}
+         */
+        registerBeforeLinkFacebookInstantGame(fn: BeforeHookFunction<AccountFacebookInstantGame>): void;
+
+        /**
+         * Register after Hook for RPC LinkFacebookInstantGame function.
+         *
+         * @param fn - The function to execute after LinkFacebookInstantGame.
+         * @throws {TypeError}
+         */
+        registerAfterLinkFacebookInstantGame(fn: AfterHookFunction<AccountFacebookInstantGame>): void;
+
+        /**
+         * Register before Hook for RPC LinkGameCenter function.
+         *
+         * @param fn - The function to execute before LinkGameCenter.
+         * @throws {TypeError}
+         */
+        registerBeforeLinkGameCenter(fn: BeforeHookFunction<AccountGameCenter>): void;
+
+        /**
+         * Register after Hook for RPC LinkGameCenter function.
+         *
+         * @param fn - The function to execute after LinkGameCenter.
+         * @throws {TypeError}
+         */
+        registerAfterLinkGameCenter(fn: AfterHookFunction<AccountGameCenter>): void;
+
+        /**
+         * Register before Hook for RPC LinkGoogle function.
+         *
+         * @param fn - The function to execute before LinkGoogle.
+         * @throws {TypeError}
+         */
+        registerBeforeLinkGoogle(fn: BeforeHookFunction<AccountGoogle>): void;
+
+        /**
+         * Register after Hook for RPC LinkGoogle function.
+         *
+         * @param fn - The function to execute after LinkGoogle.
+         * @throws {TypeError}
+         */
+        registerAfterLinkGoogle(fn: AfterHookFunction<AccountGoogle>): void;
+
+        /**
+         * Register before Hook for RPC LinkSteam function.
+         *
+         * @param fn - The function to execute before LinkSteam.
+         * @throws {TypeError}
+         */
+        registerBeforeLinkSteam(fn: BeforeHookFunction<AccountSteam>): void;
+
+        /**
+         * Register after Hook for RPC LinkSteam function.
+         *
+         * @param fn - The function to execute after LinkSteam.
+         * @throws {TypeError}
+         */
+        registerAfterLinkSteam(fn: AfterHookFunction<AccountSteam>): void;
+
+        /**
+         * Register before Hook for RPC ListMatches function.
+         *
+         * @param fn - The function to execute before ListMatches.
+         * @throws {TypeError}
+         */
+        registerBeforeListMatches(fn: BeforeHookFunction<ListMatchesRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListMatches function.
+         *
+         * @param fn - The function to execute after ListMatches.
+         * @throws {TypeError}
+         */
+        registerAfterListMatches(fn: AfterHookFunction<ListMatchesRequest>): void;
+
+        /**
+         * Register before Hook for RPC ListNotifications function.
+         *
+         * @param fn - The function to execute before ListNotifications.
+         * @throws {TypeError}
+         */
+        registerBeforeListNotifications(fn: BeforeHookFunction<ListNotificationsRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListNotifications function.
+         *
+         * @param fn - The function to execute after ListNotifications.
+         * @throws {TypeError}
+         */
+        registerAfterListNotifications(fn: AfterHookFunction<ListNotificationsRequest>): void;
+
+        /**
+         * Register before Hook for RPC DeleteNotification function.
+         *
+         * @param fn - The function to execute before DeleteNotification.
+         * @throws {TypeError}
+         */
+        registerBeforeDeleteNotification(fn: BeforeHookFunction<string[]>): void;
+
+        /**
+         * Register after Hook for RPC DeleteNotification function.
+         *
+         * @param fn - The function to execute after DeleteNotification.
+         * @throws {TypeError}
+         */
+        registerAfterDeleteNotification(fn: AfterHookFunction<string[]>): void;
+
+        /**
+         * Register before Hook for RPC ListStorageObjects function.
+         *
+         * @param fn - The function to execute before ListStorageObjects.
+         * @throws {TypeError}
+         */
+        registerBeforeListStorageObjects(fn: BeforeHookFunction<ListStorageObjectsRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListStorageObjects function.
+         *
+         * @param fn - The function to execute after ListStorageObjects.
+         * @throws {TypeError}
+         */
+        registerAfterListStorageObjects(fn: AfterHookFunction<ListStorageObjectsRequest>): void;
+
+        /**
+         * Register before Hook for RPC ReadStorageObjects function.
+         *
+         * @param fn - The function to execute before ReadStorageObjects.
+         * @throws {TypeError}
+         */
+        registerBeforeReadStorageObjects(fn: BeforeHookFunction<ReadStorageObjectsRequest>): void;
+
+        /**
+         * Register after Hook for RPC ReadStorageObjects function.
+         *
+         * @param fn - The function to execute after ReadStorageObjects.
+         * @throws {TypeError}
+         */
+        registerAfterReadStorageObjects(fn: AfterHookFunction<ReadStorageObjectsRequest>): void;
+
+        /**
+         * Register before Hook for RPC WriteStorageObjects function.
+         *
+         * @param fn - The function to execute before WriteStorageObjects.
+         * @throws {TypeError}
+         */
+        registerBeforeWriteStorageObjects(fn: BeforeHookFunction<WriteStorageObjectsRequest>): void;
+
+        /**
+         * Register after Hook for RPC WriteStorageObjects function.
+         *
+         * @param fn - The function to execute after WriteStorageObjects.
+         * @throws {TypeError}
+         */
+        registerAfterWriteStorageObjects(fn: AfterHookFunction<WriteStorageObjectsRequest>): void;
+
+        /**
+         * Register before Hook for RPC DeleteStorageObjects function.
+         *
+         * @param fn - The function to execute before DeleteStorageObjects.
+         * @throws {TypeError}
+         */
+        registerBeforeDeleteStorageObjects(fn: BeforeHookFunction<DeleteStorageObjectsRequest>): void;
+
+        /**
+         * Register after Hook for RPC DeleteStorageObjects function.
+         *
+         * @param fn - The function to execute after DeleteStorageObjects.
+         * @throws {TypeError}
+         */
+        registerAfterDeleteStorageObjects(fn: AfterHookFunction<DeleteStorageObjectsRequest>): void;
+
+        /**
+         * Register before Hook for RPC JoinTournament function.
+         *
+         * @param fn - The function to execute before JoinTournament.
+         * @throws {TypeError}
+         */
+        registerBeforeJoinTournament(fn: BeforeHookFunction<JoinTournamentRequest>): void;
+
+        /**
+         * Register after Hook for RPC JoinTournament function.
+         *
+         * @param fn - The function to execute after JoinTournament.
+         * @throws {TypeError}
+         */
+        registerAfterJoinTournament(fn: AfterHookFunction<JoinTournamentRequest>): void;
+
+        /**
+         * Register before Hook for RPC ListTournamentRecords function.
+         *
+         * @param fn - The function to execute before ListTournamentRecords.
+         * @throws {TypeError}
+         */
+        registerBeforeListTournamentRecords(fn: BeforeHookFunction<ListTournamentRecordsRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListTournamentRecords function.
+         *
+         * @param fn - The function to execute after ListTournamentRecords.
+         * @throws {TypeError}
+         */
+        registerAfterListTournamentRecords(fn: AfterHookFunction<ListTournamentRecordsRequest>): void;
+
+        /**
+         * Register before Hook for RPC ListTournaments function.
+         *
+         * @param fn - The function to execute before ListTournaments.
+         * @throws {TypeError}
+         */
+        registerBeforeListTournaments(fn: BeforeHookFunction<ListTournamentsRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListTournaments function.
+         *
+         * @param fn - The function to execute after ListTournaments.
+         * @throws {TypeError}
+         */
+        registerAfterListTournaments(fn: AfterHookFunction<ListTournamentsRequest>): void;
+
+        /**
+         * Register before Hook for RPC WriteTournamentRecord function.
+         *
+         * @param fn - The function to execute before WriteTournamentRecord.
+         * @throws {TypeError}
+         */
+        registerBeforeWriteTournamentRecord(fn: BeforeHookFunction<WriteTournamentRecordRequest>): void;
+
+        /**
+         * Register after Hook for RPC WriteTournamentRecord function.
+         *
+         * @param fn - The function to execute after WriteTournamentRecord.
+         * @throws {TypeError}
+         */
+        registerAfterWriteTournamentRecord(fn: AfterHookFunction<WriteTournamentRecordRequest>): void;
+
+        /**
+         * Register before Hook for RPC ListTournamentRecordsAroundOwner function.
+         *
+         * @param fn - The function to execute before ListTournamentRecordsAroundOwner.
+         * @throws {TypeError}
+         */
+        registerBeforeListTournamentRecordsAroundOwner(fn: BeforeHookFunction<ListTournamentRecordsAroundOwnerRequest>): void;
+
+        /**
+         * Register after Hook for RPC ListTournamentRecordsAroundOwner function.
+         *
+         * @param fn - The function to execute after ListTournamentRecordsAroundOwner.
+         * @throws {TypeError}
+         */
+        registerAfterListTournamentRecordsAroundOwner(fn: AfterHookFunction<ListTournamentRecordsAroundOwnerRequest>): void;
+
+        /**
+         * Register before Hook for RPC UnlinkApple function.
+         *
+         * @param fn - The function to execute before UnlinkApple.
+         * @throws {TypeError}
+         */
+        registerBeforeUnlinkApple(fn: BeforeHookFunction<AccountApple>): void;
+
+        /**
+         * Register after Hook for RPC UnlinkApple function.
+         *
+         * @param fn - The function to execute after UnlinkApple.
+         * @throws {TypeError}
+         */
+        registerAfterUnlinkApple(fn: AfterHookFunction<AccountApple>): void;
+
+        /**
+         * Register before Hook for RPC UnlinkCustom function.
+         *
+         * @param fn - The function to execute before UnlinkCustom.
+         * @throws {TypeError}
+         */
+        registerBeforeUnlinkCustom(fn: BeforeHookFunction<AccountCustom>): void;
+
+        /**
+         * Register after Hook for RPC UnlinkCustom function.
+         *
+         * @param fn - The function to execute after UnlinkCustom.
+         * @throws {TypeError}
+         */
+        registerAfterUnlinkCustom(fn: AfterHookFunction<AccountCustom>): void;
+
+        /**
+         * Register before Hook for RPC UnlinkDevice function.
+         *
+         * @param fn - The function to execute before UnlinkDevice.
+         * @throws {TypeError}
+         */
+        registerBeforeUnlinkDevice(fn: BeforeHookFunction<AccountDevice>): void;
+
+        /**
+         * Register after Hook for RPC UnlinkDevice function.
+         *
+         * @param fn - The function to execute after UnlinkDevice.
+         * @throws {TypeError}
+         */
+        registerAfterUnlinkDevice(fn: AfterHookFunction<AccountDevice>): void;
+
+        /**
+         * Register before Hook for RPC UnlinkEmail function.
+         *
+         * @param fn - The function to execute before UnlinkEmail.
+         * @throws {TypeError}
+         */
+        registerBeforeUnlinkEmail(fn: BeforeHookFunction<AccountEmail>): void;
+
+        /**
+         * Register after Hook for RPC UnlinkEmail function.
+         *
+         * @param fn - The function to execute after UnlinkEmail.
+         * @throws {TypeError}
+         */
+        registerAfterUnlinkEmail(fn: AfterHookFunction<AccountEmail>): void;
+
+        /**
+         * Register before Hook for RPC UnlinkFacebook function.
+         *
+         * @param fn - The function to execute before UnlinkFacebook.
+         * @throws {TypeError}
+         */
+        registerBeforeUnlinkFacebook(fn: BeforeHookFunction<AccountFacebookInstantGame>): void;
+
+        /**
+         * Register after Hook for RPC UnlinkFacebook function.
+         *
+         * @param fn - The function to execute after UnlinkFacebook.
+         * @throws {TypeError}
+         */
+        registerAfterUnlinkFacebook(fn: AfterHookFunction<AccountFacebook>): void;
+
+        /**
+         * Register before Hook for RPC UnlinkFacebookInstantGame function.
+         *
+         * @param fn - The function to execute before UnlinkFacebookInstantGame.
+         * @throws {TypeError}
+         */
+        registerBeforeUnlinkFacebookInstantGame(fn: BeforeHookFunction<AccountFacebook>): void;
+
+        /**
+         * Register after Hook for RPC UnlinkFacebookInstantGame function.
+         *
+         * @param fn - The function to execute after UnlinkFacebookInstantGame.
+         * @throws {TypeError}
+         */
+        registerAfterUnlinkFacebookInstantGame(fn: AfterHookFunction<AccountFacebookInstantGame>): void;
+
+        /**
+         * Register before Hook for RPC UnlinkGameCenter function.
+         *
+         * @param fn - The function to execute before UnlinkGameCenter.
+         * @throws {TypeError}
+         */
+        registerBeforeUnlinkGameCenter(fn: BeforeHookFunction<AccountGameCenter>): void;
+
+        /**
+         * Register after Hook for RPC UnlinkGameCenter function.
+         *
+         * @param fn - The function to execute after UnlinkGameCenter.
+         * @throws {TypeError}
+         */
+        registerAfterUnlinkGameCenter(fn: AfterHookFunction<AccountGameCenter>): void;
+
+        /**
+         * Register before Hook for RPC UnlinkGoogle function.
+         *
+         * @param fn - The function to execute before UnlinkGoogle.
+         * @throws {TypeError}
+         */
+        registerBeforeUnlinkGoogle(fn: BeforeHookFunction<AccountGoogle>): void;
+
+        /**
+         * Register after Hook for RPC UnlinkGoogle function.
+         *
+         * @param fn - The function to execute after UnlinkGoogle.
+         * @throws {TypeError}
+         */
+        registerAfterUnlinkGoogle(fn: AfterHookFunction<AccountGoogle>): void;
+
+        /**
+         * Register before Hook for RPC UnlinkSteam function.
+         *
+         * @param fn - The function to execute before UnlinkSteam.
+         * @throws {TypeError}
+         */
+        registerBeforeUnlinkSteam(fn: BeforeHookFunction<AccountSteam>): void;
+
+        /**
+         * Register after Hook for RPC UnlinkSteam function.
+         *
+         * @param fn - The function to execute after UnlinkSteam.
+         * @throws {TypeError}
+         */
+        registerAfterUnlinkSteam(fn: AfterHookFunction<AccountSteam>): void;
+
+        /**
+         * Register before Hook for RPC GetUsers function.
+         *
+         * @param fn - The function to execute before GetUsers.
+         * @throws {TypeError}
+         */
+        registerBeforeGetUsers(fn: BeforeHookFunction<GetUsersRequest>): void;
+
+        /**
+         * Register after Hook for RPC GetUsers function.
+         *
+         * @param fn - The function to execute after GetUsers.
+         * @throws {TypeError}
+         */
+        registerAfterGetUsers(fn: AfterHookFunction<GetUsersRequest>): void;
+
+        /**
+         * Register before Hook for RPC Event function.
+         *
+         * @param fn - The function to execute before Event.
+         * @throws {TypeError}
+         */
+        registerBeforeEvent(fn: BeforeHookFunction<Event>): void;
+
+        /**
+         * Register after Hook for RPC Event function.
+         *
+         * @param fn - The function to execute after Event.
+         * @throws {TypeError}
+         */
+        registerAfterEvent(fn: AfterHookFunction<Event>): void;
 
         /**
          * Register a match handler.
@@ -414,33 +1912,29 @@ module NKRuntime {
     }
 
     /**
+     * Account device object
+     */
+    export interface AccountDevice {
+        id: string
+        vars?: Array<AccountDeviceVarsEntry>
+    }
+
+    export interface AccountDeviceVarsEntry {
+        key?: string
+        value?: string
+    }
+
+    /**
      * Account object
      */
     export interface Account {
-        userId: string;
-        username: string;
-        displayName: string;
-        avatarUrl: string;
-        langTag: string;
-        location: string;
-        timezone: string;
-        appleId: string;
-        facebookId: string;
-        facebookInstantGameId: string;
-        googleId: string;
-        gamecenterId: string;
-        steamId: string;
-        online: boolean;
-        edgeCount: string;
-        createTime: number;
-        updateTime: number;
-        metadata: {[key: string]: any};
-        wallet: {[key: string]: number},
-        email: string;
-        devices: {[key: string]: string};
-        customId: string;
-        verifyTime: number;
-        disableTime: number;
+        user: User
+        wallet: string
+        email: string
+        devices: AccountDevice[]
+        customId: string
+        verifyTime: number
+        disableTime: number
     }
 
     /**
@@ -678,6 +2172,161 @@ module NKRuntime {
         BEST = 'best',
         SET = 'set',
         INCREMENTAL = 'incr',
+    }
+
+    /**
+     * Envelope for realtime message hooks
+     */
+    export interface Envelope {
+        cid: string,
+        message: EnvelopeChannel | EnvelopeChannelJoin | EnvelopeChannelLeave | EnvelopeChannelMessageSend | EnvelopeChannelMessageUpdate | EnvelopeChannelMessageRemove | EnvelopeMatchCreateMessage | EnvelopeMatchDataSend | EnvelopeMatchJoin | EnvelopeMatchLeave | EnvelopeMatchmakerAdd | EnvelopeMatchmakerRemove | EnvelopeStatusFollow | EnvelopeStatusUnfollow | EnvelopeStatusUpdate | EnvelopePing | EnvelopePong
+    }
+
+    export interface Channel {
+        id?: string,
+        presences?: Presence[],
+        self?: Presence,
+        roomName?: string,
+        groupId?: string,
+        userIdOne?: string, // For DM messages only
+        userIdTwo?: string, // For DM messages only
+    }
+
+    export interface EnvelopeChannel {
+        channel: Channel,
+    }
+
+    export interface ChannelJoin {
+        target?: string,
+        type?: number,
+        persistence?: boolean,
+        hidden?: boolean,
+    }
+
+    export interface EnvelopeChannelJoin {
+        channelJoin: ChannelJoin,
+    }
+
+    export interface ChannelLeave {
+        channelId: string
+    }
+
+    export interface EnvelopeChannelLeave {
+        channelLeave: ChannelLeave
+    }
+
+    export interface ChannelMessageSend {
+        channelId: string
+        content: string
+    }
+
+    export interface EnvelopeChannelMessageSend {
+        channelMessageSend: ChannelMessageSend
+    }
+
+    export interface ChannelMessageUpdate {
+        channelId: string
+        messageId: string
+        content: string
+    }
+
+    export interface EnvelopeChannelMessageUpdate {
+        channelMessageUpdate: ChannelMessageUpdate
+    }
+
+    export interface ChannelMessageRemove {
+        channelId: string
+        messageId: string
+    }
+
+    export interface EnvelopeChannelMessageRemove {
+        channelMessageRemove: ChannelMessageRemove
+    }
+
+    export interface EnvelopeMatchCreateMessage {
+        matchCreate: {}
+    }
+
+    export interface MatchDataMessageSend {
+        matchId: string
+        opCode: number
+        data?: string
+        presences?: Presence[]
+        reliable?: boolean
+    }
+
+    export interface EnvelopeMatchDataSend {
+        matchDataSend: MatchDataMessageSend
+    }
+
+    export interface MatchJoinMessage {
+        id: string
+        metadata: {[key: string]: string}
+    }
+
+    export interface EnvelopeMatchJoin {
+        matchJoin: MatchJoinMessage
+    }
+
+    export interface MatchLeaveMessage {
+        matchId: string
+    }
+
+    export interface EnvelopeMatchLeave {
+        matchLeave: MatchLeaveMessage
+    }
+
+    export interface MatchmakerAddMessage {
+        minCount: number
+        maxCount: number
+        query: string
+        stringProperties: {[key: string]: string}
+        numericProperties: {[key: string]: number}
+    }
+
+    export interface EnvelopeMatchmakerAdd {
+        matchmakerAdd: MatchmakerAddMessage
+    }
+
+    export interface MatchmakerRemoveMessage {
+        ticket: string
+    }
+
+    export interface EnvelopeMatchmakerRemove {
+        matchmakerRemove: MatchmakerRemoveMessage
+    }
+
+    export interface StatusFollowMessage {
+        userIds: string[]
+        usernames: string[]
+    }
+
+    export interface EnvelopeStatusFollow {
+        statusFollow: StatusFollowMessage
+    }
+
+    export interface StatusUnfollowMessage {
+        userIds: string[]
+    }
+
+    export interface EnvelopeStatusUnfollow {
+        statusUnfollow: StatusUnfollowMessage
+    }
+
+    export interface StatusUpdateMessage {
+        status?: string
+    }
+
+    export interface EnvelopeStatusUpdate {
+        statusUpdate: StatusUpdateMessage
+    }
+
+    export interface EnvelopePing {
+        ping: {}
+    }
+
+    export interface EnvelopePong {
+        pong: {}
     }
 
     /**
@@ -1398,7 +3047,7 @@ module NKRuntime {
          * Send envelope data to users in a stream.
          *
          * @param stream - Stream data.
-         * @param envelope - Envelope object. // TODO define envelope export interface
+         * @param envelope - Envelope object.
          * @param presences - Opt. List of presences in the stream to send the data to. If nil or empty, data is sent to all the users.
          * @param reliable - Opt. If data is sent with delivery guarantees. Defaults to true.
          * @throws {TypeError, GoError}

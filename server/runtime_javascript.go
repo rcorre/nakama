@@ -168,6 +168,11 @@ func (rp *RuntimeProviderJS) Rpc(ctx context.Context, id string, queryParams map
 	if err != nil {
 		return "", err, code
 	}
+
+	if retValue == nil {
+		return "", nil, 0
+	}
+
 	payload, ok := retValue.(string)
 	if !ok {
 		msg := "Runtime function returned invalid data - only allowed one return value of type string."
@@ -407,7 +412,11 @@ func (r *RuntimeJS) InvokeFunction(execMode RuntimeExecutionMode, id string, fn 
 		return nil, err, code
 	}
 
-	return retVal.Export(), nil, codes.OK
+	if retVal == nil {
+		return nil, nil, codes.OK
+	} else {
+		return retVal.Export(), nil, codes.OK
+	}
 }
 
 func (r *RuntimeJS) invokeFunction(execMode RuntimeExecutionMode, id string, fn goja.Callable, args ...goja.Value) (goja.Value, error, codes.Code) {
@@ -481,6 +490,13 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		startupLogger.Fatal("Failed to load JavaScript files", zap.Error(err))
 	}
 
+	jsJsonpbMarshaler := &jsonpb.Marshaler{
+		OrigName:     false,
+		EnumsAsInts:  jsonpbMarshaler.EnumsAsInts,
+		EmitDefaults: jsonpbMarshaler.EmitDefaults,
+		Indent:       jsonpbMarshaler.Indent,
+	}
+
 	runtimeProviderJS := &RuntimeProviderJS{
 		config:               config,
 		logger:               logger,
@@ -488,7 +504,7 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		eventFn:              eventFn,
 		matchCreateFn:        goMatchCreateFn,
 		matchRegistry:        matchRegistry,
-		jsonpbMarshaler:      jsonpbMarshaler,
+		jsonpbMarshaler:      jsJsonpbMarshaler,
 		jsonpbUnmarshaler:    jsonpbUnmarshaler,
 		socialClient:         socialClient,
 		leaderboardCache:     leaderboardCache,
