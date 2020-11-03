@@ -50,10 +50,6 @@ func request_Console_Authenticate_0(ctx context.Context, marshaler runtime.Marsh
 
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
 func local_request_Console_Authenticate_0(ctx context.Context, marshaler runtime.Marshaler, server ConsoleServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq AuthenticateRequest
 	var metadata runtime.ServerMetadata
@@ -71,7 +67,6 @@ func local_request_Console_Authenticate_0(ctx context.Context, marshaler runtime
 
 }
 
-<<<<<<< HEAD
 var (
 	filter_Console_AddUser_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
 )
@@ -109,11 +104,6 @@ func local_request_Console_AddUser_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func request_Console_BanAccount_0(ctx context.Context, marshaler runtime.Marshaler, client ConsoleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-=======
-=======
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-func request_Console_BanUser_0(ctx context.Context, marshaler runtime.Marshaler, client ConsoleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
->>>>>>> afc1df49 (Reimplement Nakama Console with Angular 10.)
 	var protoReq AccountId
 	var metadata runtime.ServerMetadata
 
@@ -139,21 +129,7 @@ func request_Console_BanUser_0(ctx context.Context, marshaler runtime.Marshaler,
 
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
 func local_request_Console_BanAccount_0(ctx context.Context, marshaler runtime.Marshaler, server ConsoleServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-=======
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-=======
->>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
->>>>>>> 40292fad (Regenerate grpc stubs)
-func local_request_Console_BanUser_0(ctx context.Context, marshaler runtime.Marshaler, server ConsoleServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
->>>>>>> afc1df49 (Reimplement Nakama Console with Angular 10.)
 	var protoReq AccountId
 	var metadata runtime.ServerMetadata
 
@@ -633,43 +609,15 @@ func local_request_Console_DeleteStorageObject_1(ctx context.Context, marshaler 
 
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 func request_Console_DeleteAccounts_0(ctx context.Context, marshaler runtime.Marshaler, client ConsoleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.DeleteAccounts(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-=======
-func request_Console_GetGroups_0(ctx context.Context, marshaler runtime.Marshaler, client ConsoleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq AccountId
-	var metadata runtime.ServerMetadata
-
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["id"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
-	}
-
-	protoReq.Id, err = runtime.String(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
-	}
-
-	msg, err := client.GetGroups(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
->>>>>>> afc1df49 (Reimplement Nakama Console with Angular 10.)
 	return msg, metadata, err
 
 }
 
-<<<<<<< HEAD
 func local_request_Console_DeleteAccounts_0(ctx context.Context, marshaler runtime.Marshaler, server ConsoleServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq empty.Empty
 	var metadata runtime.ServerMetadata
@@ -695,18 +643,10 @@ func request_Console_DeleteUser_0(ctx context.Context, marshaler runtime.Marshal
 	}
 
 	msg, err := client.DeleteUser(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-=======
-func request_Console_DeleteUsers_0(ctx context.Context, marshaler runtime.Marshaler, client ConsoleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
-	var metadata runtime.ServerMetadata
-
-	msg, err := client.DeleteUsers(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
 	return msg, metadata, err
 
 }
 
-<<<<<<< HEAD
 func local_request_Console_DeleteUser_0(ctx context.Context, marshaler runtime.Marshaler, server ConsoleServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq UserId
 	var metadata runtime.ServerMetadata
@@ -719,20 +659,6 @@ func local_request_Console_DeleteUser_0(ctx context.Context, marshaler runtime.M
 	}
 
 	msg, err := server.DeleteUser(ctx, &protoReq)
-=======
-func request_Console_GetStatus_0(ctx context.Context, marshaler runtime.Marshaler, client ConsoleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
-	var metadata runtime.ServerMetadata
-
-	msg, err := client.GetStatus(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
->>>>>>> afc1df49 (Reimplement Nakama Console with Angular 10.)
-=======
-func local_request_Console_DeleteUsers_0(ctx context.Context, marshaler runtime.Marshaler, server ConsoleServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq empty.Empty
-	var metadata runtime.ServerMetadata
-
-	msg, err := server.DeleteUsers(ctx, &protoReq)
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
 	return msg, metadata, err
 
 }
@@ -1260,17 +1186,7 @@ func local_request_Console_ListAccounts_0(ctx context.Context, marshaler runtime
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-<<<<<<< HEAD
 	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Console_ListAccounts_0); err != nil {
-=======
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Console_ListUsers_0); err != nil {
-<<<<<<< HEAD
-=======
-	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Console_ListUsers_0); err != nil {
->>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
->>>>>>> 40292fad (Regenerate grpc stubs)
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
@@ -2044,31 +1960,12 @@ func RegisterConsoleHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-<<<<<<< HEAD
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.console.Console/AddUser")
-=======
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.console.Console/BanUser")
-<<<<<<< HEAD
-=======
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
->>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
->>>>>>> 40292fad (Regenerate grpc stubs)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-<<<<<<< HEAD
 		resp, md, err := local_request_Console_AddUser_0(rctx, inboundMarshaler, server, req, pathParams)
-=======
-		resp, md, err := local_request_Console_BanUser_0(rctx, inboundMarshaler, server, req, pathParams)
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
->>>>>>> 40292fad (Regenerate grpc stubs)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -2247,31 +2144,12 @@ func RegisterConsoleHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-<<<<<<< HEAD
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.console.Console/DeleteAccounts")
-=======
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.console.Console/DeleteUsers")
-<<<<<<< HEAD
-=======
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
->>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
->>>>>>> 40292fad (Regenerate grpc stubs)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-<<<<<<< HEAD
 		resp, md, err := local_request_Console_DeleteAccounts_0(rctx, inboundMarshaler, server, req, pathParams)
-=======
-		resp, md, err := local_request_Console_DeleteUsers_0(rctx, inboundMarshaler, server, req, pathParams)
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
->>>>>>> 40292fad (Regenerate grpc stubs)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -2588,31 +2466,12 @@ func RegisterConsoleHandlerServer(ctx context.Context, mux *runtime.ServeMux, se
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-<<<<<<< HEAD
 		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.console.Console/UnbanAccount")
-=======
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/nakama.console.Console/UnbanUser")
-<<<<<<< HEAD
-=======
-		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
->>>>>>> a0602d6f... Regenerate proto stubs and minor fixes
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
->>>>>>> 40292fad (Regenerate grpc stubs)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-<<<<<<< HEAD
 		resp, md, err := local_request_Console_UnbanAccount_0(rctx, inboundMarshaler, server, req, pathParams)
-=======
-		resp, md, err := local_request_Console_UnbanUser_0(rctx, inboundMarshaler, server, req, pathParams)
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
->>>>>>> 40292fad (Regenerate grpc stubs)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -3624,17 +3483,9 @@ func RegisterConsoleHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 var (
 	pattern_Console_Authenticate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "authenticate"}, ""))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 	pattern_Console_AddUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "user"}, ""))
 
 	pattern_Console_BanAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v2", "console", "account", "id", "ban"}, ""))
-=======
-	pattern_Console_BanUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v2", "console", "account", "id", "ban"}, "", runtime.AssumeColonVerbOpt(true)))
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
-	pattern_Console_BanUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v2", "console", "account", "id", "ban"}, ""))
->>>>>>> 40292fad (Regenerate grpc stubs)
 
 	pattern_Console_DeleteAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v2", "console", "account", "id"}, ""))
 
@@ -3648,17 +3499,9 @@ var (
 
 	pattern_Console_DeleteStorageObject_1 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6}, []string{"v2", "console", "storage", "collection", "key", "user_id", "version"}, ""))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 	pattern_Console_DeleteAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "account"}, ""))
 
 	pattern_Console_DeleteUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "user"}, ""))
-=======
-	pattern_Console_DeleteUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "user"}, "", runtime.AssumeColonVerbOpt(true)))
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
-	pattern_Console_DeleteUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "user"}, ""))
->>>>>>> 40292fad (Regenerate grpc stubs)
 
 	pattern_Console_DeleteWalletLedger_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"v2", "console", "account", "id", "wallet", "wallet_id"}, ""))
 
@@ -3680,23 +3523,11 @@ var (
 
 	pattern_Console_ListStorage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "storage"}, ""))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 	pattern_Console_ListAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "account"}, ""))
 
 	pattern_Console_ListUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "user"}, ""))
 
 	pattern_Console_UnbanAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v2", "console", "account", "id", "unban"}, ""))
-=======
-	pattern_Console_ListUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "user"}, "", runtime.AssumeColonVerbOpt(true)))
-
-	pattern_Console_UnbanUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v2", "console", "account", "id", "unban"}, "", runtime.AssumeColonVerbOpt(true)))
->>>>>>> c281281d (Regenerate proto stubs and minor fixes)
-=======
-	pattern_Console_ListUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v2", "console", "user"}, ""))
-
-	pattern_Console_UnbanUser_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"v2", "console", "account", "id", "unban"}, ""))
->>>>>>> 40292fad (Regenerate grpc stubs)
 
 	pattern_Console_UnlinkCustom_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 2, 5}, []string{"v2", "console", "account", "id", "unlink", "custom"}, ""))
 
