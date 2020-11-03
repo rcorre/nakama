@@ -424,10 +424,10 @@ func (r *RuntimeJS) invokeFunction(execMode RuntimeExecutionMode, id string, fn 
 	retVal, err := fn(goja.Null(), args...)
 	if err != nil {
 		if exErr, ok := err.(*goja.Exception); ok {
-			r.logger.Error("javascript runtime function raised an uncaught exception", zap.String("mode", execMode.String()), zap.String("id", id), zap.Error(err))
+			r.logger.Error("JavaScript runtime function raised an uncaught exception", zap.String("mode", execMode.String()), zap.String("id", id), zap.Error(err))
 			return nil, newJsExceptionError(JsErrorException, exErr.Error(), exErr.String()), codes.Internal
 		}
-		r.logger.Error("javascript runtime function caused an error", zap.String("mode", execMode.String()), zap.String("id", id), zap.Error(err))
+		r.logger.Error("JavaScript runtime function caused an error", zap.String("mode", execMode.String()), zap.String("id", id), zap.Error(err))
 		return nil, newJsError(JsErrorRuntime, err), codes.Internal
 	}
 	if retVal == nil || retVal == goja.Undefined() || retVal == goja.Null() {
@@ -1731,7 +1731,7 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, m
 
 		runtimeModule := r.Get(JS_MODULE_NAME)
 		if runtimeModule == nil {
-			logger.Error(JS_MODULE_NAME + " module not found.", zap.String("module", modName))
+			logger.Error(JS_MODULE_NAME+" module not found.", zap.String("module", modName))
 			return nil, nil, errors.New(JS_MODULE_NAME + " module not found.")
 		}
 
@@ -1747,7 +1747,7 @@ func evalRuntimeModules(rp *RuntimeProviderJS, modCache *RuntimeJSModuleCache, m
 			return nil, nil, errors.New(INIT_MODULE_FN_NAME + " function not found.")
 		}
 
-		// Running a dry run, parse javascript but do not execute the init module function
+		// Running a dry run, parse JavaScript but do not execute the init module function
 		if dryRun {
 			return nil, nil, nil
 		}
