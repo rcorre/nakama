@@ -24,38 +24,31 @@ export class ConsoleService {
     this.config = config || defaultConfig;
   }
 
-<<<<<<< HEAD
   public addUser(auth_token: string, username: string, password: string, email: string, role: UserRole): Observable<any> {
     const urlPath = `/v2/console/user`;
     let params = new HttpParams();
-	  if (username) {
-		  params = params.set('username', username);
-	  }
-	  if (password) {
-		  params = params.set('password', password);
-	  }
-	  if (email) {
-		  params = params.set('email', email);
-	  }
-	  if (role) {
-		  params = params.set('role', String(role));
-	  }
+    if (username) {
+      params = params.set('username', username);
+    }
+    if (password) {
+      params = params.set('password', password);
+    }
+    if (email) {
+      params = params.set('email', email);
+    }
+    if (role) {
+      params = params.set('role', String(role));
+    }
     return this.httpClient.post(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
-=======
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
   public authenticate(body: AuthenticateRequest): Observable<ConsoleSession> {
     const urlPath = `/v2/console/authenticate`;
     let params = new HttpParams();
     return this.httpClient.post<ConsoleSession>(this.config.host + urlPath, body, { params: params })
   }
 
-<<<<<<< HEAD
   public banAccount(auth_token: string, id: string): Observable<any> {
-=======
-  public banUser(auth_token: string, id: string): Observable<any> {
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
     const urlPath = `/v2/console/account/${id}/ban`;
     let params = new HttpParams();
     return this.httpClient.post(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
@@ -70,15 +63,12 @@ export class ConsoleService {
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
-<<<<<<< HEAD
   public deleteAccounts(auth_token: string): Observable<any> {
     const urlPath = `/v2/console/account`;
     let params = new HttpParams();
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
-=======
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
   public deleteFriend(auth_token: string, id: string, friend_id: string): Observable<any> {
     const urlPath = `/v2/console/account/${id}/friend/${friend_id}`;
     let params = new HttpParams();
@@ -106,18 +96,12 @@ export class ConsoleService {
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
-<<<<<<< HEAD
   public deleteUser(auth_token: string, id: string): Observable<any> {
     const urlPath = `/v2/console/user`;
     let params = new HttpParams();
-	  if (id) {
-		  params = params.set('id', id);
-	  }
-=======
-  public deleteUsers(auth_token: string): Observable<any> {
-    const urlPath = `/v2/console/user`;
-    let params = new HttpParams();
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
+    if (id) {
+      params = params.set('id', id);
+    }
     return this.httpClient.delete(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
@@ -175,44 +159,8 @@ export class ConsoleService {
     return this.httpClient.get<WalletLedgerList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
-<<<<<<< HEAD
   public listAccounts(auth_token: string, filter: string, banned: boolean, tombstones: boolean): Observable<AccountList> {
     const urlPath = `/v2/console/account`;
-    let params = new HttpParams();
-	  if (filter) {
-		  params = params.set('filter', filter);
-	  }
-	  if (banned) {
-		  params = params.set('banned', String(banned));
-	  }
-	  if (tombstones) {
-		  params = params.set('tombstones', String(tombstones));
-	  }
-    return this.httpClient.get<AccountList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
-  }
-
-=======
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
-  public listStorage(auth_token: string, user_id: string): Observable<StorageList> {
-    const urlPath = `/v2/console/storage`;
-    let params = new HttpParams();
-    if (user_id) {
-      params = params.set('user_id', user_id);
-    }
-    return this.httpClient.get<StorageList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
-  }
-
-<<<<<<< HEAD
-  public listUsers(auth_token: string): Observable<UserList> {
-    const urlPath = `/v2/console/user`;
-    let params = new HttpParams();
-    return this.httpClient.get<UserList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
-  }
-
-  public unbanAccount(auth_token: string, id: string): Observable<any> {
-=======
-  public listUsers(auth_token: string, filter: string, banned: boolean, tombstones: boolean): Observable<UserList> {
-    const urlPath = `/v2/console/user`;
     let params = new HttpParams();
     if (filter) {
       params = params.set('filter', filter);
@@ -223,11 +171,25 @@ export class ConsoleService {
     if (tombstones) {
       params = params.set('tombstones', String(tombstones));
     }
+    return this.httpClient.get<AccountList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  public listStorage(auth_token: string, user_id: string): Observable<StorageList> {
+    const urlPath = `/v2/console/storage`;
+    let params = new HttpParams();
+    if (user_id) {
+      params = params.set('user_id', user_id);
+    }
+    return this.httpClient.get<StorageList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
+  }
+
+  public listUsers(auth_token: string): Observable<UserList> {
+    const urlPath = `/v2/console/user`;
+    let params = new HttpParams();
     return this.httpClient.get<UserList>(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
   }
 
-  public unbanUser(auth_token: string, id: string): Observable<any> {
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
+  public unbanAccount(auth_token: string, id: string): Observable<any> {
     const urlPath = `/v2/console/account/${id}/unban`;
     let params = new HttpParams();
     return this.httpClient.post(this.config.host + urlPath, { params: params, headers: this.getTokenAuthHeaders(auth_token) })
@@ -476,7 +438,6 @@ export interface AccountId {
   id?: string
 }
 
-<<<<<<< HEAD
 export interface AccountList {
   users?: Array<ApiUser>
   total_count?: number
@@ -489,8 +450,6 @@ export interface AddUserRequest {
   role?: UserRole
 }
 
-=======
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
 export interface AuthenticateRequest {
   username?: string
   password?: string
@@ -533,27 +492,16 @@ export interface DeleteWalletLedgerRequest {
   wallet_id?: string
 }
 
-<<<<<<< HEAD
 export interface ListAccountsRequest {
-=======
-export interface ListStorageRequest {
-  user_id?: string
-}
-
-export interface ListUsersRequest {
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
   filter?: string
   banned?: boolean
   tombstones?: boolean
 }
 
-<<<<<<< HEAD
 export interface ListStorageRequest {
   user_id?: string
 }
 
-=======
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
 export interface StatusList {
   nodes?: Array<StatusListStatus>
 }
@@ -600,7 +548,6 @@ export interface UpdateAccountRequestDeviceIdsEntry {
   value?: string
 }
 
-<<<<<<< HEAD
 export interface UserId {
   id?: string
 }
@@ -613,11 +560,6 @@ export interface UserListUser {
   username?: string
   email?: string
   role?: UserRole
-=======
-export interface UserList {
-  users?: Array<ApiUser>
-  total_count?: number
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
 }
 
 export interface WalletLedger {
@@ -641,7 +583,6 @@ export interface WriteStorageObjectRequest {
   permission_read?: number
   permission_write?: number
 }
-<<<<<<< HEAD
 
 export enum UserRole {
   USER_ROLE_UNKNOWN = 0,
@@ -650,5 +591,3 @@ export enum UserRole {
   USER_ROLE_MAINTAINER = 3,
   USER_ROLE_READONLY = 4,
 }
-=======
->>>>>>> 16dd8f49 (Reimplement Nakama Console with Angular 10.)
