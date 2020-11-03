@@ -3159,7 +3159,7 @@ module NKRuntime {
          * @returns Object containing an array of wallet ledger results and a cursor for the next page of results, if there is one.
          * @throws {TypeError, GoError}
          */
-        walletLedgerList(userID: string, limit?: number, cursor?: string): {items: WalletLedgerResult, cursor: string};
+        walletLedgerList(userID: string, limit?: number, cursor?: string): {items: WalletLedgerResult[], cursor?: string};
 
         /**
          * List user's storage objects from a collection.
@@ -3171,7 +3171,7 @@ module NKRuntime {
          * @returns Object containing an array of storage objects and a cursor for the next page of results, if there is one.
          * @throws {TypeError, GoError}
          */
-        storageList(userID: string, collection: string, limit?: number, cursor?: string): {items: StorageObject, cursor: string};
+        storageList(userID: string, collection: string, limit?: number, cursor?: string): {items: StorageObject[], cursor?: string};
 
         /**
          * Get all storage objects matching the parameters.
@@ -3249,9 +3249,10 @@ module NKRuntime {
          * @param limit - Max number of records to return.
          * @param cursor - Page cursor.
          * @param overrideExpiry - Override the time expiry of the leaderboard. (Unix epoch).
+         * @returns a list of leaderboard records.
          * @throws {TypeError, GoError}
          */
-        leaderboardRecordsList(leaderboardID: string, leaderboardOwners?: string[], limit?: number, cursor?: string, overrideExpiry?: number): LeaderboardRecord[]
+        leaderboardRecordsList(leaderboardID: string, leaderboardOwners?: string[], limit?: number, cursor?: string, overrideExpiry?: number): {records: LeaderboardRecord[], ownerRecords: LeaderboardRecord[], prevCursor?: string, nextCursor?: string}
 
         /**
          * Write a new leaderboard record.
@@ -3361,8 +3362,22 @@ module NKRuntime {
          * @param limit - Return only the required number of tournament denoted by this limit value.
          * @param cursor - Cursor to paginate to the next result set. If this is empty/null there is no further results.
          * @returns The tournament data for the given ids.
+         * @throws {TypeError, GoError}
          */
-        tournamentList(categoryStart?: number, categoryEnd?: number, startTime?: number, endTime?: number, limit?: number, cursor?: string): Tournament[];
+        tournamentList(categoryStart?: number, categoryEnd?: number, startTime?: number, endTime?: number, limit?: number, cursor?: string): {tournaments: Tournament[], cursor?: string};
+
+        /**
+         * List records of a tournament.
+         *
+         * @param tournamentID - Tournament id.
+         * @param tournamentOwners - Array of tournament owners.
+         * @param limit - Max number of records to return.
+         * @param cursor - Page cursor.
+         * @param overrideExpiry - Override the time expiry of the leaderboard. (Unix epoch).
+         * @returns a list of tournament records.
+         * @throws {TypeError, GoError}
+         */
+        tournamentRecordsList(tournamentID: string, tournamentOwners?: string[], limit?: number, cursor?: string, overrideExpiry?: number): {records: LeaderboardRecord[], ownerRecords: LeaderboardRecord[], prevCursor?: string, nextCursor?: string}
 
         /**
          * Submit a score and optional subscore to a tournament leaderboard.
@@ -3455,24 +3470,36 @@ module NKRuntime {
          *
          * @param groupID - The group ID to update.
          * @param limit - Opt. Max number of returned results. Defaults to 100.
-         * @param state - Opt. Filter users by their group state (0: Superadmin, 1: Admin, 2: Member, 3: Requested to join). Use nil or undefined to return all states.
+         * @param state - Opt. Filter users by their group state (0: Superadmin, 1: Admin, 2: Member, 3: Requested to join). Use undefined to return all states.
          * @param cursor - Opt. A cursor used to fetch the next page when applicable.
          * @returns A list of group members.
          * @throws {TypeError, GoError}
          */
-        groupUsersList(userID: string, limit?: number, state?: number, cursor?: string): {groupUsers: {user: User, state: number}, cursor: string | null}
+        groupUsersList(userID: string, limit?: number, state?: number, cursor?: string): {groupUsers: {user: User, state: number}, cursor?: string}
 
         /**
          * List all groups the user belongs to.
          *
          * @param userID - User ID.
          * @param limit - Opt. Max number of returned results. Defaults to 100.
-         * @param state - Opt. Filter users by their group state (0: Superadmin, 1: Admin, 2: Member, 3: Requested to join). Use nil or undefined to return all states.
+         * @param state - Opt. Filter users by their group state (0: Superadmin, 1: Admin, 2: Member, 3: Requested to join). Use undefined to return all states.
          * @param cursor - Opt. A cursor used to fetch the next page when applicable.
          * @returns A list of group members.
          * @throws {TypeError, GoError}
          */
-        userGroupsList(userID: string, limit?: number, state?: number, cursor?: string): {userGroups: {group: Group, state: number}, cursor: string | null}
+        userGroupsList(userID: string, limit?: number, state?: number, cursor?: string): {userGroups: {group: Group, state: number}, cursor?: string}
+
+         /**
+         * List a user's friends
+         *
+         * @param userID - User ID.
+         * @param limit - Opt. Max number of returned results. Defaults to 100.
+         * @param state - Opt. Filter users by their group state (friend(0), invite_sent(1), invite_received(2), blocked(3)). Use undefined to return all states.
+         * @param cursor - Opt. A cursor used to fetch the next page when applicable.
+         * @returns A list of friends.
+         * @throws {TypeError, GoError}
+         */
+        friendsList(userID: string, limit?: number, state?: number, cursor?: string): {friends: {user: User, state: number, updateTime: number}, cursor?: string}
     }
 
     /**

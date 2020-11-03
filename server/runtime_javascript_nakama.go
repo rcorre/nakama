@@ -194,6 +194,7 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"tournamentJoin":                  n.tournamentJoin(r),
 		"tournamentList":                  n.tournamentList(r),
 		"tournamentsGetId":                n.tournamentsGetId(r),
+		"tournamentRecordsList":           n.tournamentRecordsList(r),
 		"tournamentRecordWrite":           n.tournamentRecordWrite(r),
 		"tournamentRecordsHaystack":       n.tournamentRecordsHaystack(r),
 		"groupsGetId":                     n.groupsGetId(r),
@@ -203,6 +204,7 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"groupUsersKick":                  n.groupUsersKick(r),
 		"groupUsersList":                  n.groupUsersList(r),
 		"userGroupsList":                  n.userGroupsList(r),
+		"friendsList":                     n.friendsList(r),
 	}
 }
 
@@ -3923,86 +3925,7 @@ func (n *runtimeJavascriptNakamaModule) leaderboardRecordsList(r *goja.Runtime) 
 			panic(r.NewGoError(fmt.Errorf("error listing leaderboard records: %v", err.Error())))
 		}
 
-		recordsSlice := make([]interface{}, 0, len(records.Records))
-		for _, record := range records.Records {
-			recordMap := make(map[string]interface{})
-			recordMap["leaderboardId"] = record.LeaderboardId
-			recordMap["ownerId"] = record.OwnerId
-			if record.Username != nil {
-				recordMap["username"] = record.Username
-			} else {
-				recordMap["username"] = nil
-			}
-			recordMap["score"] = record.Score
-			recordMap["subscore"] = record.Subscore
-			recordMap["numScoore"] = record.NumScore
-			metadataMap := make(map[string]interface{})
-			err = json.Unmarshal([]byte(record.Metadata), &metadataMap)
-			if err != nil {
-				panic(r.NewGoError(fmt.Errorf("failed to convert metadata to json: %s", err.Error())))
-			}
-			metadataMap["metadata"] = metadataMap
-			metadataMap["createTime"] = record.CreateTime.Seconds
-			metadataMap["updateTime"] = record.UpdateTime.Seconds
-			if record.ExpiryTime != nil {
-				recordMap["expiryTime"] = record.ExpiryTime.Seconds
-			} else {
-				recordMap["expiryTime"] = nil
-			}
-			recordMap["rank"] = record.Rank
-
-			recordsSlice = append(recordsSlice, recordMap)
-		}
-
-		ownerRecordsSlice := make([]interface{}, 0, len(records.OwnerRecords))
-		for _, record := range records.OwnerRecords {
-			recordMap := make(map[string]interface{})
-			recordMap["leaderboardId"] = record.LeaderboardId
-			recordMap["ownerId"] = record.OwnerId
-			if record.Username != nil {
-				recordMap["username"] = record.Username
-			} else {
-				recordMap["username"] = nil
-			}
-			recordMap["score"] = record.Score
-			recordMap["subscore"] = record.Subscore
-			recordMap["numScore"] = record.NumScore
-			metadataMap := make(map[string]interface{})
-			err = json.Unmarshal([]byte(record.Metadata), &metadataMap)
-			if err != nil {
-				panic(r.NewGoError(fmt.Errorf("failed to convert metadata to json: %s", err.Error())))
-			}
-			metadataMap["metadata"] = metadataMap
-			metadataMap["createTime"] = record.CreateTime.Seconds
-			metadataMap["updateTime"] = record.UpdateTime.Seconds
-			if record.ExpiryTime != nil {
-				recordMap["expiryTime"] = record.ExpiryTime.Seconds
-			} else {
-				recordMap["expiryTime"] = nil
-			}
-			recordMap["rank"] = record.Rank
-
-			ownerRecordsSlice = append(ownerRecordsSlice, recordMap)
-		}
-
-		resultMap := make(map[string]interface{})
-
-		resultMap["records"] = recordsSlice
-		resultMap["ownerRecords"] = ownerRecordsSlice
-
-		if records.NextCursor != "" {
-			resultMap["nextCursor"] = records.NextCursor
-		} else {
-			resultMap["nextCursor"] = nil
-		}
-
-		if records.PrevCursor != "" {
-			resultMap["prevCursor"] = records.PrevCursor
-		} else {
-			resultMap["prevCursor"] = nil
-		}
-
-		return r.ToValue(resultMap)
+		return leaderboardRecordsToJs(r, records.Records, records.OwnerRecords, records.PrevCursor, records.NextCursor)
 	}
 }
 
@@ -4367,6 +4290,144 @@ func (n *runtimeJavascriptNakamaModule) tournamentsGetId(r *goja.Runtime) func(g
 
 		return r.ToValue(results)
 	}
+}
+
+func (n *runtimeJavascriptNakamaModule) tournamentRecordsList(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		id := getJsString(r, f.Argument(0))
+		if id == "" {
+			panic(r.NewTypeError("expects a tournament ID string"))
+		}
+
+		var ownerIds []string
+		owners := f.Argument(1)
+		if owners != nil {
+			if owners == goja.Undefined() {
+				panic(r.NewTypeError("expects an array of owner ids or null"))
+			}
+			ownersSlice, ok := owners.Export().([]interface{})
+			if !ok {
+				panic(r.NewTypeError("expects an array of owner ids"))
+			}
+			ownerIds := make([]string, 0, len(ownersSlice))
+			for _, owner := range ownersSlice {
+				ownerStr, ok := owner.(string)
+				if !ok {
+					panic(r.NewTypeError("expects a valid owner string"))
+				}
+				ownerIds = append(ownerIds, ownerStr)
+			}
+		}
+
+		limitNumber := 0
+		if f.Argument(2) != goja.Undefined() {
+			limitNumber = int(getJsInt(r, f.Argument(2)))
+		}
+		var limit *wrappers.Int32Value
+		if limitNumber != 0 {
+			limit = &wrappers.Int32Value{Value: int32(limitNumber)}
+		}
+
+		cursor := ""
+		if f.Argument(3) != goja.Undefined() {
+			cursor = getJsString(r, f.Argument(3))
+		}
+
+		overrideExpiry := int64(0)
+		if f.Argument(4) != goja.Undefined() {
+			overrideExpiry = getJsInt(r, f.Argument(4))
+		}
+
+		records, err := TournamentRecordsList(context.Background(), n.logger, n.db, n.leaderboardCache, n.rankCache, id, ownerIds, limit, cursor, overrideExpiry)
+		if err != nil {
+			panic(r.NewGoError(fmt.Errorf("error listing tournament records: %v", err.Error())))
+		}
+
+		return leaderboardRecordsToJs(r, records.Records, records.OwnerRecords, records.PrevCursor, records.NextCursor)
+	}
+}
+
+func leaderboardRecordsToJs(r *goja.Runtime, records []*api.LeaderboardRecord, ownerRecords []*api.LeaderboardRecord, prevCursor, nextCursor string) goja.Value {
+	recordsSlice := make([]interface{}, 0, len(records))
+	for _, record := range records {
+		recordMap := make(map[string]interface{})
+		recordMap["leaderboardId"] = record.LeaderboardId
+		recordMap["ownerId"] = record.OwnerId
+		if record.Username != nil {
+			recordMap["username"] = record.Username
+		} else {
+			recordMap["username"] = nil
+		}
+		recordMap["score"] = record.Score
+		recordMap["subscore"] = record.Subscore
+		recordMap["numScoore"] = record.NumScore
+		metadataMap := make(map[string]interface{})
+		err := json.Unmarshal([]byte(record.Metadata), &metadataMap)
+		if err != nil {
+			panic(r.NewGoError(fmt.Errorf("failed to convert metadata to json: %s", err.Error())))
+		}
+		metadataMap["metadata"] = metadataMap
+		metadataMap["createTime"] = record.CreateTime.Seconds
+		metadataMap["updateTime"] = record.UpdateTime.Seconds
+		if record.ExpiryTime != nil {
+			recordMap["expiryTime"] = record.ExpiryTime.Seconds
+		} else {
+			recordMap["expiryTime"] = nil
+		}
+		recordMap["rank"] = record.Rank
+
+		recordsSlice = append(recordsSlice, recordMap)
+	}
+
+	ownerRecordsSlice := make([]interface{}, 0, len(ownerRecords))
+	for _, record := range ownerRecords {
+		recordMap := make(map[string]interface{})
+		recordMap["leaderboardId"] = record.LeaderboardId
+		recordMap["ownerId"] = record.OwnerId
+		if record.Username != nil {
+			recordMap["username"] = record.Username
+		} else {
+			recordMap["username"] = nil
+		}
+		recordMap["score"] = record.Score
+		recordMap["subscore"] = record.Subscore
+		recordMap["numScore"] = record.NumScore
+		metadataMap := make(map[string]interface{})
+		err := json.Unmarshal([]byte(record.Metadata), &metadataMap)
+		if err != nil {
+			panic(r.NewGoError(fmt.Errorf("failed to convert metadata to json: %s", err.Error())))
+		}
+		metadataMap["metadata"] = metadataMap
+		metadataMap["createTime"] = record.CreateTime.Seconds
+		metadataMap["updateTime"] = record.UpdateTime.Seconds
+		if record.ExpiryTime != nil {
+			recordMap["expiryTime"] = record.ExpiryTime.Seconds
+		} else {
+			recordMap["expiryTime"] = nil
+		}
+		recordMap["rank"] = record.Rank
+
+		ownerRecordsSlice = append(ownerRecordsSlice, recordMap)
+	}
+
+	resultMap := make(map[string]interface{})
+
+	resultMap["records"] = recordsSlice
+	resultMap["ownerRecords"] = ownerRecordsSlice
+
+	if nextCursor != "" {
+		resultMap["nextCursor"] = nextCursor
+	} else {
+		resultMap["nextCursor"] = nil
+	}
+
+	if prevCursor != "" {
+		resultMap["prevCursor"] = prevCursor
+	} else {
+		resultMap["prevCursor"] = nil
+	}
+
+	return r.ToValue(resultMap)
 }
 
 func (n *runtimeJavascriptNakamaModule) tournamentList(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
@@ -4928,6 +4989,9 @@ func (n *runtimeJavascriptNakamaModule) groupUsersList(r *goja.Runtime) func(goj
 		limit := 100
 		if !goja.IsUndefined(f.Argument(1)) && !goja.IsNull(f.Argument(1)) {
 			limit = int(getJsInt(r, f.Argument(1)))
+			if limit < 1 || limit > 100 {
+				panic(r.NewTypeError("expects limit to be 1-100"))
+			}
 		}
 
 		var stateWrapper *wrappers.Int32Value
@@ -5024,6 +5088,9 @@ func (n *runtimeJavascriptNakamaModule) userGroupsList(r *goja.Runtime) func(goj
 		limit := 100
 		if !goja.IsUndefined(f.Argument(1)) && !goja.IsNull(f.Argument(1)) {
 			limit = int(getJsInt(r, f.Argument(1)))
+			if limit < 1 || limit > 100 {
+				panic(r.NewTypeError("expects limit to be 1-100"))
+			}
 		}
 
 		var stateWrapper *wrappers.Int32Value
@@ -5085,6 +5152,103 @@ func (n *runtimeJavascriptNakamaModule) userGroupsList(r *goja.Runtime) func(goj
 			result["cursor"] = nil
 		} else {
 			result["cursor"] = res.Cursor
+		}
+
+		return r.ToValue(result)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) friendsList(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		userIDString := getJsString(r, f.Argument(0))
+		if userIDString == "" {
+			panic(r.NewTypeError("expects a user ID string"))
+		}
+		userID, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects user ID to be a valid identifier"))
+		}
+
+		limit := 100
+		if !goja.IsUndefined(f.Argument(1)) && !goja.IsNull(f.Argument(1)) {
+			limit = int(getJsInt(r, f.Argument(1)))
+			if limit < 1 || limit > 100 {
+				panic(r.NewTypeError("expects limit to be 1-100"))
+			}
+		}
+
+		var stateWrapper *wrappers.Int32Value
+		if !goja.IsUndefined(f.Argument(2)) && !goja.IsNull(f.Argument(2)) {
+			state := getJsInt(r, f.Argument(2))
+			if state != -1 {
+				if state < 0 || state > 3 {
+					panic(r.NewTypeError("expects state to be 0-3"))
+				}
+				stateWrapper = &wrappers.Int32Value{Value: int32(state)}
+			}
+		}
+
+		cursor := ""
+		if !goja.IsUndefined(f.Argument(3)) && !goja.IsNull(f.Argument(3)) {
+			cursor = getJsString(r, f.Argument(3))
+		}
+
+		friends, err := ListFriends(context.Background(), n.logger, n.db, n.tracker, userID, limit, stateWrapper, cursor)
+		if err != nil {
+			panic(r.NewGoError(fmt.Errorf("error while trying to list friends for a user: %v", err.Error())))
+		}
+
+		userFriends := make([]interface{}, 0, len(friends.Friends))
+		for _, f := range friends.Friends {
+			fu := f.User
+
+			fum := make(map[string]interface{})
+
+			fum["id"] = fu.Id
+			fum["username"] = fu.Username
+			if fu.AppleId != "" {
+				fum["apple_id"] = fu.AppleId
+			}
+			if fu.FacebookId != "" {
+				fum["facebook_id"] = fu.FacebookId
+			}
+			if fu.FacebookInstantGameId != "" {
+				fum["facebook_instant_game_id"] = fu.FacebookInstantGameId
+			}
+			if fu.GoogleId != "" {
+				fum["google_id"] = fu.GoogleId
+			}
+			if fu.GamecenterId != "" {
+				fum["gamecenter_id"] = fu.GamecenterId
+			}
+			if fu.SteamId != "" {
+				fum["steam_id"] = fu.SteamId
+			}
+			fum["online"] = fu.Online
+			fum["edge_count"] = fu.EdgeCount
+			fum["create_time"] = fu.CreateTime.Seconds
+			fum["update_time"] = fu.UpdateTime.Seconds
+
+			metadataMap := make(map[string]interface{})
+			err = json.Unmarshal([]byte(fu.Metadata), &metadataMap)
+			if err != nil {
+				panic(r.NewGoError(fmt.Errorf("failed to convert metadata to json: %s", err.Error())))
+			}
+			fum["metadata"] = metadataMap
+
+			fm := make(map[string]interface{})
+			fm["state"] = f.State
+			fm["update_time"] = f.UpdateTime.Seconds
+			fm["user"] = fum
+
+			userFriends = append(userFriends, fm)
+		}
+
+		result := map[string]interface{}{
+			"friends": userFriends,
+		}
+		if friends.Cursor != "" {
+			result["cursor"] = friends.Cursor
 		}
 
 		return r.ToValue(result)

@@ -6680,8 +6680,8 @@ func (n *RuntimeLuaNakamaModule) friendsList(l *lua.LState) int {
 	state := l.OptInt(3, -1)
 	var stateWrapper *wrappers.Int32Value
 	if state != -1 {
-		if state < 0 || state > 4 {
-			l.ArgError(3, "expects state to be 0-4")
+		if state < 0 || state > 3 {
+			l.ArgError(3, "expects state to be 0-3")
 			return 0
 		}
 		stateWrapper = &wrappers.Int32Value{Value: int32(state)}
