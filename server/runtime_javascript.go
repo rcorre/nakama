@@ -514,9 +514,9 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 		streamManager:        streamManager,
 		router:               router,
 		metrics:              metrics,
-		poolCh:               make(chan *RuntimeJS, config.GetRuntime().MaxCount),
-		maxCount:             uint32(config.GetRuntime().MaxCount),
-		currentCount:         atomic.NewUint32(uint32(config.GetRuntime().MinCount)),
+		poolCh:               make(chan *RuntimeJS, config.GetRuntime().JsMaxCount),
+		maxCount:             uint32(config.GetRuntime().JsMaxCount),
+		currentCount:         atomic.NewUint32(uint32(config.GetRuntime().JsMinCount)),
 	}
 
 	rpcFunctions := make(map[string]RuntimeRpcFunction, 0)
@@ -1405,13 +1405,13 @@ func NewRuntimeProviderJS(logger, startupLogger *zap.Logger, db *sql.DB, jsonpbM
 	startupLogger.Info("JavaScript runtime modules loaded")
 
 	// Warm up the pool.
-	startupLogger.Info("Allocating minimum JavaScript runtime pool", zap.Int("count", config.GetRuntime().MinCount))
+	startupLogger.Info("Allocating minimum JavaScript runtime pool", zap.Int("count", config.GetRuntime().JsMinCount))
 	if len(modCache.Names) > 0 {
 		// Only if there are runtime modules to load.
-		for i := 0; i < config.GetRuntime().MinCount; i++ {
+		for i := 0; i < config.GetRuntime().JsMinCount; i++ {
 			runtimeProviderJS.poolCh <- runtimeProviderJS.newFn()
 		}
-		runtimeProviderJS.metrics.GaugeJsRuntimes(float64(config.GetRuntime().MinCount))
+		runtimeProviderJS.metrics.GaugeJsRuntimes(float64(config.GetRuntime().JsMinCount))
 	}
 	startupLogger.Info("Allocated minimum JavaScript runtime pool")
 

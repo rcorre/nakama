@@ -161,10 +161,10 @@ func NewRuntimeProviderLua(logger, startupLogger *zap.Logger, db *sql.DB, jsonpb
 		stdLibs:              stdLibs,
 
 		once:     once,
-		poolCh:   make(chan *RuntimeLua, config.GetRuntime().MaxCount),
-		maxCount: uint32(config.GetRuntime().MaxCount),
+		poolCh:   make(chan *RuntimeLua, config.GetRuntime().GetLuaMaxCount()),
+		maxCount: uint32(config.GetRuntime().GetLuaMaxCount()),
 		// Set the current count assuming we'll warm up the pool in a moment.
-		currentCount: atomic.NewUint32(uint32(config.GetRuntime().MinCount)),
+		currentCount: atomic.NewUint32(uint32(config.GetRuntime().GetLuaMinCount())),
 
 		statsCtx: context.Background(),
 	}
@@ -1009,7 +1009,7 @@ func NewRuntimeProviderLua(logger, startupLogger *zap.Logger, db *sql.DB, jsonpb
 		return nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, err
 	}
 
-	if config.GetRuntime().ReadOnlyGlobals {
+	if config.GetRuntime().GetLuaReadOnlyGlobals() {
 		// Capture shared globals from reference state.
 		sharedGlobals = r.vm.NewTable()
 		sharedGlobals.RawSetString("__index", r.vm.Get(lua.GlobalsIndex))
@@ -1023,8 +1023,8 @@ func NewRuntimeProviderLua(logger, startupLogger *zap.Logger, db *sql.DB, jsonpb
 
 		runtimeProviderLua.newFn = func() *RuntimeLua {
 			vm := lua.NewState(lua.Options{
-				CallStackSize:       config.GetRuntime().CallStackSize,
-				RegistrySize:        config.GetRuntime().RegistrySize,
+				CallStackSize:       config.GetRuntime().GetLuaCallStackSize(),
+				RegistrySize:        config.GetRuntime().GetLuaRegistrySize(),
 				SkipOpenLibs:        true,
 				IncludeGoStackTrace: true,
 			})
@@ -1063,13 +1063,13 @@ func NewRuntimeProviderLua(logger, startupLogger *zap.Logger, db *sql.DB, jsonpb
 	startupLogger.Info("Lua runtime modules loaded")
 
 	// Warm up the pool.
-	startupLogger.Info("Allocating minimum runtime pool", zap.Int("count", config.GetRuntime().MinCount))
+	startupLogger.Info("Allocating minimum runtime pool", zap.Int("count", config.GetRuntime().GetLuaMinCount()))
 	if len(moduleCache.Names) > 0 {
 		// Only if there are runtime modules to load.
-		for i := 0; i < config.GetRuntime().MinCount; i++ {
+		for i := 0; i < config.GetRuntime().GetLuaMinCount(); i++ {
 			runtimeProviderLua.poolCh <- runtimeProviderLua.newFn()
 		}
-		runtimeProviderLua.metrics.GaugeLuaRuntimes(float64(config.GetRuntime().MinCount))
+		runtimeProviderLua.metrics.GaugeLuaRuntimes(float64(config.GetRuntime().GetLuaMinCount()))
 	}
 	startupLogger.Info("Allocated minimum runtime pool")
 
@@ -1937,8 +1937,8 @@ func (r *RuntimeLua) Stop() {
 
 func checkRuntimeLuaVM(logger *zap.Logger, config Config, stdLibs map[string]lua.LGFunction, moduleCache *RuntimeLuaModuleCache) error {
 	vm := lua.NewState(lua.Options{
-		CallStackSize:       config.GetRuntime().CallStackSize,
-		RegistrySize:        config.GetRuntime().RegistrySize,
+		CallStackSize:       config.GetRuntime().GetLuaCallStackSize(),
+		RegistrySize:        config.GetRuntime().GetLuaRegistrySize(),
 		SkipOpenLibs:        true,
 		IncludeGoStackTrace: true,
 	})
@@ -1971,8 +1971,8 @@ func checkRuntimeLuaVM(logger *zap.Logger, config Config, stdLibs map[string]lua
 
 func newRuntimeLuaVM(logger *zap.Logger, db *sql.DB, jsonpbMarshaler *jsonpb.Marshaler, jsonpbUnmarshaler *jsonpb.Unmarshaler, config Config, socialClient *social.Client, leaderboardCache LeaderboardCache, rankCache LeaderboardRankCache, leaderboardScheduler LeaderboardScheduler, sessionRegistry SessionRegistry, matchRegistry MatchRegistry, tracker Tracker, streamManager StreamManager, router MessageRouter, stdLibs map[string]lua.LGFunction, moduleCache *RuntimeLuaModuleCache, once *sync.Once, localCache *RuntimeLuaLocalCache, matchCreateFn RuntimeMatchCreateFunction, eventFn RuntimeEventCustomFunction, announceCallbackFn func(RuntimeExecutionMode, string)) (*RuntimeLua, error) {
 	vm := lua.NewState(lua.Options{
-		CallStackSize:       config.GetRuntime().CallStackSize,
-		RegistrySize:        config.GetRuntime().RegistrySize,
+		CallStackSize:       config.GetRuntime().GetLuaCallStackSize(),
+		RegistrySize:        config.GetRuntime().GetLuaRegistrySize(),
 		SkipOpenLibs:        true,
 		IncludeGoStackTrace: true,
 	})
