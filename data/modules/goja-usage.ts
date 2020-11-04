@@ -149,7 +149,7 @@ module NKRuntime {
     export interface MatchMessage {
         userId: string;
         sessionId: string;
-        nodeId: string;
+        node: string;
         hidden: boolean;
         persistence: boolean;
         username: string;
@@ -1991,7 +1991,7 @@ module NKRuntime {
     export interface Presence {
         userId: string;
         sessionId: string;
-        nodeId: string;
+        node: string;
         hidden: boolean;
         persistence: boolean;
         username: string;

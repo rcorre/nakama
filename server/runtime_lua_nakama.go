@@ -2706,7 +2706,7 @@ func (n *RuntimeLuaNakamaModule) streamUserList(l *lua.LState) int {
 		presenceTable := l.CreateTable(0, 7)
 		presenceTable.RawSetString("user_id", lua.LString(p.UserID.String()))
 		presenceTable.RawSetString("session_id", lua.LString(p.ID.SessionID.String()))
-		presenceTable.RawSetString("node_id", lua.LString(p.ID.Node))
+		presenceTable.RawSetString("node", lua.LString(p.ID.Node))
 		presenceTable.RawSetString("hidden", lua.LBool(p.Meta.Hidden))
 		presenceTable.RawSetString("persistence", lua.LBool(p.Meta.Persistence))
 		presenceTable.RawSetString("username", lua.LString(p.Meta.Username))
@@ -3478,10 +3478,10 @@ func (n *RuntimeLuaNakamaModule) streamSend(l *lua.LState) int {
 							l.ArgError(3, "presence session id must be a valid identifier")
 							return
 						}
-					case "node_id":
+					case "node":
 						if v.Type() != lua.LTString {
 							conversionError = true
-							l.ArgError(3, "presence node id must be a string")
+							l.ArgError(3, "presence node must be a string")
 							return
 						}
 						presenceID.Node = v.String()
@@ -3646,10 +3646,10 @@ func (n *RuntimeLuaNakamaModule) streamSendRaw(l *lua.LState) int {
 							l.ArgError(3, "presence session id must be a valid identifier")
 							return
 						}
-					case "node_id":
+					case "node":
 						if v.Type() != lua.LTString {
 							conversionError = true
-							l.ArgError(3, "presence node id must be a string")
+							l.ArgError(3, "presence node must be a string")
 							return
 						}
 						presenceID.Node = v.String()
