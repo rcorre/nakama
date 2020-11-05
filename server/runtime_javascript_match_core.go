@@ -28,7 +28,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var jsMatchStoppedErr = map[string]interface{}{"name": "MatchStoppedError", "message": "match stopped"}
+var matchStoppedError = errors.New("match stopped")
 
 type RuntimeJavascriptMatchCore struct {
 	logger        *zap.Logger
@@ -398,7 +398,7 @@ func (rm *RuntimeJavascriptMatchCore) Cancel() {
 func (rm *RuntimeJavascriptMatchCore) broadcastMessage(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		if rm.stopped.Load() {
-			panic(r.ToValue(jsMatchStoppedErr))
+			panic(r.NewGoError(matchStoppedError))
 		}
 
 		presenceIDs, msg, reliable := rm.validateBroadcast(r, f)
@@ -413,7 +413,7 @@ func (rm *RuntimeJavascriptMatchCore) broadcastMessage(r *goja.Runtime) func(goj
 func (rm *RuntimeJavascriptMatchCore) broadcastMessageDeferred(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		if rm.stopped.Load() {
-			panic(r.ToValue(jsMatchStoppedErr))
+			panic(r.NewGoError(matchStoppedError))
 		}
 
 		presenceIDs, msg, reliable := rm.validateBroadcast(r, f)
@@ -602,7 +602,7 @@ func (rm *RuntimeJavascriptMatchCore) validateBroadcast(r *goja.Runtime, f goja.
 func (rm *RuntimeJavascriptMatchCore) matchKick(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		if rm.stopped.Load() {
-			panic(r.ToValue(jsMatchStoppedErr))
+			panic(r.NewGoError(matchStoppedError))
 		}
 
 		input := f.Argument(0)
@@ -651,13 +651,13 @@ func (rm *RuntimeJavascriptMatchCore) matchKick(r *goja.Runtime) func(goja.Funct
 			}
 			presence.SessionID = sid
 
-			nodeVal, _ := pMap["nodeId"]
+			nodeVal, _ := pMap["node"]
 			if nodeVal == nil {
-				panic(r.NewTypeError("expects presence to contain a 'nodeId'"))
+				panic(r.NewTypeError("expects presence to contain a 'node'"))
 			}
 			node, ok := nodeVal.(string)
 			if !ok {
-				panic(r.NewTypeError("expects a 'nodeId' string"))
+				panic(r.NewTypeError("expects a 'node' string"))
 			}
 			presence.Node = node
 
@@ -673,13 +673,13 @@ func (rm *RuntimeJavascriptMatchCore) matchKick(r *goja.Runtime) func(goja.Funct
 func (rm *RuntimeJavascriptMatchCore) matchLabelUpdate(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
 	return func(f goja.FunctionCall) goja.Value {
 		if rm.stopped.Load() {
-			panic(r.ToValue(jsMatchStoppedErr))
+			panic(r.NewGoError(matchStoppedError))
 		}
 
 		input := getJsString(r, f.Argument(0))
 
 		if err := rm.matchRegistry.UpdateMatchLabel(rm.id, input); err != nil {
-			panic(r.ToValue(r.NewGoError(fmt.Errorf("error updating match label: %v", err.Error()))))
+			panic(r.NewGoError(fmt.Errorf("error updating match label: %v", err.Error())))
 		}
 		rm.label.Store(input)
 

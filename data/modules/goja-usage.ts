@@ -114,6 +114,7 @@ module NKRuntime {
          * @param presences - Opt. List of presences (a subset of match participants) to use as message targets, or nil to send to the whole match. Defaults to nil
          * @param sender - Opt. A presence to tag on the message as the 'sender', or nil.
          * @param reliable - Opt. Broadcast the message with delivery guarantees or not. Defaults to true.
+         * @throws {TypeError, GoError}
          */
         broadcastMessage(opcode: number, data?: string, presences?: Presence[] | null, sender?: Presence | null, reliable?: boolean): void;
 
@@ -125,6 +126,7 @@ module NKRuntime {
          * @param presences - Opt. List of presences (a subset of match participants) to use as message targets, or nil to send to the whole match. Defaults to nil
          * @param sender - Opt. A presence to tag on the message as the 'sender', or nil.
          * @param reliable - Opt. Broadcast the message with delivery guarantees or not. Defaults to true.
+         * @throws {TypeError, GoError}
          */
         broadcastMessageDeferred(opcode: number, data?: string, presences?: Presence[], sender?: Presence, reliable?: boolean): void;
 
@@ -132,6 +134,7 @@ module NKRuntime {
          * Kick presences from match.
          *
          * @param presences - List of presences to kick from the match.
+         * @throws {TypeError, GoError}
          */
         matchKick(presences: Presence[]): void;
 
@@ -139,6 +142,7 @@ module NKRuntime {
          * Update match label.
          *
          * @param label - New label for the match.
+         * @throws {TypeError, GoError}
          */
         matchLabelUpdate(label: string): void;
     }
