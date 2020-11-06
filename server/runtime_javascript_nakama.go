@@ -1301,38 +1301,38 @@ func (n *runtimeJavascriptNakamaModule) accountUpdateId(r *goja.Runtime) func(go
 		}
 
 		var username string
-		if f.Argument(0) != goja.Undefined() && f.Argument(0) != goja.Null() {
-			username = getJsString(r, f.Argument(0))
+		if f.Argument(1) != goja.Undefined() && f.Argument(1) != goja.Null() {
+			username = getJsString(r, f.Argument(1))
 		}
 
 		var displayName *wrappers.StringValue
-		if f.Argument(1) != goja.Undefined() && f.Argument(1) != goja.Null() {
-			displayName = &wrappers.StringValue{Value: getJsString(r, f.Argument(1))}
+		if f.Argument(2) != goja.Undefined() && f.Argument(2) != goja.Null() {
+			displayName = &wrappers.StringValue{Value: getJsString(r, f.Argument(2))}
 		}
 
 		var timezone *wrappers.StringValue
-		if f.Argument(2) != goja.Undefined() && f.Argument(2) != goja.Null() {
-			timezone = &wrappers.StringValue{Value: getJsString(r, f.Argument(2))}
+		if f.Argument(3) != goja.Undefined() && f.Argument(3) != goja.Null() {
+			timezone = &wrappers.StringValue{Value: getJsString(r, f.Argument(3))}
 		}
 
 		var location *wrappers.StringValue
-		if f.Argument(3) != goja.Undefined() && f.Argument(3) != goja.Null() {
-			location = &wrappers.StringValue{Value: getJsString(r, f.Argument(3))}
+		if f.Argument(4) != goja.Undefined() && f.Argument(4) != goja.Null() {
+			location = &wrappers.StringValue{Value: getJsString(r, f.Argument(4))}
 		}
 
 		var lang *wrappers.StringValue
-		if f.Argument(4) != goja.Undefined() && f.Argument(4) != goja.Null() {
-			lang = &wrappers.StringValue{Value: getJsString(r, f.Argument(4))}
+		if f.Argument(5) != goja.Undefined() && f.Argument(5) != goja.Null() {
+			lang = &wrappers.StringValue{Value: getJsString(r, f.Argument(5))}
 		}
 
 		var avatar *wrappers.StringValue
-		if f.Argument(5) != goja.Undefined() && f.Argument(5) != goja.Null() {
-			avatar = &wrappers.StringValue{Value: getJsString(r, f.Argument(5))}
+		if f.Argument(6) != goja.Undefined() && f.Argument(6) != goja.Null() {
+			avatar = &wrappers.StringValue{Value: getJsString(r, f.Argument(6))}
 		}
 
 		var metadata *wrappers.StringValue
-		if f.Argument(6) != goja.Undefined() && f.Argument(6) != goja.Null() {
-			metadataMap, ok := f.Argument(6).Export().(map[string]interface{})
+		if f.Argument(7) != goja.Undefined() && f.Argument(7) != goja.Null() {
+			metadataMap, ok := f.Argument(7).Export().(map[string]interface{})
 			if !ok {
 				panic(r.NewTypeError("expects metadata to be an object"))
 			}

@@ -636,7 +636,7 @@ module NKRuntime {
          * @param metadata - Metadata object.
          * @returns object with state, acceptUser and optional rejection message if acceptUser is false.
          */
-        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: MatchState, presence: Presence, metadata: {[key: string]: string}): {state: MatchState, accept: boolean, rejectMessage?: string};
+        (ctx: Context, logger: Logger, nk: Nakama, dispatcher: MatchDispatcher, tick: number, state: MatchState, presence: Presence, metadata: {[key: string]: any}): {state: MatchState, accept: boolean, rejectMessage?: string};
     }
 
     /**
@@ -2700,15 +2700,16 @@ module NKRuntime {
          * Update user account.
          *
          * @param userId - User ID for which the information is to be updated.
-         * @param displayName - Display name to be updated. Use null to not update this field.
-         * @param timezone - Timezone to be updated. Use null to not update this field.
-         * @param location - Location to be updated. Use null to not update this field.
-         * @param language - Language to be updated. Use null to not update this field.
-         * @param avatar - User's avatar URL. Use null to not update this field.
-         * @param metadata - Metadata to update. Use null not to update this field.
+         * @param username - Username to be updated. Use null or undefined to not update this field.
+         * @param displayName - Display name to be updated. Use null or undefined to not update this field.
+         * @param timezone - Timezone to be updated. Use null or undefined to not update this field.
+         * @param location - Location to be updated. Use null or undefined to not update this field.
+         * @param language - Language to be updated. Use null or undefined to not update this field.
+         * @param avatar - User's avatar URL. Use null or undefined to not update this field.
+         * @param metadata - Metadata to update. Use null or undefined not to update this field.
          * @throws {TypeError, GoError}
          */
-        accountUpdateId(userId: string, displayName: string, timezone: string, location: string, language: string, avatar: string, metadata: {[key: string]: any}): void;
+        accountUpdateId(userId: string, username?: string, displayName?: string, timezone?: string, location?: string, language?: string, avatar?: string, metadata?: {[key: string]: any}): void;
 
         /**
          * Delete user account
@@ -3133,7 +3134,7 @@ module NKRuntime {
          * @param updateLedger - Opt. Whether to record this update in the ledger. Default true.
          * @throws {TypeError, GoError}
          */
-        walletUpdate(userID: string, changeset: {[key: string]: number}, metadata?: {[key: string]: string}, updateLedger?: boolean): WalletUpdateResult;
+        walletUpdate(userID: string, changeset: {[key: string]: number}, metadata?: {[key: string]: any}, updateLedger?: boolean): WalletUpdateResult;
 
         /**
          * Update multiple user wallets.
