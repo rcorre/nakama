@@ -88,6 +88,7 @@ package runtime
 import (
 	"context"
 	"database/sql"
+
 	"github.com/heroiclabs/nakama-common/api"
 	"github.com/heroiclabs/nakama-common/rtapi"
 )
@@ -287,10 +288,6 @@ type Initializer interface {
 
 	// RegisterAfterAuthenticateApple can be used to perform after successful authentication checks.
 	RegisterAfterAuthenticateApple(fn func(ctx context.Context, logger Logger, db *sql.DB, nk NakamaModule, out *api.Session, in *api.AuthenticateAppleRequest) error) error
-
-	// RegisterBeforeAuthenticateCustom can be used to perform pre-authentication checks.
-	// You can use this to process the input (such as decoding custom tokens) and ensure inter-compatibility between Nakama and your own custom system.
-	RegisterBeforeAuthenticateRefresh(fn func(ctx context.Context, logger Logger, db *sql.DB, nk NakamaModule, in *api.AuthenticateRefreshRequest) (*api.AuthenticateRefreshRequest, error)) error
 
 	// RegisterBeforeAuthenticateCustom can be used to perform pre-authentication checks.
 	// You can use this to process the input (such as decoding custom tokens) and ensure inter-compatibility between Nakama and your own custom system.
@@ -883,6 +880,7 @@ type NakamaModule interface {
 	TournamentJoin(ctx context.Context, id, ownerID, username string) error
 	TournamentsGetId(ctx context.Context, tournamentIDs []string) ([]*api.Tournament, error)
 	TournamentList(ctx context.Context, categoryStart, categoryEnd, startTime, endTime, limit int, cursor string) (*api.TournamentList, error)
+	TournamentRecordsList(ctx context.Context, tournamentId string, ownerIDs []string, limit int, cursor string, overrideExpiry int64) ([]*api.LeaderboardRecord, []*api.LeaderboardRecord, string, string, error)
 	TournamentRecordWrite(ctx context.Context, id, ownerID, username string, score, subscore int64, metadata map[string]interface{}) (*api.LeaderboardRecord, error)
 	TournamentRecordsHaystack(ctx context.Context, id, ownerID string, limit int, expiry int64) ([]*api.LeaderboardRecord, error)
 
@@ -890,9 +888,16 @@ type NakamaModule interface {
 	GroupCreate(ctx context.Context, userID, name, creatorID, langTag, description, avatarUrl string, open bool, metadata map[string]interface{}, maxCount int) (*api.Group, error)
 	GroupUpdate(ctx context.Context, id, name, creatorID, langTag, description, avatarUrl string, open bool, metadata map[string]interface{}, maxCount int) error
 	GroupDelete(ctx context.Context, id string) error
+	GroupUserJoin(ctx context.Context, groupID, userID, username string) error
+	GroupUserLeave(ctx context.Context, groupID, userID, username string) error
+	GroupUsersAdd(ctx context.Context, groupID string, userIDs []string) error
 	GroupUsersKick(ctx context.Context, groupID string, userIDs []string) error
-	GroupUsersList(ctx context.Context, id string, limit int, state *int, cursor string) ([]*api.GroupUserList_GroupUser, error)
-	UserGroupsList(ctx context.Context, userID string, limit int, state *int, cursor string) ([]*api.UserGroupList_UserGroup, error)
+	GroupUsersPromote(ctx context.Context, groupID string, userIDs []string) error
+	GroupUsersDemote(ctx context.Context, groupID string, userIDs []string) error
+	GroupUsersList(ctx context.Context, id string, limit int, state *int, cursor string) ([]*api.GroupUserList_GroupUser, string, error)
+	UserGroupsList(ctx context.Context, userID string, limit int, state *int, cursor string) ([]*api.UserGroupList_UserGroup, string, error)
+
+	FriendsList(ctx context.Context, userID string, limit int, state *int, cursor string) ([]*api.Friend, string, error)
 
 	Event(ctx context.Context, evt *api.Event) error
 }
