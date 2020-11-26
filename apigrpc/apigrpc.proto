@@ -248,7 +248,7 @@ service Nakama {
       post: "/v2/account/authenticate/refresh",
       body: "account"
     };
-    option (grpc.gateway.protoc_gen_swagger.options.openapiv2_operation) = {
+    option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_operation) = {
       security: {
         security_requirement: {
           key: "BasicAuth";
