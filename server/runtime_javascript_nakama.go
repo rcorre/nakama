@@ -205,6 +205,11 @@ func (n *runtimeJavascriptNakamaModule) mappings(r *goja.Runtime) map[string]fun
 		"groupUsersList":                  n.groupUsersList(r),
 		"userGroupsList":                  n.userGroupsList(r),
 		"friendsList":                     n.friendsList(r),
+		"groupUserJoin":                   n.groupUserJoin(r),
+		"groupUserLeave":                  n.groupUserLeave(r),
+		"groupUsersAdd":                   n.groupUsersAdd(r),
+		"groupUsersPromote":               n.groupUsersPromote(r),
+		"groupUsersDemote":                n.groupUsersDemote(r),
 	}
 }
 
@@ -4965,7 +4970,7 @@ func (n *runtimeJavascriptNakamaModule) groupUsersKick(r *goja.Runtime) func(goj
 				panic(r.NewTypeError("expects user id to be valid identifier"))
 			}
 			if userID == uuid.Nil {
-				panic(r.NewTypeError("cannto kick the root user"))
+				panic(r.NewTypeError("cannot kick the root user"))
 			}
 			userIDs = append(userIDs, userID)
 		}
@@ -5252,6 +5257,213 @@ func (n *runtimeJavascriptNakamaModule) friendsList(r *goja.Runtime) func(goja.F
 		}
 
 		return r.ToValue(result)
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) groupUserJoin(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		groupIDString := getJsString(r, f.Argument(0))
+		if groupIDString == "" {
+			panic(r.NewTypeError("expects a group ID string"))
+		}
+		groupID, err := uuid.FromString(groupIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects group ID to be a valid identifier"))
+		}
+
+		userIDString := getJsString(r, f.Argument(1))
+		if userIDString == "" {
+			panic(r.NewTypeError("expects a user ID string"))
+		}
+		userID, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects user ID to be a valid identifier"))
+		}
+
+		username := getJsString(r, f.Argument(2))
+		if username == "" {
+			panic(r.NewTypeError("expects a username string"))
+		}
+
+		if err := JoinGroup(context.Background(), n.logger, n.db, n.router, groupID, userID, username); err != nil {
+			panic(r.NewGoError(fmt.Errorf("error while trying to join a group: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) groupUserLeave(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		groupIDString := getJsString(r, f.Argument(0))
+		if groupIDString == "" {
+			panic(r.NewTypeError("expects a group ID string"))
+		}
+		groupID, err := uuid.FromString(groupIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects group ID to be a valid identifier"))
+		}
+
+		userIDString := getJsString(r, f.Argument(1))
+		if userIDString == "" {
+			panic(r.NewTypeError("expects a user ID string"))
+		}
+		userID, err := uuid.FromString(userIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects user ID to be a valid identifier"))
+		}
+
+		username := getJsString(r, f.Argument(2))
+		if username == "" {
+			panic(r.NewTypeError("expects a username string"))
+		}
+
+		if err := LeaveGroup(context.Background(), n.logger, n.db, n.router, groupID, userID, username); err != nil {
+			panic(r.NewGoError(fmt.Errorf("error while trying to leave a group: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) groupUsersAdd(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		groupIDString := getJsString(r, f.Argument(0))
+		if groupIDString == "" {
+			panic(r.NewTypeError("expects a group ID string"))
+		}
+		groupID, err := uuid.FromString(groupIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects group ID to be a valid identifier"))
+		}
+
+		users := f.Argument(1)
+		if goja.IsUndefined(users) || goja.IsNull(users) {
+			panic(r.NewTypeError("expects an array of user ids"))
+		}
+		usersSlice, ok := users.Export().([]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects an array of user ids"))
+		}
+
+		userIDs := make([]uuid.UUID, 0, len(usersSlice))
+		for _, id := range usersSlice {
+			idStr, ok := id.(string)
+			if !ok {
+				panic(r.NewTypeError("expects user id to be valid identifier"))
+			}
+			userID, err := uuid.FromString(idStr)
+			if err != nil {
+				panic(r.NewTypeError("expects user id to be valid identifier"))
+			}
+			if userID == uuid.Nil {
+				panic(r.NewTypeError("cannot add the root user"))
+			}
+			userIDs = append(userIDs, userID)
+		}
+		if len(userIDs) == 0 {
+			return goja.Undefined()
+		}
+
+		if err := AddGroupUsers(context.Background(), n.logger, n.db, n.router, uuid.Nil, groupID, userIDs); err != nil {
+			panic(r.NewGoError(fmt.Errorf("error while trying to add users into a group: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) groupUsersPromote(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		groupIDString := getJsString(r, f.Argument(0))
+		if groupIDString == "" {
+			panic(r.NewTypeError("expects a group ID string"))
+		}
+		groupID, err := uuid.FromString(groupIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects group ID to be a valid identifier"))
+		}
+
+		users := f.Argument(1)
+		if goja.IsUndefined(users) || goja.IsNull(users) {
+			panic(r.NewTypeError("expects an array of user ids"))
+		}
+		usersSlice, ok := users.Export().([]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects an array of user ids"))
+		}
+
+		userIDs := make([]uuid.UUID, 0, len(usersSlice))
+		for _, id := range usersSlice {
+			idStr, ok := id.(string)
+			if !ok {
+				panic(r.NewTypeError("expects user id to be valid identifier"))
+			}
+			userID, err := uuid.FromString(idStr)
+			if err != nil {
+				panic(r.NewTypeError("expects user id to be valid identifier"))
+			}
+			if userID == uuid.Nil {
+				panic(r.NewTypeError("cannot promote the root user"))
+			}
+			userIDs = append(userIDs, userID)
+		}
+		if len(userIDs) == 0 {
+			return goja.Undefined()
+		}
+
+		if err := PromoteGroupUsers(context.Background(), n.logger, n.db, n.router, uuid.Nil, groupID, userIDs); err != nil {
+			panic(r.NewGoError(fmt.Errorf("error while trying to promote users in a group: %v", err.Error())))
+		}
+
+		return goja.Undefined()
+	}
+}
+
+func (n *runtimeJavascriptNakamaModule) groupUsersDemote(r *goja.Runtime) func(goja.FunctionCall) goja.Value {
+	return func(f goja.FunctionCall) goja.Value {
+		groupIDString := getJsString(r, f.Argument(0))
+		if groupIDString == "" {
+			panic(r.NewTypeError("expects a group ID string"))
+		}
+		groupID, err := uuid.FromString(groupIDString)
+		if err != nil {
+			panic(r.NewTypeError("expects group ID to be a valid identifier"))
+		}
+
+		users := f.Argument(1)
+		if goja.IsUndefined(users) || goja.IsNull(users) {
+			panic(r.NewTypeError("expects an array of user ids"))
+		}
+		usersSlice, ok := users.Export().([]interface{})
+		if !ok {
+			panic(r.NewTypeError("expects an array of user ids"))
+		}
+
+		userIDs := make([]uuid.UUID, 0, len(usersSlice))
+		for _, id := range usersSlice {
+			idStr, ok := id.(string)
+			if !ok {
+				panic(r.NewTypeError("expects user id to be valid identifier"))
+			}
+			userID, err := uuid.FromString(idStr)
+			if err != nil {
+				panic(r.NewTypeError("expects user id to be valid identifier"))
+			}
+			if userID == uuid.Nil {
+				panic(r.NewTypeError("cannot demote the root user"))
+			}
+			userIDs = append(userIDs, userID)
+		}
+		if len(userIDs) == 0 {
+			return goja.Undefined()
+		}
+
+		if err := DemoteGroupUsers(context.Background(), n.logger, n.db, n.router, uuid.Nil, groupID, userIDs); err != nil {
+			panic(r.NewGoError(fmt.Errorf("error while trying to demote users in a group: %v", err.Error())))
+		}
+
+		return goja.Undefined()
 	}
 }
 
